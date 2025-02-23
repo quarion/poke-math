@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+  <!-- Debug info -->
+  <div style="display: none">
+    <p>Pokemon vars: {{ pokemon_vars }}</p>
+    <p>Quiz: {{ quiz }}</p>
+  </div>
+
+  <h2>{{ quiz.title }}</h2>
+  <p>{{ quiz.description }}</p>
+  <form method="POST">
+    {% for equation in quiz.equations %}
+      {% set ns = namespace(equation=equation, unknowns=[]) %}
+      {% for pokemon_name, image_file in pokemon_vars.items() %}
+        {% set placeholder = "{" ~ pokemon_name ~ "}" %}
+        {% if placeholder in ns.equation %}
+          {% set ns.equation = ns.equation | replace(placeholder, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ pokemon_name ~ '" style="height:30px; display:inline-block;">') %}
+          {% if pokemon_name not in ns.unknowns %}
+            {% set ns.unknowns = ns.unknowns + [pokemon_name] %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      <div class="equation">
+        <div style="font-size:1.2em; margin:10px 0;">{{ ns.equation | safe }}</div>
+        <div class="inputs" style="margin-bottom:20px;">
+          {% for unknown in ns.unknowns %}
+            <label for="{{ unknown }}">
+              <img src="/static/images/{{ pokemon_vars[unknown] }}" class="pokemon-var" alt="{{ unknown }}" style="height:30px; display:inline-block;">
+            </label>
+            <input type="number" name="{{ unknown }}" id="{{ unknown }}" required style="width:60px; margin:0 5px;">
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+    <button type="submit" style="margin-top:20px;">Submit Answers</button>
+  </form>
+
+  {% if result is not none %}
+    <div style="margin-top:20px;">
+      <h3>Result: {{ 'Correct!' if result else 'Try Again' }}</h3>
+    </div>
+  {% endif %}
+{% endblock %}

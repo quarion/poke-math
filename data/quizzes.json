@@ -1,0 +1,31 @@
+{
+    "pokemons": {
+        "pikachu": "pikachu.png",
+        "bulbasaur": "bulbasaur.png",
+        "charmander": "charmander.png"
+    },
+    "quizzes": {
+        "1": {
+            "title": "Simple Addition",
+            "description": "Solve for the unknowns.",
+            "equations": [
+                "{pikachu} + 4 = 8",
+                "{pikachu} + {bulbasaur} = 10"
+            ],
+            "answer": {
+                "pikachu": 4,
+                "bulbasaur": 6
+            }
+        },
+        "2": {
+            "title": "Subtraction Challenge",
+            "description": "Solve the following problem.",
+            "equations": [
+                "10 - 4= {bulbasaur}"
+            ],
+            "answer": {
+                "bulbasaur": 6
+            }
+    }
+}
+}
