@@ -1,29 +1,25 @@
+# CI definition for IaC (terraform)
 steps:
-  # Initialize Terraform
-  - name: 'hashicorp/terraform:1.0.0'
-    args: ['init']
-    dir: 'infrastructure'
-
-  # Validate Terraform configurations
-  - name: 'hashicorp/terraform:1.0.0'
-    args: ['validate']
-    dir: 'infrastructure'
-
-  # Plan Terraform changes
-  - name: 'hashicorp/terraform:1.0.0'
-    args: ['plan', '-out=tfplan']
-    dir: 'infrastructure'
-
-  # Apply Terraform changes (only on main branch)
-  - name: 'hashicorp/terraform:1.0.0'
-    args: ['apply', 'tfplan']
-    dir: 'infrastructure'
-    entrypoint: 'sh'
+  # Create tfvars file from secrets
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
     args:
-      - '-c'
+      - -c
       - |
-        if [ "$BRANCH_NAME" = "main" ]; then
-          terraform apply tfplan
-        else
-          echo "Skipping apply on non-main branch"
-        fi 
+        echo "project_id = \"$PROJECT_ID\"" > terraform.tfvars
+        echo "project_number = \"$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')\"" >> terraform.tfvars
+        echo "tfstate_bucket = \"tfstate-$PROJECT_ID-${_REGION}-${_ENV}\"" >> terraform.tfvars
+
+  - name: hashicorp/terraform:1.5
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        terraform init
+        terraform validate
+        terraform plan -out=tfplan
+        terraform apply -auto-approve tfplan
+
+substitutions:
+  _REGION: europe-west1
+  _ENV: prod

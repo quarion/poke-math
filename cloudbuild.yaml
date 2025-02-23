@@ -1,24 +1,35 @@
 steps:
-  # Build the container image
+  # Build and push image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/quiz-app:$COMMIT_SHA', '.']
+    args: [
+      'build',
+      '-t',
+      '${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:$COMMIT_SHA',
+      '--build-arg', 'ENVIRONMENT=${_ENV}',
+      '.'
+    ]
+    id: 'build'
 
-  # Push the container image to Container Registry
+  # Push image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/quiz-app:$COMMIT_SHA']
+    args: [
+      'push',
+      '${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:$COMMIT_SHA'
+    ]
+    id: 'push'
 
-  # Update the container image in Cloud Run
-  - name: 'gcr.io/cloud-builders/gcloud'
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
     args:
-      - 'run'
-      - 'deploy'
-      - 'quiz-app'
-      - '--image'
-      - 'gcr.io/$PROJECT_ID/quiz-app:$COMMIT_SHA'
-      - '--region'
-      - 'us-central1'
-      - '--platform'
-      - 'managed'
+      - '-c'
+      - |
+        gcloud run deploy poke-math \
+          --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:$COMMIT_SHA \
+          --region=${_REGION} \
+          --platform=managed \
+          --allow-unauthenticated
 
-images:
-  - 'gcr.io/$PROJECT_ID/quiz-app:$COMMIT_SHA' 
+substitutions:
+  _REGION: europe-west1
+  _ENV: prod

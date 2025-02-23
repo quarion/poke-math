@@ -3,13 +3,18 @@ variable "project_id" {
   type        = string
 }
 
+variable "project_number" {
+  description = "The GCP project number"
+  type        = string
+}
+
+variable "tfstate_bucket" {
+  description = "The GCS bucket for terraform state"
+  type        = string
+}
+
 variable "region" {
   description = "The GCP region"
   type        = string
-  default     = "us-central1"
-}
-
-variable "container_image" {
-  description = "The container image to deploy"
-  type        = string
+  default     = "europe-west1"
 } 
