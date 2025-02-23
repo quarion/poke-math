@@ -36,11 +36,14 @@ def quiz(quiz_id):
         return render_template('quiz.html', 
                              quiz=quiz_data,
                              pokemon_vars=pokemon_variables,
-                             result=correct)
+                             result=correct,
+                             request=request)
 
     return render_template('quiz.html', 
                          quiz=quiz_data,
-                         pokemon_vars=pokemon_variables)
+                         pokemon_vars=pokemon_variables,
+                         result=None,
+                         request=request)
 
 if __name__ == '__main__':
     app.run(debug=True)
