@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -19,50 +20,23 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
 # Virtual Environment
 venv/
-env/
 ENV/
-.env
-.venv
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.DS_Store
 
-# Flask
-instance/
-.webassets-cache
-flask_session/
-
-# Local development
-*.db
-*.sqlite3
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Docker
+.docker/
 
 # Logs
 *.log
-logs/
-log/
 
-# Coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-
-# Unit test / coverage reports
-.pytest_cache/
+# Local development
+.env
+.env.local
