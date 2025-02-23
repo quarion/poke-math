@@ -1,31 +1,361 @@
 {
     "pokemons": {
-        "pikachu": "pikachu.png",
-        "bulbasaur": "bulbasaur.png",
-        "charmander": "charmander.png"
+      "pikachu": "pikachu.png",
+      "bulbasaur": "bulbasaur.png",
+      "charmander": "charmander.png"
     },
     "quizzes": {
-        "1": {
-            "title": "Simple Addition",
-            "description": "Solve for the unknowns.",
-            "equations": [
-                "{pikachu} + 4 = 8",
-                "{pikachu} + {bulbasaur} = 10"
-            ],
-            "answer": {
-                "pikachu": 4,
-                "bulbasaur": 6
-            }
-        },
-        "2": {
-            "title": "Subtraction Challenge",
-            "description": "Solve the following problem.",
-            "equations": [
-                "10 - 4= {bulbasaur}"
-            ],
-            "answer": {
-                "bulbasaur": 6
-            }
+      "1": {
+        "title": "Simple Addition with One Unknown",
+        "description": "Solve for the unknown variable.",
+        "equations": [
+          "3 + {pikachu} = 7"
+        ],
+        "answer": {
+          "pikachu": 4
         }
+      },
+      "2": {
+        "title": "Simple Subtraction with One Unknown",
+        "description": "Find the missing number.",
+        "equations": [
+          "10 - {bulbasaur} = 4"
+        ],
+        "answer": {
+          "bulbasaur": 6
+        }
+      },
+      "3": {
+        "title": "Repeated Addition with Two Unknowns",
+        "description": "Solve for the unknowns using repeated addition instead of multiplication.",
+        "equations": [
+          "{pikachu} + {pikachu} + {bulbasaur} = 10"
+        ],
+        "answer": {
+          "pikachu": 2,
+          "bulbasaur": 6
+        }
+      },
+      "4": {
+        "title": "Simple Addition with One Unknown (Variant)",
+        "description": "Solve the addition equation.",
+        "equations": [
+          "5 + {charmander} = 12"
+        ],
+        "answer": {
+          "charmander": 7
+        }
+      },
+      "5": {
+        "title": "Two Variable Addition and Subtraction",
+        "description": "Solve for the unknowns.",
+        "equations": [
+          "{pikachu} + {bulbasaur} = 12",
+          "{pikachu} - {bulbasaur} = 2"
+        ],
+        "answer": {
+          "pikachu": 7,
+          "bulbasaur": 5
+        }
+      },
+      "6": {
+        "title": "Two Variable Addition System",
+        "description": "Find the unknowns from the system.",
+        "equations": [
+          "{pikachu} + {bulbasaur} = 14",
+          "{bulbasaur} = {pikachu} + 2"
+        ],
+        "answer": {
+          "pikachu": 6,
+          "bulbasaur": 8
+        }
+      },
+      "7": {
+        "title": "Repeated Addition in a Two Equation System",
+        "description": "Solve the system using repeated addition.",
+        "equations": [
+          "{pikachu} + {pikachu} + {bulbasaur} = 13",
+          "{pikachu} + {bulbasaur} = 9"
+        ],
+        "answer": {
+          "pikachu": 4,
+          "bulbasaur": 5
+        }
+      },
+      "8": {
+        "title": "Two Variable System with Simple Equations",
+        "description": "Find the unknowns using two simple equations.",
+        "equations": [
+          "{pikachu} + {bulbasaur} = 11",
+          "{pikachu} - 1 = {bulbasaur}"
+        ],
+        "answer": {
+          "pikachu": 6,
+          "bulbasaur": 5
+        }
+      },
+      "9": {
+        "title": "Simple Addition with One Unknown (Alternate)",
+        "description": "Solve for the unknown.",
+        "equations": [
+          "2 + {charmander} = 9"
+        ],
+        "answer": {
+          "charmander": 7
+        }
+      },
+      "10": {
+        "title": "Rearranged Addition Equation",
+        "description": "Solve for the unknown variable.",
+        "equations": [
+          "15 = {pikachu} + 7"
+        ],
+        "answer": {
+          "pikachu": 8
+        }
+      },
+      "11": {
+        "title": "Two Unknowns with Repeated Addition",
+        "description": "Solve the following system using repeated addition.",
+        "equations": [
+          "{pikachu} + {pikachu} = {bulbasaur}",
+          "{pikachu} + {bulbasaur} = 15"
+        ],
+        "answer": {
+          "pikachu": 5,
+          "bulbasaur": 10
+        }
+      },
+      "12": {
+        "title": "Three Variable Sum with Given Values",
+        "description": "Two values are provided; solve for the third.",
+        "equations": [
+          "{pikachu} + {bulbasaur} + {charmander} = 18",
+          "{pikachu} = 4",
+          "{bulbasaur} = 7"
+        ],
+        "answer": {
+          "pikachu": 4,
+          "bulbasaur": 7,
+          "charmander": 7
+        }
+      },
+      "13": {
+        "title": "Three Variable System: Sum, Difference, and Relation",
+        "description": "Find the unknowns from the system.",
+        "equations": [
+          "{pikachu} + {bulbasaur} + {charmander} = 20",
+          "{pikachu} - {bulbasaur} = 2",
+          "{charmander} = {bulbasaur} + 3"
+        ],
+        "answer": {
+          "pikachu": 7,
+          "bulbasaur": 5,
+          "charmander": 8
+        }
+      },
+      "14": {
+        "title": "Advanced Addition with One Unknown",
+        "description": "Solve for the unknown.",
+        "equations": [
+          "12 + {charmander} = 20"
+        ],
+        "answer": {
+          "charmander": 8
+        }
+      },
+      "15": {
+        "title": "Advanced Subtraction with One Unknown",
+        "description": "Find the unknown in the equation.",
+        "equations": [
+          "25 - {pikachu} = 18"
+        ],
+        "answer": {
+          "pikachu": 7
+        }
+      },
+      "16": {
+        "title": "Advanced Repeated Addition with One Unknown",
+        "description": "Determine the unknown by adding it repeatedly.",
+        "equations": [
+          "{bulbasaur} + {bulbasaur} + {bulbasaur} = 21"
+        ],
+        "answer": {
+          "bulbasaur": 7
+        }
+      },
+      "17": {
+        "title": "Mixed Operations: Addition and Subtraction",
+        "description": "Solve the system using repeated addition and subtraction.",
+        "equations": [
+          "{pikachu} + {pikachu} + 3 = {bulbasaur}",
+          "{bulbasaur} - {pikachu} = 5"
+        ],
+        "answer": {
+          "pikachu": 2,
+          "bulbasaur": 7
+        }
+      },
+      "18": {
+        "title": "Mixed Operations: Two Equation System",
+        "description": "Solve for the unknowns in the system.",
+        "equations": [
+          "{pikachu} + {pikachu} + 2 = {bulbasaur}",
+          "{pikachu} + {bulbasaur} = 11"
+        ],
+        "answer": {
+          "pikachu": 3,
+          "bulbasaur": 8
+        }
+      },
+      "19": {
+        "title": "Two Variable Sum with Relation",
+        "description": "Determine the unknowns from the given relations.",
+        "equations": [
+          "{pikachu} + {bulbasaur} = 10",
+          "{bulbasaur} = {pikachu} + 2"
+        ],
+        "answer": {
+          "pikachu": 4,
+          "bulbasaur": 6
+        }
+      },
+      "20": {
+        "title": "Two Variable Linear Combination with Repeated Addition",
+        "description": "Find the unknowns using a combination of equations.",
+        "equations": [
+          "{bulbasaur} + {bulbasaur} - {pikachu} = 10",
+          "{bulbasaur} + {pikachu} = 14"
+        ],
+        "answer": {
+          "pikachu": 6,
+          "bulbasaur": 8
+        }
+      },
+      "21": {
+        "title": "Three Variable Mixed Operations",
+        "description": "Solve for all unknowns using three equations.",
+        "equations": [
+          "{pikachu} + {bulbasaur} + {charmander} = 20",
+          "{bulbasaur} + {charmander} = 15",
+          "{charmander} - {pikachu} = 1"
+        ],
+        "answer": {
+          "pikachu": 5,
+          "bulbasaur": 9,
+          "charmander": 6
+        }
+      },
+      "22": {
+        "title": "Three Variable System with Repeated Addition",
+        "description": "Solve the following system with repeated addition.",
+        "equations": [
+          "{pikachu} + {pikachu} + {bulbasaur} = {charmander}",
+          "{pikachu} + {bulbasaur} + {charmander} = 21"
+        ],
+        "answer": {
+          "pikachu": 3,
+          "bulbasaur": 6,
+          "charmander": 12
+        }
+      },
+      "23": {
+        "title": "Two Unknowns with Repeated Addition and Relation",
+        "description": "Determine the values from the system.",
+        "equations": [
+          "{pikachu} + {pikachu} + {bulbasaur} = 16",
+          "{bulbasaur} = {pikachu} + 4"
+        ],
+        "answer": {
+          "pikachu": 4,
+          "bulbasaur": 8
+        }
+      },
+      "24": {
+        "title": "Simple Equation with One Unknown (Alternate)",
+        "description": "Solve for the missing number.",
+        "equations": [
+          "8 + {charmander} = 15"
+        ],
+        "answer": {
+          "charmander": 7
+        }
+      },
+      "25": {
+        "title": "Two Variable Sum with Simple Relation",
+        "description": "Find the unknowns using a simple relation.",
+        "equations": [
+          "{pikachu} + {bulbasaur} = 12",
+          "{pikachu} = {bulbasaur} - 2"
+        ],
+        "answer": {
+          "pikachu": 5,
+          "bulbasaur": 7
+        }
+      },
+      "26": {
+        "title": "Repeated Addition with One Unknown",
+        "description": "Solve for the unknown using repeated addition.",
+        "equations": [
+          "{charmander} + {charmander} + {charmander} = 18"
+        ],
+        "answer": {
+          "charmander": 6
+        }
+      },
+      "27": {
+        "title": "Two Unknowns: Sum and Difference",
+        "description": "Determine the unknowns from the sum and difference.",
+        "equations": [
+          "{pikachu} + {bulbasaur} = 15",
+          "{pikachu} - {bulbasaur} = 3"
+        ],
+        "answer": {
+          "pikachu": 9,
+          "bulbasaur": 6
+        }
+      },
+      "28": {
+        "title": "Three Variable Sum with Given Values",
+        "description": "Two values are provided; solve for the third.",
+        "equations": [
+          "{pikachu} + {bulbasaur} + {charmander} = 30",
+          "{pikachu} = 8",
+          "{bulbasaur} = 10"
+        ],
+        "answer": {
+          "pikachu": 8,
+          "bulbasaur": 10,
+          "charmander": 12
+        }
+      },
+      "29": {
+        "title": "Three Variable System with Two Equations and a Relation",
+        "description": "Solve the system of equations.",
+        "equations": [
+          "{pikachu} + {bulbasaur} + {charmander} = 25",
+          "{pikachu} + {bulbasaur} = 14",
+          "{charmander} = {pikachu} + 3"
+        ],
+        "answer": {
+          "pikachu": 8,
+          "bulbasaur": 6,
+          "charmander": 11
+        }
+      },
+      "30": {
+        "title": "Challenging Three Variable Mixed Operations",
+        "description": "Determine all unknowns from the system.",
+        "equations": [
+          "{pikachu} + {bulbasaur} + {charmander} = 12",
+          "{pikachu} + {pikachu} - {bulbasaur} = 2",
+          "{bulbasaur} + {charmander} = 9"
+        ],
+        "answer": {
+          "pikachu": 3,
+          "bulbasaur": 4,
+          "charmander": 5
+        }
+      }
     }
-}
+  }  

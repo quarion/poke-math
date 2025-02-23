@@ -4,21 +4,23 @@ import os
 
 app = Flask(__name__)
 
-# Load quiz data from JSON
+# Move this outside the function to keep it as a global variable
 def load_quizzes():
     with open(os.path.join('data', 'quizzes.json')) as f:
         data = json.load(f)
         return data['pokemons'], data['quizzes']
 
-pokemon_variables, quizzes = load_quizzes()
-
 @app.route('/')
 def index():
-    # List all available quizzes
+    # Load quizzes for each request
+    pokemon_variables, quizzes = load_quizzes()
     return render_template('index.html', quizzes=quizzes)
 
 @app.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
 def quiz(quiz_id):
+    # Load quizzes for each request
+    pokemon_variables, quizzes = load_quizzes()
+    
     quiz_data = quizzes.get(str(quiz_id))
     if not quiz_data:
         return "Quiz not found", 404
