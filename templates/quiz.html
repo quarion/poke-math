@@ -37,7 +37,12 @@
           <label for="{{ unknown }}">
             <img src="/static/images/{{ pokemon_vars[unknown] }}" class="pokemon-var" alt="{{ unknown }}" style="height:30px; display:inline-block;">
           </label>
-          <input type="number" name="{{ unknown }}" id="{{ unknown }}" required style="width:60px; margin:0 5px;">
+          <input type="number" 
+                 name="{{ unknown }}" 
+                 id="{{ unknown }}" 
+                 value="{{ user_answers[unknown] if unknown in user_answers else '' }}"
+                 required 
+                 style="width:60px; margin:0 5px;">
         </div>
       {% endfor %}
     </div>
