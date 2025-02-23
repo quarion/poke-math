@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import json
 import os
 
 app = Flask(__name__)
+app.secret_key = 'your-secret-key-here'  # Required for session management
 
 # Move this outside the function to keep it as a global variable
 def load_quizzes():
@@ -14,7 +15,10 @@ def load_quizzes():
 def index():
     # Load quizzes for each request
     pokemon_variables, quizzes = load_quizzes()
-    return render_template('index.html', quizzes=quizzes)
+    # Initialize solved_quizzes in session if it doesn't exist
+    if 'solved_quizzes' not in session:
+        session['solved_quizzes'] = {}
+    return render_template('index.html', quizzes=quizzes, solved_quizzes=session['solved_quizzes'])
 
 @app.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
 def quiz(quiz_id):
@@ -35,6 +39,11 @@ def quiz(quiz_id):
             int(user_answers.get(pokemon, 0)) == answer 
             for pokemon, answer in quiz_data['answer'].items()
         )
+        if correct:
+            if 'solved_quizzes' not in session:
+                session['solved_quizzes'] = {}
+            session['solved_quizzes'][str(quiz_id)] = True
+            session.modified = True
         return render_template('quiz.html', 
                              quiz=quiz_data,
                              pokemon_vars=pokemon_variables,
@@ -48,6 +57,11 @@ def quiz(quiz_id):
                          result=None,
                          request=request,
                          user_answers={})
+
+@app.route('/reset_progress', methods=['POST'])
+def reset_progress():
+    session['solved_quizzes'] = {}
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

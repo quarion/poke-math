@@ -202,4 +202,54 @@ ul li a:hover {
     width: auto;
     vertical-align: middle;
     margin: 0 5px;
+}
+
+/* Quiz list item with checkmark */
+.quiz-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checkmark {
+    color: #4CAF50;
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.quiz-controls {
+    margin-bottom: 2rem;
+    text-align: right;
+}
+
+.reset-button {
+    background-color: var(--pokemon-red);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.reset-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.quiz-title {
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.celebration-gif {
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.celebration-gif img {
+    max-width: 100px;
+    height: auto;
 } 

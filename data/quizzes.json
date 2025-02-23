@@ -29,6 +29,7 @@
         "title": "Repeated Addition with Two Unknowns",
         "description": "Solve for the unknowns using repeated addition instead of multiplication.",
         "equations": [
+          "{pikachu} + {pikachu} = 4",  
           "{pikachu} + {pikachu} + {bulbasaur} = 10"
         ],
         "answer": {
