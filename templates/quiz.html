@@ -51,8 +51,8 @@
   </form>
 
   {% if request.method == 'POST' and result is not none %}
-    <div style="margin-top:20px;">
-      <h3>Result: {{ 'Correct!' if result else 'Try Again' }}</h3>
+    <div class="{{ 'result-correct' if result else 'result-incorrect' }}">
+      <h3>{{ 'Correct!' if result else 'Try Again' }}</h3>
     </div>
   {% endif %}
 {% endblock %}

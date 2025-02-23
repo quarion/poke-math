@@ -1,70 +1,196 @@
-/* General styles */
+/* Pokemon-inspired colors and general styles */
+:root {
+    --pokemon-red: #FF1F1F;
+    --pokemon-blue: #1F1FFF;
+    --pokemon-yellow: #FFD733;
+    --pokemon-light: #FAFAFA;
+    --pokemon-dark: #333333;
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
     line-height: 1.6;
     margin: 0;
     padding: 0;
+    background-color: var(--pokemon-light);
+    color: var(--pokemon-dark);
 }
 
+/* Header styling */
 header {
-    background-color: #f4f4f4;
-    padding: 1rem;
+    background-color: var(--pokemon-red);
+    padding: 1.5rem;
     text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    color: white;
+    font-size: 2.5rem;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 nav a {
-    color: #333;
+    display: inline-block;
+    color: white;
     text-decoration: none;
-    padding: 0.5rem 1rem;
+    padding: 0.8rem 1.5rem;
+    margin-top: 1rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
 }
 
+nav a:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* Main content area */
 main {
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* Quiz list styles */
+/* Quiz list styling */
 .quiz-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
-.quiz-card {
-    border: 1px solid #ddd;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
     padding: 1rem;
-    border-radius: 5px;
 }
 
-/* Quiz styles */
-.quiz-container {
-    max-width: 800px;
-    margin: 0 auto;
+/* Quiz page styling */
+.equation {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin: 1rem 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    font-size: 1.4rem;
 }
 
-.question {
-    margin-bottom: 2rem;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+.answers-section {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.pokemon-image {
-    max-width: 100px;
-    height: auto;
+.answers-section div {
+    display: flex;
+    align-items: center;
+    margin: 1rem 0;
 }
 
-.btn {
-    background-color: #007bff;
+/* Form elements */
+input[type="number"] {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    width: 100px;
+    margin: 0 10px;
+}
+
+button[type="submit"] {
+    background-color: var(--pokemon-blue);
     color: white;
-    padding: 0.5rem 1rem;
+    padding: 1rem 2rem;
     border: none;
-    border-radius: 5px;
+    border-radius: 25px;
+    font-size: 1.2rem;
     cursor: pointer;
-    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.btn:hover {
-    background-color: #0056b3;
+button[type="submit"]:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Quiz list items */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    margin: 1rem 0;
+}
+
+ul li a {
+    display: block;
+    background-color: white;
+    padding: 1.2rem;
+    border-radius: 15px;
+    text-decoration: none;
+    color: var(--pokemon-dark);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+ul li a:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Result message styling */
+.result-correct {
+    background-color: #4CAF50;
+    color: white;
+    padding: 1rem;
+    border-radius: 15px;
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 1.4rem;
+}
+
+.result-incorrect {
+    background-color: var(--pokemon-red);
+    color: white;
+    padding: 1rem;
+    border-radius: 15px;
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 1.4rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+
+    main {
+        padding: 1rem;
+    }
+
+    .equation {
+        font-size: 1.2rem;
+        padding: 1rem;
+    }
+
+    input[type="number"] {
+        font-size: 1rem;
+        width: 80px;
+    }
+
+    button[type="submit"] {
+        width: 100%;
+        padding: 0.8rem;
+    }
+}
+
+/* Pokemon variable images */
+.pokemon-var {
+    height: 40px !important;
+    width: auto;
+    vertical-align: middle;
+    margin: 0 5px;
 } 
