@@ -1,0 +1,29 @@
+steps:
+  # Initialize Terraform
+  - name: 'hashicorp/terraform:1.0.0'
+    args: ['init']
+    dir: 'infrastructure'
+
+  # Validate Terraform configurations
+  - name: 'hashicorp/terraform:1.0.0'
+    args: ['validate']
+    dir: 'infrastructure'
+
+  # Plan Terraform changes
+  - name: 'hashicorp/terraform:1.0.0'
+    args: ['plan', '-out=tfplan']
+    dir: 'infrastructure'
+
+  # Apply Terraform changes (only on main branch)
+  - name: 'hashicorp/terraform:1.0.0'
+    args: ['apply', 'tfplan']
+    dir: 'infrastructure'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        if [ "$BRANCH_NAME" = "main" ]; then
+          terraform apply tfplan
+        else
+          echo "Skipping apply on non-main branch"
+        fi 
