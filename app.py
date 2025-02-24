@@ -49,9 +49,28 @@ def quiz(quiz_id):
     if not quiz_data:
         return "Quiz not found", 404
 
-    # Debug print
-    print("Pokemon vars:", pokemon_variables)
-    print("Quiz data:", quiz_data)
+    # Find the next quiz ID if it exists
+    current_section = None
+    for section in sections:
+        if any(quiz['id'] == quiz_id for quiz in section['quizzes']):
+            current_section = section
+            break
+    
+    next_quiz_id = None
+    if current_section:
+        quiz_list = current_section['quizzes']
+        current_index = next(i for i, quiz in enumerate(quiz_list) if quiz['id'] == quiz_id)
+        if current_index < len(quiz_list) - 1:
+            next_quiz_id = quiz_list[current_index + 1]['id']
+        else:
+            # If we're at the end of current section, look for next section
+            current_section_index = next(i for i, section in enumerate(sections) if section['id'] == current_section['id'])
+            if current_section_index < len(sections) - 1:
+                next_section = sections[current_section_index + 1]
+                if next_section['quizzes']:
+                    next_quiz_id = next_section['quizzes'][0]['id']
+
+    quiz_data['next_quiz_id'] = next_quiz_id
 
     if request.method == 'POST':
         user_answers = request.form.to_dict()
@@ -59,11 +78,21 @@ def quiz(quiz_id):
             int(user_answers.get(pokemon, 0)) == answer 
             for pokemon, answer in quiz_data['answer'].items()
         )
+        
         if correct:
             if 'solved_quizzes' not in session:
                 session['solved_quizzes'] = {}
             session['solved_quizzes'][quiz_id] = True
             session.modified = True
+
+        # If it's an AJAX request, return JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'correct': correct,
+                'next_quiz_id': next_quiz_id
+            })
+            
+        # For regular form submissions (fallback)
         return render_template('quiz.html', 
                              quiz=quiz_data,
                              pokemon_vars=pokemon_variables,

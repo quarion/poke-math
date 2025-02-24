@@ -250,9 +250,38 @@ ul li a:hover {
     font-weight: bold;
 }
 
+/* Quiz controls */
 .quiz-controls {
-    margin-bottom: 2rem;
-    text-align: right;
+    margin: 2rem 0;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.nav-button {
+    display: inline-block;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-size: 1.2rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.nav-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#backToList {
+    background-color: var(--pokemon-dark);
+    color: white;
+}
+
+.next-quiz {
+    background-color: var(--pokemon-blue);
+    color: white;
 }
 
 .reset-button {
@@ -285,4 +314,28 @@ ul li a:hover {
 .celebration-gif img {
     max-width: 100px;
     height: auto;
+}
+
+.answer-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.answer-input {
+    display: flex;
+    align-items: center;
+}
+
+.celebration-gif {
+    width: 30px;
+    height: 30px;
+    display: none;
+}
+
+.celebration-gif img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 } 

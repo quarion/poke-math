@@ -9,7 +9,7 @@
   <h2>{{ quiz.title }}</h2>
   <p>{{ quiz.description }}</p>
 
-  <form method="POST" action="#quiz-results">
+  <form id="quizForm" method="POST">
     {# Process each equation and replace placeholders with images #}
     {% for equation in quiz.equations %}
       {% set ns = namespace(equation=equation) %}
@@ -33,37 +33,87 @@
     <h3>Your Answers</h3>
     <div class="answers-section" style="margin-bottom:20px;">
       {% for unknown, correct_value in quiz.answer.items() %}
-        <div>
-          <label for="{{ unknown }}">
-            <img src="/static/images/{{ pokemon_vars[unknown] }}" class="pokemon-var" alt="{{ unknown }}" style="height:30px; display:inline-block;">
-          </label>
-          <input type="number" 
-                 name="{{ unknown }}" 
-                 id="{{ unknown }}" 
-                 value="{{ user_answers[unknown] if unknown in user_answers else '' }}"
-                 required 
-                 style="width:60px; margin:0 5px;">
+        <div class="answer-group">
+          <div class="answer-input">
+            <label for="{{ unknown }}">
+              <img src="/static/images/{{ pokemon_vars[unknown] }}" class="pokemon-var" alt="{{ unknown }}" style="height:30px; display:inline-block;">
+            </label>
+            <input type="number" 
+                   name="{{ unknown }}" 
+                   id="{{ unknown }}" 
+                   value="{{ user_answers[unknown] if unknown in user_answers else '' }}"
+                   required 
+                   style="width:60px; margin:0 5px;">
+          </div>
+          <div class="celebration-gif" id="celebration-{{ unknown }}" style="display: none;">
+            <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball" style="height:30px;">
+          </div>
         </div>
       {% endfor %}
     </div>
 
-    <button type="submit" style="margin-top:20px;">Submit Answers</button>
-  </form>
-
-  {% if request.method == 'POST' and result is not none %}
-    <div id="quiz-results" style="margin-top:20px;">
-      {% if result %}
-      <div class="result-correct">
-        <h3>Correct!</h3>
-      </div>
-      <div class="celebration-gif">
-        <img src="{{ url_for('static', filename='images/pokeball-1.gif') }}" alt="Celebration pokeball">
-      </div>
-      {% else %}
-      <div class="result-incorrect">
-        <h3>Try Again</h3>
-      </div>
+    <div class="quiz-controls">
+      <button type="submit" id="submitBtn">Check Answers</button>
+      <a href="{{ url_for('index') }}" class="nav-button" style="display: none;" id="backToList">Back to List</a>
+      {% if quiz.next_quiz_id %}
+        <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="nav-button next-quiz" style="display: none;" id="nextQuiz">Next Quiz →</a>
       {% endif %}
     </div>
-  {% endif %}
+  </form>
+
+  <div id="quiz-results" style="margin-top:20px;"></div>
+
+  <script>
+    document.getElementById('quizForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        const resultsDiv = document.getElementById('quiz-results');
+        const backButton = document.getElementById('backToList');
+        const nextButton = document.getElementById('nextQuiz');
+        const submitButton = document.getElementById('submitBtn');
+        
+        // Hide all celebration gifs first
+        document.querySelectorAll('.celebration-gif').forEach(gif => {
+          gif.style.display = 'none';
+        });
+        
+        if (data.correct) {
+          resultsDiv.innerHTML = `
+            <div class="result-correct">
+              <h3>Correct!</h3>
+            </div>
+          `;
+          // Show celebration gif next to each Pokemon
+          formData.forEach((value, key) => {
+            const celebrationGif = document.getElementById(`celebration-${key}`);
+            if (celebrationGif) {
+              celebrationGif.style.display = 'block';
+            }
+          });
+          submitButton.style.display = 'none';
+          backButton.style.display = 'inline-block';
+          if (nextButton) nextButton.style.display = 'inline-block';
+        } else {
+          resultsDiv.innerHTML = `
+            <div class="result-incorrect">
+              <h3>Try Again</h3>
+            </div>
+          `;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    });
+  </script>
 {% endblock %}
