@@ -53,10 +53,10 @@
     </div>
 
     <div class="quiz-controls">
-      <button type="submit" id="submitBtn">Check Answers</button>
-      <a href="{{ url_for('index') }}" class="nav-button" style="display: none;" id="backToList">Back to List</a>
+      <a href="{{ url_for('index') }}" class="button-base button-dark">Back to List</a>
+      <button type="submit" class="button-base button-blue">Check Answers</button>
       {% if quiz.next_quiz_id %}
-        <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="nav-button next-quiz" style="display: none;" id="nextQuiz">Next Quiz →</a>
+        <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" style="display: none;" id="nextQuiz">Next Quiz →</a>
       {% endif %}
     </div>
   </form>
@@ -78,7 +78,6 @@
       .then(response => response.json())
       .then(data => {
         const resultsDiv = document.getElementById('quiz-results');
-        const backButton = document.getElementById('backToList');
         const nextButton = document.getElementById('nextQuiz');
         const submitButton = document.getElementById('submitBtn');
         
@@ -102,7 +101,6 @@
             </div>
           `;
           submitButton.style.display = 'none';
-          backButton.style.display = 'inline-block';
           if (nextButton) nextButton.style.display = 'inline-block';
         } else {
           resultsDiv.innerHTML = `

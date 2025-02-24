@@ -3,7 +3,7 @@
   <h2>Available Quizzes</h2>
   
   <div class="quiz-controls">
-    <button onclick="confirmReset()" class="reset-button">
+    <button onclick="confirmReset()" class="button-base button-red">
       Reset Progress
     </button>
     <form id="resetForm" action="{{ url_for('reset_progress') }}" method="post" style="display: none;">

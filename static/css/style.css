@@ -138,21 +138,76 @@ input[type="number"]::-webkit-inner-spin-button {
     margin: 0;
 }
 
-button[type="submit"] {
-    background-color: var(--pokemon-blue);
-    color: white;
-    padding: 1rem 2rem;
-    border: none;
-    border-radius: 25px;
+/* Button styling */
+.button-base {
+    display: inline-block;
+    padding: 12px 32px;
+    border-radius: 50px;
     font-size: 1.2rem;
-    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: white;
+    border: none;
+    cursor: pointer;
+    min-width: 180px;
+    line-height: 1.5;
 }
 
-button[type="submit"]:hover {
+.button-base:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Button color variations */
+.button-blue {
+    background-color: var(--pokemon-blue);
+}
+
+.button-dark {
+    background-color: var(--pokemon-dark);
+}
+
+.button-red {
+    background-color: var(--pokemon-red);
+}
+
+/* Apply base styles to all buttons */
+.nav-button,
+button[type="submit"],
+.reset-button {
+    composes: button-base;
+}
+
+/* Quiz controls */
+.quiz-controls {
+    margin: 2rem 0;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+}
+
+#backToList {
+    composes: button-base;
+    background-color: var(--pokemon-dark);
+}
+
+button[type="submit"] {
+    composes: button-base;
+    background-color: var(--pokemon-blue);
+}
+
+.next-quiz {
+    composes: button-base;
+    background-color: var(--pokemon-blue);
+}
+
+.reset-button {
+    composes: button-base;
+    background-color: var(--pokemon-red);
 }
 
 /* Quiz list items */
@@ -248,57 +303,6 @@ ul li a:hover {
     color: #4CAF50;
     font-size: 1.4rem;
     font-weight: bold;
-}
-
-/* Quiz controls */
-.quiz-controls {
-    margin: 2rem 0;
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    align-items: center;
-}
-
-.nav-button {
-    display: inline-block;
-    padding: 1rem 2rem;
-    border-radius: 25px;
-    font-size: 1.2rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.nav-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-#backToList {
-    background-color: var(--pokemon-dark);
-    color: white;
-}
-
-.next-quiz {
-    background-color: var(--pokemon-blue);
-    color: white;
-}
-
-.reset-button {
-    background-color: var(--pokemon-red);
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 25px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.reset-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .quiz-title {
