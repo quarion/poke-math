@@ -1,0 +1,42 @@
+{
+    "pokemons": {
+        "pikachu": "pikachu.png",
+        "bulbasaur": "bulbasaur.png",
+        "charmander": "charmander.png",
+        "squirtle": "squirtle.png"
+    },
+    "sections": [
+        {
+            "id": "test_section",
+            "title": "Test Section",
+            "description": "Section for testing",
+            "quizzes": [
+                {
+                    "id": "test_basic",
+                    "title": "Basic Test Quiz",
+                    "description": "A simple quiz for testing",
+                    "equations": [
+                        "2 + {pikachu} = 5"
+                    ],
+                    "answer": {
+                        "pikachu": 3
+                    }
+                },
+                {
+                    "id": "test_variables",
+                    "title": "Variable Test Quiz",
+                    "description": "Testing special variables",
+                    "equations": [
+                        "{x} + {y} = 10",
+                        "{y} - {z} = 3"
+                    ],
+                    "answer": {
+                        "x": 5,
+                        "y": 5,
+                        "z": 2
+                    }
+                }
+            ]
+        }
+    ]
+} 
