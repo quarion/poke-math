@@ -4,7 +4,7 @@ steps:
     args: [
       'build',
       '-t',
-      '${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:$COMMIT_SHA',
+      '${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:latest',
       '--build-arg', 'ENVIRONMENT=${_ENV}',
       '.'
     ]
@@ -14,7 +14,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'push',
-      '${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:$COMMIT_SHA'
+      '${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:latest'
     ]
     id: 'push'
 
@@ -25,7 +25,7 @@ steps:
       - '-c'
       - |
         gcloud run deploy poke-math \
-          --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:$COMMIT_SHA \
+          --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:latest \
           --region=${_REGION} \
           --platform=managed \
           --allow-unauthenticated
