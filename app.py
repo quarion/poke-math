@@ -5,6 +5,12 @@ import os
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Required for session management
 
+def get_version_info():
+    # Check if we're running locally (development mode)
+    return {
+        'version': os.environ.get('COMMIT_SHA', 'development')
+    }
+
 # Move this outside the function to keep it as a global variable
 def load_quizzes():
     with open(os.path.join('data', 'quizzes.json')) as f:
@@ -18,7 +24,10 @@ def index():
     # Initialize solved_quizzes in session if it doesn't exist
     if 'solved_quizzes' not in session:
         session['solved_quizzes'] = {}
-    return render_template('index.html', quizzes=quizzes, solved_quizzes=session['solved_quizzes'])
+    return render_template('index.html', 
+                         quizzes=quizzes, 
+                         solved_quizzes=session['solved_quizzes'],
+                         version_info=get_version_info())
 
 @app.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
 def quiz(quiz_id):
@@ -49,14 +58,16 @@ def quiz(quiz_id):
                              pokemon_vars=pokemon_variables,
                              result=correct,
                              request=request,
-                             user_answers=user_answers)
+                             user_answers=user_answers,
+                             version_info=get_version_info())
 
     return render_template('quiz.html', 
                          quiz=quiz_data,
                          pokemon_vars=pokemon_variables,
                          result=None,
                          request=request,
-                         user_answers={})
+                         user_answers={},
+                         version_info=get_version_info())
 
 @app.route('/reset_progress', methods=['POST'])
 def reset_progress():

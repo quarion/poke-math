@@ -6,6 +6,7 @@ steps:
       '-t',
       '${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:latest',
       '--build-arg', 'ENVIRONMENT=${_ENV}',
+      '--build-arg', 'COMMIT_SHA=$COMMIT_SHA',
       '.'
     ]
     id: 'build'
