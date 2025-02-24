@@ -54,9 +54,9 @@
 
     <div class="quiz-controls">
       <a href="{{ url_for('index') }}" class="button-base button-dark">Back to List</a>
-      <button type="submit" class="button-base button-blue">Check Answers</button>
+      <button type="submit" id="submitBtn" class="button-base button-blue">Check Answers</button>
       {% if quiz.next_quiz_id %}
-        <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" style="display: none;" id="nextQuiz">Next Quiz →</a>
+        <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" style="display: none;" id="nextQuiz">Next Question →</a>
       {% endif %}
     </div>
   </form>
@@ -98,16 +98,26 @@
           resultsDiv.innerHTML = `
             <div class="result-correct">
               <h3>All Correct!</h3>
+              <p>Great job! You can move on to the next question.</p>
             </div>
           `;
           submitButton.style.display = 'none';
-          if (nextButton) nextButton.style.display = 'inline-block';
+          if (nextButton) {
+            nextButton.style.display = 'inline-block';
+            // Optionally auto-focus the next button for keyboard users
+            nextButton.focus();
+          }
         } else {
           resultsDiv.innerHTML = `
             <div class="result-incorrect">
               <h3>Keep trying! Some answers are correct!</h3>
             </div>
           `;
+          // Make sure submit button is visible and next button is hidden
+          submitButton.style.display = 'inline-block';
+          if (nextButton) {
+            nextButton.style.display = 'none';
+          }
         }
       })
       .catch(error => {
