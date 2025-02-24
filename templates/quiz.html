@@ -87,26 +87,27 @@
           gif.style.display = 'none';
         });
         
+        // Show pokeballs for correct answers
+        Object.entries(data.correct_answers).forEach(([pokemon, isCorrect]) => {
+          const celebrationGif = document.getElementById(`celebration-${pokemon}`);
+          if (celebrationGif) {
+            celebrationGif.style.display = isCorrect ? 'block' : 'none';
+          }
+        });
+        
         if (data.correct) {
           resultsDiv.innerHTML = `
             <div class="result-correct">
-              <h3>Correct!</h3>
+              <h3>All Correct!</h3>
             </div>
           `;
-          // Show celebration gif next to each Pokemon
-          formData.forEach((value, key) => {
-            const celebrationGif = document.getElementById(`celebration-${key}`);
-            if (celebrationGif) {
-              celebrationGif.style.display = 'block';
-            }
-          });
           submitButton.style.display = 'none';
           backButton.style.display = 'inline-block';
           if (nextButton) nextButton.style.display = 'inline-block';
         } else {
           resultsDiv.innerHTML = `
             <div class="result-incorrect">
-              <h3>Try Again</h3>
+              <h3>Keep trying! Some answers are correct!</h3>
             </div>
           `;
         }

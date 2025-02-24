@@ -74,12 +74,17 @@ def quiz(quiz_id):
 
     if request.method == 'POST':
         user_answers = request.form.to_dict()
-        correct = all(
-            int(user_answers.get(pokemon, 0)) == answer 
-            for pokemon, answer in quiz_data['answer'].items()
-        )
         
-        if correct:
+        # Check each answer individually
+        correct_answers = {
+            pokemon: int(user_answers.get(pokemon, 0)) == answer
+            for pokemon, answer in quiz_data['answer'].items()
+        }
+        
+        # Overall correctness
+        all_correct = all(correct_answers.values())
+        
+        if all_correct:
             if 'solved_quizzes' not in session:
                 session['solved_quizzes'] = {}
             session['solved_quizzes'][quiz_id] = True
@@ -88,7 +93,8 @@ def quiz(quiz_id):
         # If it's an AJAX request, return JSON
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({
-                'correct': correct,
+                'correct': all_correct,
+                'correct_answers': correct_answers,
                 'next_quiz_id': next_quiz_id
             })
             
@@ -96,7 +102,7 @@ def quiz(quiz_id):
         return render_template('quiz.html', 
                              quiz=quiz_data,
                              pokemon_vars=pokemon_variables,
-                             result=correct,
+                             result=all_correct,
                              request=request,
                              user_answers=user_answers,
                              version_info=get_version_info())
