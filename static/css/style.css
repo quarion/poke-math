@@ -349,4 +349,10 @@ input[type="number"]::-webkit-inner-spin-button {
     .answers-section {
         padding: var(--spacing-md);
     }
+}
+
+.equals-sign {
+    font-size: 1.4rem;
+    margin: 0 var(--spacing-sm);
+    color: var(--pokemon-dark);
 } 
