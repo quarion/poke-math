@@ -10,18 +10,24 @@
     </form>
   </div>
 
-  <ul class="quiz-list">
-    {% for id, quiz in quizzes.items() %}
-      <li>
-        <a href="{{ url_for('quiz', quiz_id=id) }}" class="quiz-item">
-          <span class="quiz-title">Quiz {{ id }}: {{ quiz.title }}</span>
-          {% if id in solved_quizzes and solved_quizzes[id] %}
-            <span class="checkmark">✓</span>
-          {% endif %}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
+  {% for section in sections %}
+    <div class="quiz-section">
+      <h3>{{ section.title }}</h3>
+      <p>{{ section.description }}</p>
+      <ul class="quiz-list">
+        {% for quiz in section.quizzes %}
+          <li>
+            <a href="{{ url_for('quiz', quiz_id=quiz.id) }}" class="quiz-item">
+              <span class="quiz-title">Quiz {{ quiz.display_number }}: {{ quiz.title }}</span>
+              {% if quiz.id in solved_quizzes and solved_quizzes[quiz.id] %}
+                <span class="checkmark">✓</span>
+              {% endif %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
 
   <script>
     function confirmReset() {
