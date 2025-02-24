@@ -9,7 +9,7 @@
   <h2>{{ quiz.title }}</h2>
   <p>{{ quiz.description }}</p>
 
-  <form method="POST">
+  <form method="POST" action="#quiz-results">
     {# Process each equation and replace placeholders with images #}
     {% for equation in quiz.equations %}
       {% set ns = namespace(equation=equation) %}
@@ -51,21 +51,19 @@
   </form>
 
   {% if request.method == 'POST' and result is not none %}
-    {% if result %}
-    <div style="margin-top:20px;">
+    <div id="quiz-results" style="margin-top:20px;">
+      {% if result %}
       <div class="result-correct">
         <h3>Correct!</h3>
       </div>
       <div class="celebration-gif">
         <img src="{{ url_for('static', filename='images/pokeball-1.gif') }}" alt="Celebration pokeball">
       </div>
-    </div>
-    {% else %}
-    <div style="margin-top:20px;">
+      {% else %}
       <div class="result-incorrect">
         <h3>Try Again</h3>
       </div>
+      {% endif %}
     </div>
-    {% endif %}
   {% endif %}
 {% endblock %}
