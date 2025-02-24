@@ -30,6 +30,10 @@ steps:
           --platform=managed \
           --allow-unauthenticated
 
+# Add options for logging
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 substitutions:
   _REGION: europe-west1
   _ENV: prod
