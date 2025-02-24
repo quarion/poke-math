@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import json
 import os
+import random
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Required for session management
@@ -49,6 +50,34 @@ def quiz(quiz_id):
     if not quiz_data:
         return "Quiz not found", 404
 
+    # Create a mapping for special tokens if they exist in equations
+    special_tokens = {'x': None, 'y': None, 'z': None}
+    available_pokemon = list(pokemon_variables.keys())
+    
+    # Check if any equations contain special tokens and assign random Pokemon
+    has_special_tokens = any('{' + token + '}' in eq for eq in quiz_data['equations'] for token in special_tokens)
+    if has_special_tokens:
+        # If we don't have stored mappings for this quiz in the session, create new ones
+        session_key = f'pokemon_mappings_{quiz_id}'
+        if session_key not in session:
+            # Randomly assign Pokemon to special tokens
+            random.shuffle(available_pokemon)
+            for token in special_tokens:
+                if available_pokemon:
+                    special_tokens[token] = available_pokemon.pop()
+            session[session_key] = special_tokens
+            session.modified = True
+        else:
+            special_tokens = session[session_key]
+
+        # Create a combined dictionary of Pokemon variables including special token mappings
+        display_pokemon_variables = pokemon_variables.copy()
+        for token, pokemon in special_tokens.items():
+            if pokemon:
+                display_pokemon_variables[token] = pokemon_variables[pokemon]
+    else:
+        display_pokemon_variables = pokemon_variables
+
     # Find the next quiz ID if it exists
     current_section = None
     for section in sections:
@@ -75,10 +104,26 @@ def quiz(quiz_id):
     if request.method == 'POST':
         user_answers = request.form.to_dict()
         
+        # If we have special tokens, we need to map the answers accordingly
+        if has_special_tokens:
+            mapped_answers = {}
+            # Create reverse mapping from Pokemon to token
+            reverse_mapping = {pokemon: token for token, pokemon in special_tokens.items()}
+            for token, value in user_answers.items():
+                # If this is a special token, use its value directly
+                if token in special_tokens:
+                    mapped_answers[token] = int(value)
+                # If this is a Pokemon that was mapped to a token, map it back
+                elif token in reverse_mapping:
+                    mapped_answers[reverse_mapping[token]] = int(value)
+                else:
+                    mapped_answers[token] = int(value)
+            user_answers = mapped_answers
+
         # Check each answer individually
         correct_answers = {
-            pokemon: int(user_answers.get(pokemon, 0)) == answer
-            for pokemon, answer in quiz_data['answer'].items()
+            token: int(user_answers.get(token, 0)) == answer
+            for token, answer in quiz_data['answer'].items()
         }
         
         # Overall correctness
@@ -101,7 +146,7 @@ def quiz(quiz_id):
         # For regular form submissions (fallback)
         return render_template('quiz.html', 
                              quiz=quiz_data,
-                             pokemon_vars=pokemon_variables,
+                             pokemon_vars=display_pokemon_variables,
                              result=all_correct,
                              request=request,
                              user_answers=user_answers,
@@ -109,7 +154,7 @@ def quiz(quiz_id):
 
     return render_template('quiz.html', 
                          quiz=quiz_data,
-                         pokemon_vars=pokemon_variables,
+                         pokemon_vars=display_pokemon_variables,
                          result=None,
                          request=request,
                          user_answers={},
@@ -117,7 +162,8 @@ def quiz(quiz_id):
 
 @app.route('/reset_progress', methods=['POST'])
 def reset_progress():
-    session['solved_quizzes'] = {}
+    # Clear both solved quizzes and Pokemon mappings
+    session.clear()
     return redirect(url_for('index'))
 
 if __name__ == '__main__':

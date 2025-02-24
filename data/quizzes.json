@@ -2,7 +2,8 @@
     "pokemons": {
       "pikachu": "pikachu.png",
       "bulbasaur": "bulbasaur.png",
-      "charmander": "charmander.png"
+      "charmander": "charmander.png",
+      "mew": "mew.png"
     },
     "sections": [
       {
@@ -75,6 +76,28 @@
               "pikachu": 6,
               "bulbasaur": 4,
               "charmander": 2
+            }
+          }
+        ]
+      },
+      {
+        "id": "advanced",
+        "title": "Advanced Challenges",
+        "description": "Advanced equations with random Pokemon variables!",
+        "quizzes": [
+          {
+            "id": "random_variables",
+            "title": "Random Pokemon Variables",
+            "description": "Solve equations with randomly assigned Pokemon!",
+            "equations": [
+              "{x} + {y} = 10",
+              "{y} - {z} = 3",
+              "{x} + {z} = 7"
+            ],
+            "answer": {
+              "x": 5,
+              "y": 5,
+              "z": 2
             }
           }
         ]
