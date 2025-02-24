@@ -1,10 +1,20 @@
-/* Pokemon-inspired colors and general styles */
+/* Variables and base styles */
 :root {
     --pokemon-red: #FF1F1F;
     --pokemon-blue: #1F1FFF;
     --pokemon-yellow: #FFD733;
     --pokemon-light: #FAFAFA;
     --pokemon-dark: #333333;
+    --pokemon-success: #4CAF50;
+    --border-radius-lg: 15px;
+    --border-radius-pill: 50px;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
 }
 
 body {
@@ -16,12 +26,20 @@ body {
     color: var(--pokemon-dark);
 }
 
-/* Header styling */
+/* Layout */
+main {
+    padding: var(--spacing-xl);
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: calc(100vh - 150px);
+}
+
+/* Header */
 header {
     background-color: var(--pokemon-red);
-    padding: 1.5rem;
+    padding: var(--spacing-lg);
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 header h1 {
@@ -35,10 +53,10 @@ nav a {
     display: inline-block;
     color: white;
     text-decoration: none;
-    padding: 0.8rem 1.5rem;
-    margin-top: 1rem;
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-top: var(--spacing-md);
     background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 25px;
+    border-radius: var(--border-radius-pill);
     font-size: 1.2rem;
     transition: all 0.3s ease;
 }
@@ -48,7 +66,7 @@ nav a:hover {
     transform: scale(1.05);
 }
 
-/* Footer styling */
+/* Footer */
 footer {
     position: relative;
     width: 100%;
@@ -58,18 +76,22 @@ footer {
     color: #666;
     padding: 5px 0;
     border-top: 1px solid #ddd;
-    margin-top: 2rem;
+    margin-top: var(--spacing-xl);
 }
 
 .footer-content {
-    padding: 0 1rem;
+    padding: 0 var(--spacing-md);
 }
 
 .github-link {
-    color: #333;
+    color: var(--pokemon-dark);
     text-decoration: none;
     vertical-align: middle;
     margin-right: 5px;
+}
+
+.github-link:hover {
+    color: #666;
 }
 
 .github-link svg {
@@ -77,79 +99,103 @@ footer {
     width: 16px;
 }
 
-.github-link:hover {
-    color: #666;
+/* Quiz Components */
+.quiz-section {
+    margin-bottom: var(--spacing-xl);
 }
 
-main {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    min-height: calc(100vh - 150px);
-}
-
-/* Quiz list styling */
 .quiz-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    padding: 1rem;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
+    list-style: none;
+    margin: 0;
 }
 
-/* Quiz page styling */
+.quiz-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    text-decoration: none;
+    color: var(--pokemon-dark);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.quiz-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.quiz-title {
+    flex: 1;
+    margin-right: var(--spacing-md);
+}
+
+/* Quiz Content */
 .equation {
     background-color: white;
-    padding: 1.5rem;
-    border-radius: 15px;
-    margin: 1rem 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    margin: var(--spacing-md) 0;
+    box-shadow: var(--shadow-sm);
     font-size: 1.4rem;
 }
 
 .answers-section {
     background-color: white;
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-xl);
 }
 
-.answers-section div {
+.answer-group {
     display: flex;
     align-items: center;
-    margin: 1rem 0;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
 }
 
-/* Form elements */
+.answer-input {
+    display: flex;
+    align-items: center;
+}
+
+/* Form Elements */
 input[type="number"] {
     font-size: 1.2rem;
-    padding: 0.5rem;
+    padding: var(--spacing-sm);
     border: 2px solid #ddd;
     border-radius: 8px;
     width: 100px;
-    margin: 0 10px;
-    /* Remove spinners/steppers for all browsers */
-    -moz-appearance: textfield; /* Firefox */
+    margin: 0 var(--spacing-sm);
+    -moz-appearance: textfield;
 }
 
-/* Remove spinners/steppers for Chrome, Safari, Edge, Opera */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-/* Button styling - Core styles */
+/* Button Styling */
 .button-base {
     display: inline-block;
     padding: 0.8rem 2rem;
-    border-radius: 50px;
+    border-radius: var(--border-radius-pill);
     font-size: 1.2rem;
     font-family: inherit;
     font-weight: 500;
     text-decoration: none;
     text-align: center;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-md);
     color: white;
     border: none;
     cursor: pointer;
@@ -159,169 +205,45 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .button-base:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-lg);
 }
 
-/* Button color variations */
-.button-blue {
-    background-color: var(--pokemon-blue);
-}
+.button-blue { background-color: var(--pokemon-blue); }
+.button-dark { background-color: var(--pokemon-dark); }
+.button-red { background-color: var(--pokemon-red); }
 
-.button-dark {
-    background-color: var(--pokemon-dark);
-}
-
-.button-red {
-    background-color: var(--pokemon-red);
-}
-
-/* Quiz controls container */
 .quiz-controls {
-    margin: 2rem 0;
+    margin: var(--spacing-xl) 0;
     display: flex;
-    gap: 1rem;
+    gap: var(--spacing-md);
     justify-content: center;
     align-items: center;
 }
 
-/* Responsive adjustments for buttons */
-@media (max-width: 768px) {
-    .button-base {
-        padding: 0.8rem 1.5rem;
-        font-size: 1.1rem;
-        min-width: 140px;
-    }
-    
-    .quiz-controls {
-        flex-direction: column;
-        gap: 0.8rem;
-    }
-    
-    .quiz-controls .button-base {
-        width: 100%;
-    }
-}
-
-/* Quiz list items */
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-ul li {
-    margin: 1rem 0;
-}
-
-ul li a {
-    display: block;
-    background-color: white;
-    padding: 1.2rem;
-    border-radius: 15px;
-    text-decoration: none;
-    color: var(--pokemon-dark);
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-ul li a:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Result message styling */
-.result-correct {
-    background-color: #4CAF50;
+/* Result Messages */
+.result-correct, .result-incorrect {
     color: white;
-    padding: 1rem;
-    border-radius: 15px;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-lg);
     text-align: center;
-    margin-top: 2rem;
+    margin-top: var(--spacing-xl);
     font-size: 1.4rem;
+}
+
+.result-correct {
+    background-color: var(--pokemon-success);
 }
 
 .result-incorrect {
     background-color: var(--pokemon-red);
-    color: white;
-    padding: 1rem;
-    border-radius: 15px;
-    text-align: center;
-    margin-top: 2rem;
-    font-size: 1.4rem;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    header h1 {
-        font-size: 2rem;
-    }
-
-    main {
-        padding: 1rem;
-    }
-
-    .equation {
-        font-size: 1.2rem;
-        padding: 1rem;
-    }
-
-    input[type="number"] {
-        font-size: 1rem;
-        width: 80px;
-    }
-
-    button[type="submit"] {
-        width: 100%;
-        padding: 0.8rem;
-    }
-}
-
-/* Pokemon variable images */
+/* Pokemon Images */
 .pokemon-var {
-    height: 40px !important;
+    height: 40px;
     width: auto;
     vertical-align: middle;
     margin: 0 5px;
-}
-
-/* Quiz list item with checkmark */
-.quiz-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.checkmark {
-    color: #4CAF50;
-    font-size: 1.4rem;
-    font-weight: bold;
-}
-
-.quiz-title {
-    flex: 1;
-    margin-right: 1rem;
-}
-
-.celebration-gif {
-    text-align: center;
-    margin: 1rem 0;
-}
-
-.celebration-gif img {
-    max-width: 100px;
-    height: auto;
-}
-
-.answer-group {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.answer-input {
-    display: flex;
-    align-items: center;
 }
 
 .celebration-gif {
@@ -334,4 +256,72 @@ ul li a:hover {
     width: 100%;
     height: 100%;
     object-fit: contain;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    :root {
+        --spacing-xl: 1.5rem;
+        --spacing-lg: 1.2rem;
+        --spacing-md: 0.8rem;
+        --spacing-sm: 0.4rem;
+    }
+
+    main {
+        padding: var(--spacing-md);
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    .equation {
+        font-size: 1.2rem;
+        padding: var(--spacing-md);
+    }
+
+    .quiz-list {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    input[type="number"] {
+        font-size: 1rem;
+        width: 80px;
+    }
+
+    .button-base {
+        padding: 0.8rem 1.5rem;
+        font-size: 1.1rem;
+        min-width: 140px;
+    }
+
+    .quiz-controls {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        width: 100%;
+    }
+
+    .quiz-controls .button-base {
+        width: 100%;
+    }
+
+    .result-correct, .result-incorrect {
+        font-size: 1.2rem;
+        padding: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .equation {
+        font-size: 1.1rem;
+    }
+
+    .answers-section {
+        padding: var(--spacing-md);
+    }
 } 
