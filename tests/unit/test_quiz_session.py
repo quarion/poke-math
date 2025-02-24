@@ -26,7 +26,8 @@ def test_session_creation(quiz_session):
     """Test if session is created with correct initial state."""
     assert isinstance(quiz_session, QuizSession)
     assert len(quiz_session.solved_quizzes) == 0
-    assert len(quiz_session.variable_mappings) == 0
+    # Access variable_mappings through session_manager.state
+    assert len(quiz_session.session_manager.state.variable_mappings) == 0
 
 def test_quiz_state_retrieval(quiz_session):
     """Test getting quiz state."""
@@ -99,12 +100,14 @@ def test_session_reset(quiz_session):
     
     # Get state for variable quiz to create mappings
     quiz_session.get_quiz_state('test_variables')
-    assert len(quiz_session.variable_mappings) > 0
+    # Access variable_mappings through session_manager.state
+    assert len(quiz_session.session_manager.state.variable_mappings) > 0
     
     # Reset session
     quiz_session.reset()
     assert len(quiz_session.solved_quizzes) == 0
-    assert len(quiz_session.variable_mappings) == 0
+    # Access variable_mappings through session_manager.state
+    assert len(quiz_session.session_manager.state.variable_mappings) == 0
 
 def test_pokemon_image_paths(quiz_session):
     """Test if Pokemon image paths are correctly included in quiz state."""

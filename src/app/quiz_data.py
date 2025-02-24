@@ -12,8 +12,6 @@ class Pokemon:
 @dataclass
 class QuizAnswer:
     values: Dict[str, int]
-    is_dynamic: bool = False
-    relations: List[str] = None
 
 @dataclass
 class Quiz:
@@ -61,17 +59,9 @@ def load_quiz_data(data_file: Path) -> QuizData:
     for section_data in raw_data['sections']:
         section_quizzes = []
         for idx, quiz_data in enumerate(section_data['quizzes'], 1):
-            # Prepare answer data
-            if isinstance(quiz_data['answer'], dict) and quiz_data['answer'].get('dynamic'):
-                answer = QuizAnswer(
-                    values={},  # Empty dict for dynamic answers
-                    is_dynamic=True,
-                    relations=quiz_data['answer']['relations']
-                )
-            else:
-                answer = QuizAnswer(values=quiz_data['answer'])
-
-            # Create quiz object
+            # Create quiz object with answer
+            answer = QuizAnswer(values=quiz_data['answer'])
+            
             quiz = Quiz(
                 id=quiz_data['id'],
                 title=quiz_data['title'],

@@ -7,17 +7,24 @@ import os
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Required for session management
 
-# Load quiz data at startup
+# Load quiz data at startup - this is shared across all sessions
+# and doesn't need to be stored in each user's session
 QUIZ_DATA = load_quiz_data(Path('data/quizzes.json'))
 
 def get_version_info():
-    # Check if we're running locally (development mode)
+    """Get version information for the application."""
     return {
         'version': os.environ.get('COMMIT_SHA', 'development')
     }
 
 def get_or_create_quiz_session() -> QuizSession:
-    """Get the current quiz session or create a new one."""
+    """
+    Get the current quiz session or create a new one.
+    
+    This function manages the Flask session and ensures we have a QuizSession
+    object for the current user. Only the session state (solved quizzes and
+    variable mappings) is stored in the session, not the entire quiz data.
+    """
     if 'quiz_session' not in session:
         session['quiz_session'] = QuizSession.create_new(QUIZ_DATA)
     return session['quiz_session']
