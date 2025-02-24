@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Math Quiz App{% endblock %}</title>
+    <title>{% block title %}Pokemath!{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <header>
-        <h1>Math Quiz App</h1>
+        <h1>Pokemath!</h1>
         <nav>
             <a href="{{ url_for('index') }}">Home</a>
         </nav>
@@ -22,7 +22,7 @@
 
     <footer>
         <div class="footer-content">
-            <p>Math Quiz App | Version: {{ version_info.version[:7] if version_info.version else 'development' }}</p>
+            <p>Pokemath! | Version: {{ version_info.version[:7] if version_info.version else 'development' }}</p>
         </div>
     </footer>
 </body>
