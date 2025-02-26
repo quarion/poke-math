@@ -27,11 +27,45 @@ def get_quiz_session() -> GameManager:
 
 @app.route('/')
 def index():
-    quiz_session = get_quiz_session()
+    """
+    Display the home page with welcome message.
+    """
     return render_template('index.html', 
+                         version_info=get_version_info())
+
+@app.route('/exercises')
+def all_exercises():
+    """
+    Display all available exercises.
+    """
+    quiz_session = get_quiz_session()
+    return render_template('all_exercises.html', 
                          sections=QUIZ_DATA.sections,
                          solved_quizzes=quiz_session.solved_quizzes,
                          version_info=get_version_info())
+
+@app.route('/profile')
+def profile():
+    """
+    Display the user's profile with points and progress.
+    """
+    quiz_session = get_quiz_session()
+    solved_count = len(quiz_session.solved_quizzes)
+    # Each solved quiz is worth 1 point
+    points = solved_count
+    
+    return render_template('profile.html',
+                          points=points,
+                          solved_count=solved_count,
+                          version_info=get_version_info())
+
+@app.route('/new-exercise')
+def new_exercise():
+    """
+    Placeholder for future random exercise generation feature.
+    """
+    return render_template('new_exercise.html',
+                          version_info=get_version_info())
 
 @app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
 def quiz(quiz_id):

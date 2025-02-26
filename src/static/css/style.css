@@ -6,6 +6,7 @@
     --pokemon-light: #FAFAFA;
     --pokemon-dark: #333333;
     --pokemon-success: #4CAF50;
+    --pokemon-green: #4CAF50;
     --border-radius-lg: 15px;
     --border-radius-pill: 50px;
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -49,55 +50,125 @@ header h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-nav a {
+/* Main Navigation */
+.main-nav ul {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: var(--spacing-md) 0 0 0;
+    gap: var(--spacing-md);
+}
+
+.main-nav li {
     display: inline-block;
+}
+
+.main-nav a {
+    display: block;
     color: white;
     text-decoration: none;
-    padding: var(--spacing-md) var(--spacing-lg);
-    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: var(--border-radius-pill);
-    font-size: 1.2rem;
+    font-size: 1rem;
     transition: all 0.3s ease;
 }
 
-nav a:hover {
+.main-nav a:hover {
     background-color: rgba(255, 255, 255, 0.3);
     transform: scale(1.05);
 }
 
-/* Footer */
-footer {
-    position: relative;
-    width: 100%;
-    background-color: #f5f5f5;
+/* Welcome Section */
+.welcome-section {
     text-align: center;
-    font-size: 0.7rem;
-    color: #666;
-    padding: 5px 0;
-    border-top: 1px solid #ddd;
-    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-xl);
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
 }
 
-.footer-content {
-    padding: 0 var(--spacing-md);
+.welcome-message {
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-lg);
 }
 
-.footer-links {
+.action-buttons {
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: var(--spacing-md);
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
 }
 
-.github-link {
+.button-green {
+    background-color: var(--pokemon-green);
+}
+
+/* Profile Page */
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+.profile-stats {
+    margin-bottom: var(--spacing-xl);
+}
+
+.stats-card {
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-item {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
+    justify-content: space-between;
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid #eee;
 }
 
-.version-info {
-    color: #666;
+.stat-value {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--pokemon-blue);
+}
+
+.profile-message {
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.profile-actions {
+    text-align: center;
+}
+
+/* New Exercise Page */
+.new-exercise-container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.coming-soon {
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-xl) 0;
+    box-shadow: var(--shadow-md);
+}
+
+.pokeball-gif {
+    width: 100px;
+    height: 100px;
+    margin-bottom: var(--spacing-md);
 }
 
 /* Quiz Components */
@@ -335,6 +406,16 @@ input[type="number"]::-webkit-inner-spin-button {
         font-size: 1.2rem;
         padding: var(--spacing-sm);
     }
+
+    .main-nav ul {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
 }
 
 @media (max-width: 480px) {
@@ -349,10 +430,53 @@ input[type="number"]::-webkit-inner-spin-button {
     .answers-section {
         padding: var(--spacing-md);
     }
+
+    .welcome-section {
+        padding: var(--spacing-md);
+    }
+    
+    .profile-container,
+    .new-exercise-container {
+        padding: var(--spacing-sm);
+    }
 }
 
 .equals-sign {
     font-size: 1.4rem;
     margin: 0 var(--spacing-sm);
     color: var(--pokemon-dark);
+}
+
+/* Footer */
+footer {
+    position: relative;
+    width: 100%;
+    background-color: #f5f5f5;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #666;
+    padding: 5px 0;
+    border-top: 1px solid #ddd;
+    margin-top: var(--spacing-xl);
+}
+
+.footer-content {
+    padding: 0 var(--spacing-md);
+}
+
+.footer-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+}
+
+.github-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.version-info {
+    color: #666;
 } 

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Your Profile - Pokemath!{% endblock %}
+
+{% block content %}
+  <div class="profile-container">
+    <h2>Your Pokemath Profile</h2>
+    
+    <div class="profile-stats">
+      <div class="stats-card">
+        <h3>Your Progress</h3>
+        <div class="stat-item">
+          <span class="stat-label">Points Earned:</span>
+          <span class="stat-value">{{ points }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Exercises Completed:</span>
+          <span class="stat-value">{{ solved_count }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="profile-message">
+      <h3>Keep Going, Math Pokemon Trainer!</h3>
+      <p>Every math problem you solve makes you stronger! Continue your journey to become a Math Pokemon Master.</p>
+      {% if points > 0 %}
+        <p>You've earned {{ points }} points so far. That's awesome!</p>
+      {% else %}
+        <p>Start solving exercises to earn your first points!</p>
+      {% endif %}
+    </div>
+    
+    <div class="profile-actions">
+      <button onclick="confirmReset()" class="button-base button-red">
+        Reset Progress
+      </button>
+      <form id="resetForm" action="{{ url_for('reset_progress') }}" method="post" style="display: none;">
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function confirmReset() {
+      if (confirm('Are you sure you want to reset all progress? This will delete all your points and completed exercises.')) {
+        document.getElementById('resetForm').submit();
+      }
+    }
+  </script>
+{% endblock %} 

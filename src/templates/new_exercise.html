@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}New Exercise - Pokemath!{% endblock %}
+
+{% block content %}
+  <div class="new-exercise-container">
+    <h2>New Random Exercise</h2>
+    
+    <div class="coming-soon">
+      <img src="{{ url_for('static', filename='images/pokeball-1.gif') }}" alt="Pokeball" class="pokeball-gif">
+      <h3>Coming Soon!</h3>
+      <p>Our Pokemon trainers are working hard to create random exercises for you!</p>
+      <p>This feature will be available in a future update. Check back soon!</p>
+    </div>
+    
+    <div class="action-buttons">
+      <a href="{{ url_for('index') }}" class="button-base button-blue">Back to Exercises</a>
+    </div>
+  </div>
+{% endblock %} 

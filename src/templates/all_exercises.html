@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}All Exercises - Pokemath!{% endblock %}
+
+{% block content %}
+  <div class="exercises-section">
+    <h2>All Available Exercises</h2>
+
+    {% for section in sections %}
+      <div class="quiz-section">
+        <h3>{{ section.title }}</h3>
+        <p>{{ section.description }}</p>
+        <ul class="quiz-list">
+          {% for quiz in section.quizzes %}
+            <li>
+              <a href="{{ url_for('quiz', quiz_id=quiz.id) }}" class="quiz-item">
+                <span class="quiz-title">Quiz {{ quiz.display_number }}: {{ quiz.title }}</span>
+                {% if quiz.id in solved_quizzes and solved_quizzes[quiz.id] %}
+                  <span class="checkmark">✓</span>
+                {% endif %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %} 
