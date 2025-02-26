@@ -1,4 +1,4 @@
-from src.app.equations.equations import generator, MathEquationGenerator
+from src.app.equations.equations_generator import generator, MathEquationGenerator
 
 configurations_advanced = [
     {

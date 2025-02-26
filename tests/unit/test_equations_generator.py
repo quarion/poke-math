@@ -2,7 +2,7 @@ import pytest
 from fractions import Fraction
 
 # Import the module to test
-from src.app.equations.equations import MathEquationGenerator
+from src.app.equations.equations_generator import MathEquationGenerator
 
 
 @pytest.fixture
