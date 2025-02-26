@@ -5,7 +5,7 @@ Tests the SessionManager class that handles session persistence and state manage
 """
 
 import pytest
-from src.app.session_manager import SessionManager, SessionState
+from src.app.game.session_manager import SessionManager, SessionState
 
 @pytest.fixture
 def session_state():

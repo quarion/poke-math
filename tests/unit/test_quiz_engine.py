@@ -6,8 +6,8 @@ and answer checking logic.
 """
 
 import pytest
-from src.app.game_config import Quiz, QuizAnswer
-from src.app.quiz_engine import create_variable_mappings, check_quiz_answers, get_display_variables
+from src.app.game.game_config import Quiz, QuizAnswer
+from src.app.game.quiz_engine import create_variable_mappings, check_quiz_answers, get_display_variables
 
 @pytest.fixture
 def sample_quiz():

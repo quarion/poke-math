@@ -6,9 +6,9 @@ Tests the GameManager class that orchestrates the game and holds the game config
 
 import pytest
 from pathlib import Path
-from src.app.game_config import load_game_config
-from src.app.game_manager import GameManager
-from src.app.session_manager import SessionManager
+from src.app.game.game_config import load_game_config
+from src.app.game.game_manager import GameManager
+from src.app.game.session_manager import SessionManager
 
 @pytest.fixture
 def test_data_path():

@@ -1,7 +1,7 @@
 from typing import Dict, Set, Optional
-from src.app.game_config import GameConfig
-from src.app.session_manager import SessionManager
-from src.app.quiz_engine import check_quiz_answers, create_variable_mappings, get_display_variables
+from src.app.game.game_config import GameConfig
+from src.app.game.session_manager import SessionManager
+from src.app.game.quiz_engine import check_quiz_answers, create_variable_mappings, get_display_variables
 
 
 class GameManager:

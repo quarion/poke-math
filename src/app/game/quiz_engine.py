@@ -1,6 +1,6 @@
 import random
-from typing import Dict, Set, Tuple
-from src.app.game_config import Quiz, GameConfig
+from typing import Dict, Tuple
+from src.app.game.game_config import Quiz, GameConfig
 
 
 def create_variable_mappings(quiz: Quiz, available_pokemons: Dict[str, object]) -> Dict[str, str]:

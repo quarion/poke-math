@@ -15,8 +15,8 @@ if project_root not in sys.path:
 
 import pytest
 from pathlib import Path
-from src.app.game_config import load_game_config
-from src.app.game_manager import GameManager
+from src.app.game.game_config import load_game_config
+from src.app.game.game_manager import GameManager
 
 
 @pytest.fixture(scope="session")

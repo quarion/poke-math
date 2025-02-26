@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from pathlib import Path
-from src.app.game_config import load_game_config
-from src.app.game_manager import GameManager
+from src.app.game.game_config import load_game_config
+from src.app.game.game_manager import GameManager
 import os
 
 # Create Flask app with correct template and static folders
