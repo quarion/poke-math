@@ -42,11 +42,13 @@
               <input type="number" 
                      name="{{ unknown }}" 
                      id="{{ unknown }}" 
-                     value="{{ user_answers[unknown] if unknown in user_answers else '' }}"
-                     required>
+                     value="{{ user_answers[unknown] if unknown in user_answers else '' }}">
             </div>
             <div class="celebration-gif" id="celebration-{{ unknown }}">
               <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
+            </div>
+            <div class="incorrect-gif" id="incorrect-{{ unknown }}">
+              <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
             </div>
           </div>
         {% endfor %}
@@ -82,20 +84,33 @@
         const nextButton = document.getElementById('nextQuiz');
         const submitButton = document.getElementById('submitBtn');
         
-        // Hide all celebration gifs first
-        document.querySelectorAll('.celebration-gif').forEach(gif => {
+        // Hide all celebration and incorrect gifs first
+        document.querySelectorAll('.celebration-gif, .incorrect-gif').forEach(gif => {
           gif.style.display = 'none';
         });
         
-        // Show pokeballs for correct answers
+        // Show appropriate gifs for each answer
         Object.entries(data.correct_answers).forEach(([pokemon, isCorrect]) => {
-          const celebrationGif = document.getElementById(`celebration-${pokemon}`);
-          if (celebrationGif) {
-            celebrationGif.style.display = isCorrect ? 'block' : 'none';
+          // Only show gifs for answers that were provided
+          if (formData.has(pokemon) && formData.get(pokemon).trim() !== '') {
+            if (isCorrect) {
+              // Show pokeball for correct answers
+              const celebrationGif = document.getElementById(`celebration-${pokemon}`);
+              if (celebrationGif) {
+                celebrationGif.style.display = 'block';
+              }
+            } else {
+              // Show psyduck for incorrect answers
+              const incorrectGif = document.getElementById(`incorrect-${pokemon}`);
+              if (incorrectGif) {
+                incorrectGif.style.display = 'block';
+              }
+            }
           }
         });
         
         if (data.correct) {
+          // All answers are correct and all questions were answered
           resultsDiv.innerHTML = `
             <div class="result-correct">
               <h3>All Correct!</h3>
@@ -108,11 +123,34 @@
             nextButton.focus();
           }
         } else {
-          resultsDiv.innerHTML = `
-            <div class="result-incorrect">
-              <h3>Keep trying! Some answers are correct!</h3>
-            </div>
-          `;
+          // Not all correct or not all answered
+          if (data.correct_count > 0) {
+            // Some answers are correct
+            resultsDiv.innerHTML = `
+              <div class="result-partial">
+                <h3>Making Progress!</h3>
+                <p>You have ${data.correct_count} out of ${data.total_count} correct answers.</p>
+                ${!data.all_answered ? '<p>Try filling in all the answers!</p>' : ''}
+              </div>
+            `;
+          } else if (!data.all_answered && data.correct_count === 0) {
+            // No answers or all wrong
+            resultsDiv.innerHTML = `
+              <div class="result-incorrect">
+                <h3>Keep trying!</h3>
+                <p>Fill in your answers and try again.</p>
+              </div>
+            `;
+          } else {
+            // All answered but all wrong
+            resultsDiv.innerHTML = `
+              <div class="result-incorrect">
+                <h3>Keep trying!</h3>
+                <p>None of your answers are correct yet.</p>
+              </div>
+            `;
+          }
+          
           submitButton.style.display = 'inline-block';
           if (nextButton) {
             nextButton.style.display = 'none';

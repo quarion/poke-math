@@ -38,7 +38,7 @@ def create_variable_mappings(quiz: Quiz, available_pokemons: Dict[str, object]) 
     }
 
 
-def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool, Dict[str, bool]]:
+def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool, Dict[str, bool], bool]:
     """
     Check the user's answers for a quiz.
     This is a pure function that can be tested in isolation.
@@ -48,24 +48,36 @@ def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool, 
         user_answers: Dictionary of variable names to user-provided values
         
     Returns:
-        Tuple of (all_correct, correct_answers_dict)
+        Tuple of (all_correct, correct_answers_dict, all_answered)
     """
     # Map variable names to their actual values
     mapped_answers = {}
+    
+    # Get all expected answer variables
+    expected_vars = set(quiz.answer.values.keys())
+    
+    # Track which variables were answered
+    answered_vars = set()
 
     for var, value in user_answers.items():
-        # For all variables (special or Pokemon), use the integer value directly
-        mapped_answers[var] = int(value)
+        if var in expected_vars:
+            # For all variables (special or Pokemon), use the integer value directly
+            mapped_answers[var] = int(value)
+            answered_vars.add(var)
 
-    # Check each answer
-    correct_answers = {
-        var: mapped_answers.get(var, 0) == answer
-        for var, answer in quiz.answer.values.items()
-    }
+    # Check each answer that was provided
+    correct_answers = {}
+    for var, answer in quiz.answer.values.items():
+        if var in mapped_answers:
+            correct_answers[var] = mapped_answers[var] == answer
+        else:
+            # If the variable wasn't provided, mark it as not correct
+            correct_answers[var] = False
 
     all_correct = all(correct_answers.values())
+    all_answered = answered_vars == expected_vars
 
-    return all_correct, correct_answers
+    return all_correct, correct_answers, all_answered
 
 
 def get_display_variables(game_config: GameConfig,

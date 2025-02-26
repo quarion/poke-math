@@ -98,18 +98,26 @@ class GameManager:
             return {'error': 'Quiz not found'}
 
         # Use the quiz_engine module to check answers
-        all_correct, correct_answers = check_quiz_answers(
+        all_correct, correct_answers, all_answered = check_quiz_answers(
             quiz,
             user_answers
         )
 
-        if all_correct:
+        # Only mark as solved if all answers are correct and all questions were answered
+        if all_correct and all_answered:
             self.session_manager.mark_quiz_solved(quiz_id)
 
+        # Count how many answers are correct
+        correct_count = sum(1 for is_correct in correct_answers.values() if is_correct)
+        total_count = len(correct_answers)
+        
         return {
-            'correct': all_correct,
+            'correct': all_correct and all_answered,
             'correct_answers': correct_answers,
-            'next_quiz_id': quiz.next_quiz_id
+            'next_quiz_id': quiz.next_quiz_id,
+            'all_answered': all_answered,
+            'correct_count': correct_count,
+            'total_count': total_count
         }
 
     def reset(self):

@@ -77,9 +77,11 @@ def quiz(quiz_id):
         return "Quiz not found", 404
 
     if request.method == 'POST':
+        # Filter out empty inputs
         user_answers = {
             key: int(value) 
             for key, value in request.form.items()
+            if value.strip()  # Only include non-empty values
         }
         
         result = quiz_session.check_answers(quiz_id, user_answers)
@@ -94,7 +96,7 @@ def quiz(quiz_id):
         return render_template('quiz.html',
                              quiz=quiz_state['quiz'],
                              pokemon_vars=quiz_state['pokemon_vars'],
-                             result=result['correct'],
+                             result=result,
                              user_answers=user_answers,
                              version_info=get_version_info())
 
