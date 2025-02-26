@@ -3,7 +3,8 @@
       "pikachu": "pikachu.png",
       "bulbasaur": "bulbasaur.png",
       "charmander": "charmander.png",
-      "mew": "mew.png"
+      "mew": "mew.png",
+      "squirtle": "squirtle.png"
     },
     "sections": [
       {
