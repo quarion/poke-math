@@ -1,0 +1,86 @@
+[
+  {
+    "id": "grade_1_2_easy",
+    "name": "Very Simple (Grade 1-2)",
+    "difficulty": 1,
+    "params": {
+      "num_unknowns": 1,
+      "num_equations": 1,
+      "max_elements": 1,
+      "very_simple": true,
+      "ensure_operation": false
+    }
+  },
+  {
+    "id": "grade_1_2_medium",
+    "name": "Very Simple 2 (Grade 1-2)",
+    "difficulty": 2,
+    "params": {
+      "num_unknowns": 1,
+      "num_equations": 1,
+      "max_elements": 2,
+      "very_simple": true,
+      "ensure_operation": true
+    }
+  },
+  {
+    "id": "grade_1_2_hard",
+    "name": "Very Simple 3 (Grade 1-2)",
+    "difficulty": 3,
+    "params": {
+      "num_unknowns": 1,
+      "num_equations": 2,
+      "max_elements": 2,
+      "very_simple": true,
+      "ensure_operation": true
+    }
+  },
+  {
+    "id": "grade_1_2_expert",
+    "name": "Very Simple 4 (Grade 1-2)",
+    "difficulty": 4,
+    "params": {
+      "num_unknowns": 1,
+      "num_equations": 2,
+      "max_elements": 3,
+      "very_simple": true,
+      "ensure_operation": true
+    }
+  },
+  {
+    "id": "grade_3_4_easy",
+    "name": "Basic (Grade 3-4)",
+    "difficulty": 5,
+    "params": {
+      "num_unknowns": 2,
+      "num_equations": 3,
+      "max_elements": 3,
+      "very_simple": true,
+      "ensure_operation": true
+    }
+  },
+  {
+    "id": "grade_3_4_medium",
+    "name": "Basic 2 (Grade 3-4)",
+    "difficulty": 6,
+    "params": {
+      "num_unknowns": 2,
+      "num_equations": 3,
+      "max_elements": 3,
+      "very_simple": false,
+      "ensure_operation": true
+    }
+  },
+  {
+    "id": "grade_3_4_hard",
+    "name": "Intermediate (Grade 3-4)",
+    "difficulty": 7,
+    "params": {
+      "num_unknowns": 2,
+      "num_equations": 2,
+      "max_elements": 3,
+      "very_simple": false,
+      "ensure_operation": true
+    }
+  }
+] 

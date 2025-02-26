@@ -102,9 +102,35 @@ header h1 {
     margin-top: var(--spacing-lg);
 }
 
-.button-green {
-    background-color: var(--pokemon-green);
+/* Button Styling */
+.button-base {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    border-radius: var(--border-radius-pill);
+    font-size: 1.2rem;
+    font-family: inherit;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+    color: white;
+    border: none;
+    cursor: pointer;
+    min-width: 160px;
+    line-height: 1.5;
 }
+
+.button-base:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.button-blue { background-color: var(--pokemon-blue); }
+.button-dark { background-color: var(--pokemon-dark); }
+.button-red { background-color: var(--pokemon-red); }
+.button-green { background-color: var(--pokemon-green); }
+.button-yellow { background-color: var(--pokemon-yellow); }
 
 /* Profile Page */
 .profile-container {
@@ -171,6 +197,31 @@ header h1 {
     margin-bottom: var(--spacing-md);
 }
 
+/* Difficulty Selection Styles */
+.difficulty-selection {
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-lg);
+    background-color: #f5f5f5;
+    border-radius: var(--border-radius-lg);
+    text-align: center;
+}
+
+.difficulty-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.difficulty-tag {
+    background-color: var(--pokemon-green);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    font-weight: bold;
+}
+
 /* Quiz Components */
 .quiz-section {
     margin-bottom: var(--spacing-xl);
@@ -210,47 +261,56 @@ header h1 {
 }
 
 /* Quiz Content */
-.quiz-content {
+.quiz-content, .quiz-container {
     max-width: 800px;
     margin: 0 auto;
 }
 
-.equations-section {
-    margin-bottom: var(--spacing-xl);
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
 }
 
-.equation-content {
-    font-size: 1.2em;
-    margin: var(--spacing-sm) 0;
-}
-
-.equation {
+.equations-section, .equations-container {
     background-color: white;
     padding: var(--spacing-lg);
     border-radius: var(--border-radius-lg);
-    margin: var(--spacing-md) 0;
+    margin-bottom: var(--spacing-lg);
     box-shadow: var(--shadow-sm);
-    font-size: 1.4rem;
 }
 
-.answers-section {
+.equation-content, .equation {
+    font-size: 1.4rem;
+    margin: var(--spacing-sm) 0;
+    font-family: monospace;
+}
+
+.answers-section, .solution-container {
     background-color: white;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-sm);
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
 }
 
-.answer-group {
+.answer-group, .input-group {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
+    flex-direction: column;
     margin-bottom: var(--spacing-md);
 }
 
-.answer-input {
+.answer-inputs {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.button-container {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
 }
 
 /* Form Elements */
@@ -270,33 +330,15 @@ input[type="number"]::-webkit-inner-spin-button {
     margin: 0;
 }
 
-/* Button Styling */
-.button-base {
-    display: inline-block;
-    padding: 0.8rem 2rem;
-    border-radius: var(--border-radius-pill);
-    font-size: 1.2rem;
-    font-family: inherit;
-    font-weight: 500;
-    text-decoration: none;
-    text-align: center;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
-    color: white;
-    border: none;
-    cursor: pointer;
-    min-width: 160px;
-    line-height: 1.5;
+input.correct {
+    border-color: var(--pokemon-green);
+    background-color: rgba(76, 175, 80, 0.1);
 }
 
-.button-base:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-lg);
+input.incorrect {
+    border-color: var(--pokemon-red);
+    background-color: rgba(244, 67, 54, 0.1);
 }
-
-.button-blue { background-color: var(--pokemon-blue); }
-.button-dark { background-color: var(--pokemon-dark); }
-.button-red { background-color: var(--pokemon-red); }
 
 .quiz-controls {
     margin: var(--spacing-xl) 0;
@@ -307,26 +349,40 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 /* Result Messages */
-.result-correct, .result-incorrect, .result-partial {
-    color: white;
+.result-container, .result-correct, .result-incorrect, .result-partial {
+    margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
     border-radius: var(--border-radius-lg);
     text-align: center;
-    margin-top: var(--spacing-xl);
     font-size: 1.4rem;
 }
 
-.result-correct {
-    background-color: var(--pokemon-success);
+.result-correct, .result-container.correct {
+    background-color: rgba(76, 175, 80, 0.1);
+    border: 1px solid var(--pokemon-green);
+    color: var(--pokemon-dark);
 }
 
-.result-incorrect {
-    background-color: var(--pokemon-red);
+.result-incorrect, .result-container.incorrect {
+    background-color: rgba(244, 67, 54, 0.1);
+    border: 1px solid var(--pokemon-red);
+    color: var(--pokemon-dark);
 }
 
 .result-partial {
-    background-color: var(--pokemon-yellow);
-    color: var(--pokemon-dark); /* Dark text for better contrast on yellow */
+    background-color: rgba(255, 215, 51, 0.1);
+    border: 1px solid var(--pokemon-yellow);
+    color: var(--pokemon-dark);
+}
+
+.score {
+    font-size: 1.5rem;
+    margin: var(--spacing-sm) 0;
+    font-weight: bold;
+}
+
+.congratulations {
+    margin-top: var(--spacing-md);
 }
 
 /* Pokemon Images */
@@ -403,17 +459,17 @@ input[type="number"]::-webkit-inner-spin-button {
         min-width: 140px;
     }
 
-    .quiz-controls {
+    .quiz-controls, .button-container {
         flex-direction: column;
         gap: var(--spacing-sm);
         width: 100%;
     }
 
-    .quiz-controls .button-base {
+    .quiz-controls .button-base, .button-container .button-base {
         width: 100%;
     }
 
-    .result-correct, .result-incorrect, .result-partial {
+    .result-correct, .result-incorrect, .result-partial, .result-container {
         font-size: 1.2rem;
         padding: var(--spacing-sm);
     }
@@ -427,6 +483,10 @@ input[type="number"]::-webkit-inner-spin-button {
         flex-direction: column;
         gap: var(--spacing-md);
     }
+    
+    .difficulty-buttons {
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 480px) {
@@ -438,7 +498,7 @@ input[type="number"]::-webkit-inner-spin-button {
         font-size: 1.1rem;
     }
 
-    .answers-section {
+    .answers-section, .solution-container {
         padding: var(--spacing-md);
     }
 

@@ -98,4 +98,10 @@ def load_game_config(data_file: Path) -> GameConfig:
         pokemons=pokemons,
         sections=sections,
         quizzes_by_id=quizzes_by_id
-    ) 
+    )
+
+
+def load_equation_difficulties(file_path):
+    with open(file_path) as f:
+        difficulties = json.load(f)
+    return difficulties

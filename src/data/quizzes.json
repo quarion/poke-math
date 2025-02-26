@@ -17,7 +17,7 @@
             "title": "Simple Addition with One Unknown",
             "description": "Solve for the unknown variable.",
             "equations": [
-              "3 + {pikachu} = 7"
+              "3 + pikachu = 7"
             ],
             "answer": {
               "pikachu": 4
@@ -28,7 +28,7 @@
             "title": "Simple Subtraction with One Unknown",
             "description": "Find the missing number.",
             "equations": [
-              "10 - {bulbasaur} = 4"
+              "10 - bulbasaur = 4"
             ],
             "answer": {
               "bulbasaur": 6
@@ -39,8 +39,8 @@
             "title": "Repeated Addition with Two Unknowns",
             "description": "Solve for the unknowns using repeated addition instead of multiplication.",
             "equations": [
-              "{pikachu} + {pikachu} = 4",  
-              "{pikachu} + {pikachu} + {bulbasaur} = 10"
+              "pikachu + pikachu = 4",  
+              "pikachu + pikachu + bulbasaur = 10"
             ],
             "answer": {
               "pikachu": 2,
@@ -59,7 +59,7 @@
             "title": "Simple Addition with One Unknown (Variant)", 
             "description": "Solve the addition equation.",
             "equations": [
-              "5 + {charmander} = 12"
+              "5 + charmander = 12"
             ],
             "answer": {
               "charmander": 7
@@ -70,8 +70,8 @@
             "title": "Multi-Step Problem",
             "description": "Solve this two-step problem using multiple Pokemon variables.",
             "equations": [
-              "{pikachu} + {bulbasaur} = 10",
-              "{bulbasaur} - {charmander} = 2"
+              "pikachu + bulbasaur = 10",
+              "bulbasaur - charmander = 2"
             ],
             "answer": {
               "pikachu": 6,
@@ -91,9 +91,9 @@
             "title": "Random Pokemon Variables",
             "description": "Solve equations with randomly assigned Pokemon!",
             "equations": [
-              "{x} + {y} = 10",
-              "{y} - {z} = 3",
-              "{x} + {z} = 7"
+              "x + y = 10",
+              "y - z = 3",
+              "x + z = 7"
             ],
             "answer": {
               "x": 5,
