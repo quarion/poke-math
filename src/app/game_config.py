@@ -33,15 +33,15 @@ class Section:
     quizzes: List[Quiz]
 
 @dataclass
-class QuizData:
+class GameConfig:
     pokemons: Dict[str, Pokemon]
     sections: List[Section]
     quizzes_by_id: Dict[str, Quiz]
 
-def load_quiz_data(data_file: Path) -> QuizData:
+def load_game_config(data_file: Path) -> GameConfig:
     """
     Load and prepare quiz data from a JSON file.
-    Returns a QuizData object containing all necessary information.
+    Returns a GameConfig object containing all necessary information.
     """
     with open(data_file) as f:
         raw_data = json.load(f)
@@ -94,7 +94,7 @@ def load_quiz_data(data_file: Path) -> QuizData:
             elif section_idx < len(sections) - 1 and sections[section_idx + 1].quizzes:
                 quiz.next_quiz_id = sections[section_idx + 1].quizzes[0].id
 
-    return QuizData(
+    return GameConfig(
         pokemons=pokemons,
         sections=sections,
         quizzes_by_id=quizzes_by_id

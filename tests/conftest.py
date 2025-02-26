@@ -15,8 +15,8 @@ if project_root not in sys.path:
 
 import pytest
 from pathlib import Path
-from src.app.quiz_data import load_quiz_data
-from src.app.quiz_session import QuizSession
+from src.app.game_config import load_game_config
+from src.app.game_manager import GameManager
 
 
 @pytest.fixture(scope="session")
@@ -34,7 +34,7 @@ def quiz_data(test_data_path):
     Fixture providing loaded quiz data.
     Creates fresh data for each test to avoid state contamination.
     """
-    return load_quiz_data(test_data_path)
+    return load_game_config(test_data_path)
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def quiz_session(quiz_data):
     Fixture providing a fresh quiz session for each test.
     Creates new session to ensure tests start with clean state.
     """
-    return QuizSession.create_new(quiz_data)
+    return GameManager.start_session(quiz_data)
 
 
 @pytest.fixture

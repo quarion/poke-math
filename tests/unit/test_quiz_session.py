@@ -1,13 +1,14 @@
 """
-Unit tests for quiz session management and state.
+Unit tests for quiz session functionality.
 
-Tests the session handling, state management, and answer checking functionality.
+Tests the QuizSession class that provides a thin wrapper around SessionManager.
 """
 
 import pytest
 from pathlib import Path
-from src.app.quiz_data import load_quiz_data
-from src.app.quiz_session import QuizSession
+from src.app.game_config import load_game_config
+from src.app.game_manager import GameManager
+from src.app.session_manager import SessionManager
 
 @pytest.fixture
 def test_data_path():
@@ -15,16 +16,16 @@ def test_data_path():
 
 @pytest.fixture
 def quiz_data(test_data_path):
-    return load_quiz_data(test_data_path)
+    return load_game_config(test_data_path)
 
 @pytest.fixture
 def quiz_session(quiz_data):
-    """Fixture to provide a fresh quiz session for each test"""
-    return QuizSession.create_new(quiz_data)
+    """Fixture providing a fresh quiz session."""
+    return GameManager.start_session(quiz_data)
 
 def test_session_creation(quiz_session):
     """Test if session is created with correct initial state."""
-    assert isinstance(quiz_session, QuizSession)
+    assert isinstance(quiz_session, GameManager)
     assert len(quiz_session.solved_quizzes) == 0
     # Access variable_mappings through session_manager.state
     assert len(quiz_session.session_manager.state.variable_mappings) == 0

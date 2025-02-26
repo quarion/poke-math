@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from pathlib import Path
-from src.app.quiz_data import load_quiz_data
-from src.app.quiz_session import QuizSession
+from src.app.game_config import load_game_config
+from src.app.game_manager import GameManager
 import os
 
 app = Flask(__name__)
@@ -9,24 +9,16 @@ app.secret_key = 'your-secret-key-here'  # Required for session management
 
 # Load quiz data at startup - this is shared across all sessions
 # and doesn't need to be stored in each user's session
-QUIZ_DATA = load_quiz_data(Path('data/quizzes.json'))
+QUIZ_DATA = load_game_config(Path('data/quizzes.json'))
 
 def get_version_info():
-    """Get version information for the application."""
     return {
         'version': os.environ.get('COMMIT_SHA', 'development')
     }
 
-def get_or_create_quiz_session() -> QuizSession:
-    """
-    Get the current quiz session or create a new one.
-    
-    This function manages the Flask session and ensures we have a QuizSession
-    object for the current user. Only the session state (solved quizzes and
-    variable mappings) is stored in the session, not the entire quiz data.
-    """
+def get_or_create_quiz_session() -> GameManager:
     if 'quiz_session' not in session:
-        session['quiz_session'] = QuizSession.create_new(QUIZ_DATA)
+        session['quiz_session'] = GameManager.start_session(QUIZ_DATA)
     return session['quiz_session']
 
 @app.route('/')

@@ -1,6 +1,6 @@
 from typing import Dict, Set, Optional
-from src.app.quiz_data import QuizData, Quiz
-from src.app.quiz_engine import create_variable_mappings, check_quiz_answers, get_display_variables
+from src.app.game_config import GameConfig, Quiz
+from src.app.quiz_engine import create_variable_mappings, get_display_variables
 
 class SessionState:
     """
@@ -26,15 +26,15 @@ class SessionManager:
     without affecting the core quiz logic.
     """
     
-    def __init__(self, quiz_data: QuizData):
+    def __init__(self, game_config: GameConfig):
         """
         Initialize with quiz data.
         
         Args:
-            quiz_data: The shared quiz data (not persisted per session)
+            game_config: The shared quiz data (not persisted per session)
         """
         # Shared application data (not persisted per session)
-        self.quiz_data = quiz_data
+        self.game_config = game_config
         
         # User-specific session state (persisted per session)
         self.state = SessionState()
@@ -61,14 +61,14 @@ class SessionManager:
         Get existing variable mappings for a quiz or create new ones if they don't exist.
         """
         if quiz_id not in self.state.variable_mappings:
-            quiz = self.quiz_data.quizzes_by_id.get(quiz_id)
+            quiz = self.game_config.quizzes_by_id.get(quiz_id)
             if not quiz:
                 return {}
                 
             # Use the quiz_engine module to create mappings
             self.state.variable_mappings[quiz_id] = create_variable_mappings(
                 quiz, 
-                self.quiz_data.pokemons
+                self.game_config.pokemons
             )
             
         return self.state.variable_mappings[quiz_id]
@@ -78,7 +78,7 @@ class SessionManager:
         Get the current state of a quiz, including any variable mappings.
         Returns None if quiz not found.
         """
-        quiz = self.quiz_data.quizzes_by_id.get(quiz_id)
+        quiz = self.game_config.quizzes_by_id.get(quiz_id)
         if not quiz:
             return None
 
@@ -87,8 +87,7 @@ class SessionManager:
         
         # Get display variables using the quiz_engine module
         display_vars = get_display_variables(
-            quiz,
-            self.quiz_data,
+            self.game_config,
             mappings
         )
 
@@ -97,32 +96,4 @@ class SessionManager:
             'pokemon_vars': display_vars,
             'is_solved': self.is_quiz_solved(quiz_id),
             'variable_mappings': mappings
-        }
-    
-    def check_answers(self, quiz_id: str, user_answers: Dict[str, int]) -> Dict:
-        """
-        Check the user's answers for a quiz.
-        Returns a dictionary with the results.
-        """
-        quiz = self.quiz_data.quizzes_by_id.get(quiz_id)
-        if not quiz:
-            return {'error': 'Quiz not found'}
-
-        # Get variable mappings
-        mappings = self.get_or_create_variable_mappings(quiz_id)
-        
-        # Use the quiz_engine module to check answers
-        all_correct, correct_answers = check_quiz_answers(
-            quiz, 
-            user_answers,
-            mappings
-        )
-        
-        if all_correct:
-            self.mark_quiz_solved(quiz_id)
-
-        return {
-            'correct': all_correct,
-            'correct_answers': correct_answers,
-            'next_quiz_id': quiz.next_quiz_id
         } 

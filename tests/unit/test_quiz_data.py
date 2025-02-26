@@ -6,7 +6,7 @@ Tests the loading and validation of quiz data from JSON files.
 
 import pytest
 from pathlib import Path
-from src.app.quiz_data import load_quiz_data, QuizData, Quiz, Section, Pokemon, QuizAnswer
+from src.app.game_config import load_game_config, GameConfig, Quiz, Section, Pokemon, QuizAnswer
 
 @pytest.fixture
 def test_data_path():
@@ -14,11 +14,11 @@ def test_data_path():
 
 @pytest.fixture
 def quiz_data(test_data_path):
-    return load_quiz_data(test_data_path)
+    return load_game_config(test_data_path)
 
 def test_load_quiz_data_structure(quiz_data):
     """Test if the quiz data is loaded with correct structure."""
-    assert isinstance(quiz_data, QuizData)
+    assert isinstance(quiz_data, GameConfig)
     assert isinstance(quiz_data.pokemons, dict)
     assert isinstance(quiz_data.sections, list)
     assert isinstance(quiz_data.quizzes_by_id, dict)

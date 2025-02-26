@@ -6,7 +6,7 @@ and answer checking logic.
 """
 
 import pytest
-from src.app.quiz_data import Quiz, QuizAnswer
+from src.app.game_config import Quiz, QuizAnswer
 from src.app.quiz_engine import create_variable_mappings, check_quiz_answers, get_display_variables
 
 @pytest.fixture
@@ -67,13 +67,13 @@ def test_check_quiz_answers(sample_quiz):
     """Test checking quiz answers."""
     # Test with correct answers
     correct_answers = {"x": 5, "y": 5, "z": 2}
-    all_correct, correct_dict = check_quiz_answers(sample_quiz, correct_answers, {})
+    all_correct, correct_dict = check_quiz_answers(sample_quiz, correct_answers)
     assert all_correct is True
     assert all(correct_dict.values())
     
     # Test with some incorrect answers
     wrong_answers = {"x": 5, "y": 4, "z": 2}
-    all_correct, correct_dict = check_quiz_answers(sample_quiz, wrong_answers, {})
+    all_correct, correct_dict = check_quiz_answers(sample_quiz, wrong_answers)
     assert all_correct is False
     assert correct_dict["x"] is True
     assert correct_dict["y"] is False
@@ -81,7 +81,7 @@ def test_check_quiz_answers(sample_quiz):
     
     # Test with missing answers
     incomplete_answers = {"x": 5, "z": 2}
-    all_correct, correct_dict = check_quiz_answers(sample_quiz, incomplete_answers, {})
+    all_correct, correct_dict = check_quiz_answers(sample_quiz, incomplete_answers)
     assert all_correct is False
     assert correct_dict["y"] is False
 
@@ -98,7 +98,7 @@ def test_get_display_variables(sample_quiz, sample_pokemon, quiz_data):
     mock_quiz_data = MockQuizData(sample_pokemon)
     
     # Get display variables
-    display_vars = get_display_variables(sample_quiz, mock_quiz_data, mappings)
+    display_vars = get_display_variables(mock_quiz_data, mappings)
     
     # Check that all Pokemon are included
     for pokemon, obj in sample_pokemon.items():

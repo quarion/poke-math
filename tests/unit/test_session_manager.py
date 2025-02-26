@@ -6,7 +6,7 @@ Tests the SessionManager class that handles session persistence and state manage
 
 import pytest
 from src.app.session_manager import SessionManager, SessionState
-from src.app.quiz_data import load_quiz_data
+from src.app.game_config import load_game_config
 
 @pytest.fixture
 def session_state():
@@ -38,7 +38,7 @@ def test_session_state_reset(session_state):
 
 def test_session_manager_creation(session_manager, quiz_data):
     """Test if session manager is created with correct initial state."""
-    assert session_manager.quiz_data == quiz_data
+    assert session_manager.game_config == quiz_data
     assert len(session_manager.solved_quizzes) == 0
     assert len(session_manager.state.variable_mappings) == 0
 
@@ -94,37 +94,11 @@ def test_get_quiz_state(session_manager):
     # Get state for a non-existent quiz
     assert session_manager.get_quiz_state('non_existent') is None
 
-def test_check_answers(session_manager):
-    """Test checking answers."""
-    # Check correct answers for basic quiz
-    result = session_manager.check_answers('test_basic', {'pikachu': 3})
-    
-    # Check result
-    assert result['correct'] is True
-    assert session_manager.is_quiz_solved('test_basic')
-    
-    # Check wrong answers
-    result = session_manager.check_answers('test_basic', {'pikachu': 4})
-    assert result['correct'] is False
-    
-    # Check answers for a quiz with variables
-    # First get state to establish mappings
-    session_manager.get_quiz_state('test_variables')
-    
-    # Check correct answers
-    result = session_manager.check_answers('test_variables', {'x': 5, 'y': 5, 'z': 2})
-    assert result['correct'] is True
-    assert session_manager.is_quiz_solved('test_variables')
-    
-    # Check wrong answers
-    result = session_manager.check_answers('test_variables', {'x': 5, 'y': 4, 'z': 2})
-    assert result['correct'] is False
-
 def test_session_manager_reset(session_manager):
     """Test resetting session manager."""
     # Solve some quizzes
-    session_manager.check_answers('test_basic', {'pikachu': 3})
-    session_manager.check_answers('test_variables', {'x': 5, 'y': 5, 'z': 2})
+    session_manager.mark_quiz_solved('test_basic')
+    session_manager.mark_quiz_solved('test_variables')
     
     # Create mappings
     session_manager.get_quiz_state('test_variables')
