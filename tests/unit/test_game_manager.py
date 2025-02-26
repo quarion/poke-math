@@ -1,7 +1,7 @@
 """
-Unit tests for quiz session functionality.
+Unit tests for game manager functionality.
 
-Tests the QuizSession class that provides a thin wrapper around SessionManager.
+Tests the GameManager class that orchestrates the game and holds the game configuration.
 """
 
 import pytest
@@ -20,18 +20,18 @@ def quiz_data(test_data_path):
 
 @pytest.fixture
 def quiz_session(quiz_data):
-    """Fixture providing a fresh quiz session."""
+    """Fixture providing a fresh GameManager instance."""
     return GameManager.start_session(quiz_data)
 
-def test_session_creation(quiz_session):
-    """Test if session is created with correct initial state."""
+def test_game_manager_creation(quiz_session, quiz_data):
+    """Test if GameManager is created with correct initial state."""
     assert isinstance(quiz_session, GameManager)
+    assert quiz_session.game_config == quiz_data
+    assert isinstance(quiz_session.session_manager, SessionManager)
     assert len(quiz_session.solved_quizzes) == 0
-    # Access variable_mappings through session_manager.state
-    assert len(quiz_session.session_manager.state.variable_mappings) == 0
 
 def test_quiz_state_retrieval(quiz_session):
-    """Test getting quiz state."""
+    """Test getting quiz state from GameManager."""
     # Test basic quiz state
     basic_state = quiz_session.get_quiz_state('test_basic')
     assert basic_state is not None
@@ -65,6 +65,26 @@ def test_variable_mappings_persistence(quiz_session):
     for var, pokemon in mappings.items():
         assert pokemon in valid_pokemon
 
+def test_get_or_create_variable_mappings(quiz_session):
+    """Test the get_or_create_variable_mappings method in GameManager."""
+    # Get mappings for a quiz with variables
+    mappings = quiz_session.get_or_create_variable_mappings('test_variables')
+    
+    # Check if mappings were created
+    assert len(mappings) == 3  # x, y, z
+    
+    # Check if mappings are stored in session manager
+    assert quiz_session.session_manager.has_variable_mappings('test_variables')
+    assert quiz_session.session_manager.get_variable_mappings('test_variables') == mappings
+    
+    # Get mappings again - should be the same
+    mappings2 = quiz_session.get_or_create_variable_mappings('test_variables')
+    assert mappings2 == mappings
+    
+    # Get mappings for a non-existent quiz
+    empty_mappings = quiz_session.get_or_create_variable_mappings('non_existent')
+    assert empty_mappings == {}
+
 def test_answer_checking_basic(quiz_session):
     """Test answer checking for basic quizzes."""
     # Test correct answer
@@ -92,9 +112,9 @@ def test_answer_checking_with_variables(quiz_session):
     result = quiz_session.check_answers('test_variables', wrong_answers)
     assert result['correct'] is False
 
-def test_session_reset(quiz_session):
-    """Test session reset functionality."""
-    # Solve both quizzes
+def test_game_manager_reset(quiz_session):
+    """Test GameManager reset functionality."""
+    # Solve some quizzes
     quiz_session.check_answers('test_basic', {'pikachu': 3})
     quiz_session.check_answers('test_variables', {'x': 5, 'y': 5, 'z': 2})
     assert len(quiz_session.solved_quizzes) == 2

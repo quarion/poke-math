@@ -1,0 +1,8 @@
+---
+description: Running unit tests
+globs: 
+alwaysApply: false
+---
+# Executing tests
+Use `python -m pytest -v` to execute all tests
+

@@ -38,20 +38,20 @@ def quiz_data(test_data_path):
 
 
 @pytest.fixture
-def quiz_session(quiz_data):
+def game_manager(quiz_data):
     """
-    Fixture providing a fresh quiz session for each test.
-    Creates new session to ensure tests start with clean state.
+    Fixture providing a fresh GameManager instance for each test.
+    Creates new instance to ensure tests start with clean state.
     """
     return GameManager.start_session(quiz_data)
 
 
 @pytest.fixture
-def solved_quiz_session(quiz_session):
+def solved_game_manager(game_manager):
     """
-    Fixture providing a quiz session with some quizzes already solved.
+    Fixture providing a GameManager with some quizzes already solved.
     Useful for testing state-dependent behavior.
     """
     # Solve the basic quiz
-    quiz_session.check_answers('test_basic', {'pikachu': 3})
-    return quiz_session 
+    game_manager.check_answers('test_basic', {'pikachu': 3})
+    return game_manager 
