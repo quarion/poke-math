@@ -1,0 +1,9 @@
+---
+description: Creating frontend html and css files
+globs: *.html *.css
+alwaysApply: false
+---
+# Styling
+
+- use [style.css](mdc:src/static/css/style.css) for styling, do not inline styles in html files
+- Make sure to use consistent styling, re-use as much as possible and not create duplicates

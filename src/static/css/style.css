@@ -1,39 +1,103 @@
 /* Variables and base styles */
 :root {
+    /* Colors */
     --pokemon-red: #FF1F1F;
     --pokemon-blue: #1F1FFF;
     --pokemon-yellow: #FFD733;
     --pokemon-light: #FAFAFA;
     --pokemon-dark: #333333;
-    --pokemon-success: #4CAF50;
     --pokemon-green: #4CAF50;
+    --pokemon-success: var(--pokemon-green);
+    
+    /* UI Elements */
+    --text-color: var(--pokemon-dark);
+    --text-color-light: white;
+    --text-color-muted: #666;
+    --background-color: var(--pokemon-light);
+    --card-background: white;
+    --border-color-light: #ddd;
+    --border-color-lighter: #eee;
+    
+    /* Transparent colors for states */
+    --green-transparent: rgba(76, 175, 80, 0.1);
+    --red-transparent: rgba(244, 67, 54, 0.1);
+    --yellow-transparent: rgba(255, 215, 51, 0.1);
+    --white-transparent: rgba(255, 255, 255, 0.2);
+    --white-transparent-hover: rgba(255, 255, 255, 0.3);
+    
+    /* Sizing and Spacing */
     --border-radius-lg: 15px;
+    --border-radius-md: 8px;
     --border-radius-pill: 50px;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    
+    /* Typography */
+    --font-size-sm: 0.7rem;
+    --font-size-base: 1rem;
+    --font-size-md: 1.2rem;
+    --font-size-lg: 1.4rem;
+    --font-size-xl: 1.5rem;
+    --font-size-xxl: 2rem;
+    --font-size-jumbo: 2.5rem;
+    --font-family-base: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+    --font-family-mono: monospace;
+    --line-height-base: 1.6;
+    --line-height-sm: 1.5;
+    
+    /* Layout */
+    --container-max-width: 1200px;
+    --content-max-width: 800px;
+    --card-spacing: var(--spacing-lg);
 }
 
+/* Base Styles */
 body {
-    font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
-    line-height: 1.6;
+    font-family: var(--font-family-base);
+    line-height: var(--line-height-base);
     margin: 0;
     padding: 0;
-    background-color: var(--pokemon-light);
-    color: var(--pokemon-dark);
+    background-color: var(--background-color);
+    color: var(--text-color);
 }
 
 /* Layout */
 main {
     padding: var(--spacing-xl);
-    max-width: 1200px;
+    max-width: var(--container-max-width);
     margin: 0 auto;
     min-height: calc(100vh - 150px);
 }
+
+/* Common Card Styles */
+.card {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-lg);
+    padding: var(--card-spacing);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.card-sm {
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Text Utilities */
+.text-center { text-align: center; }
+.font-bold { font-weight: bold; }
+.font-md { font-size: var(--font-size-md); }
+.font-lg { font-size: var(--font-size-lg); }
+.font-xl { font-size: var(--font-size-xl); }
+.font-xxl { font-size: var(--font-size-xxl); }
 
 /* Header */
 header {
@@ -44,10 +108,10 @@ header {
 }
 
 header h1 {
-    color: white;
-    font-size: 2.5rem;
+    color: var(--text-color-light);
+    font-size: var(--font-size-jumbo);
     margin: 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    text-shadow: var(--text-shadow);
 }
 
 /* Main Navigation */
@@ -66,17 +130,17 @@ header h1 {
 
 .main-nav a {
     display: block;
-    color: white;
+    color: var(--text-color-light);
     text-decoration: none;
     padding: var(--spacing-sm) var(--spacing-md);
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--white-transparent);
     border-radius: var(--border-radius-pill);
-    font-size: 1rem;
+    font-size: var(--font-size-base);
     transition: all 0.3s ease;
 }
 
 .main-nav a:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: var(--white-transparent-hover);
     transform: scale(1.05);
 }
 
@@ -85,16 +149,51 @@ header h1 {
     text-align: center;
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-xl);
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
 }
 
 .welcome-message {
-    font-size: 1.2rem;
+    font-size: var(--font-size-md);
     margin-bottom: var(--spacing-lg);
 }
 
+/* Flex Containers */
+.flex {
+    display: flex;
+}
+
+.flex-center {
+    justify-content: center;
+    align-items: center;
+}
+
+.flex-between {
+    justify-content: space-between;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.flex-gap-sm {
+    gap: var(--spacing-sm);
+}
+
+.flex-gap-md {
+    gap: var(--spacing-md);
+}
+
+.flex-gap-lg {
+    gap: var(--spacing-lg);
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+/* Action Buttons Container */
 .action-buttons {
     display: flex;
     justify-content: center;
@@ -107,18 +206,18 @@ header h1 {
     display: inline-block;
     padding: 0.8rem 2rem;
     border-radius: var(--border-radius-pill);
-    font-size: 1.2rem;
+    font-size: var(--font-size-md);
     font-family: inherit;
     font-weight: 500;
     text-decoration: none;
     text-align: center;
     transition: all 0.3s ease;
     box-shadow: var(--shadow-md);
-    color: white;
+    color: var(--text-color-light);
     border: none;
     cursor: pointer;
     min-width: 160px;
-    line-height: 1.5;
+    line-height: var(--line-height-sm);
 }
 
 .button-base:hover {
@@ -132,19 +231,25 @@ header h1 {
 .button-green { background-color: var(--pokemon-green); }
 .button-yellow { background-color: var(--pokemon-yellow); }
 
-/* Profile Page */
-.profile-container {
-    max-width: 800px;
+/* Standard Containers */
+.container {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+}
+
+.container-padded {
+    max-width: var(--content-max-width);
     margin: 0 auto;
     padding: var(--spacing-lg);
 }
 
+/* Profile Page */
 .profile-stats {
     margin-bottom: var(--spacing-xl);
 }
 
 .stats-card {
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-md);
@@ -154,17 +259,17 @@ header h1 {
     display: flex;
     justify-content: space-between;
     padding: var(--spacing-md) 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color-lighter);
 }
 
 .stat-value {
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: var(--font-size-md);
     color: var(--pokemon-blue);
 }
 
 .profile-message {
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-xl);
@@ -172,19 +277,15 @@ header h1 {
     text-align: center;
 }
 
-.profile-actions {
-    text-align: center;
-}
-
 /* New Exercise Page */
 .new-exercise-container {
-    max-width: 800px;
+    max-width: var(--content-max-width);
     margin: 0 auto;
     text-align: center;
 }
 
 .coming-soon {
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
     margin: var(--spacing-xl) 0;
@@ -216,7 +317,7 @@ header h1 {
 
 .difficulty-tag {
     background-color: var(--pokemon-green);
-    color: white;
+    color: var(--text-color-light);
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--border-radius-lg);
     font-weight: bold;
@@ -240,12 +341,12 @@ header h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: white;
+    background-color: var(--card-background);
     padding: var(--spacing-md);
     border-radius: var(--border-radius-lg);
     text-decoration: none;
-    color: var(--pokemon-dark);
-    font-size: 1.2rem;
+    color: var(--text-color);
+    font-size: var(--font-size-md);
     transition: all 0.3s ease;
     box-shadow: var(--shadow-sm);
 }
@@ -261,11 +362,6 @@ header h1 {
 }
 
 /* Quiz Content */
-.quiz-content, .quiz-container {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
 .quiz-header {
     display: flex;
     justify-content: space-between;
@@ -273,26 +369,26 @@ header h1 {
     margin-bottom: var(--spacing-lg);
 }
 
-.equations-section, .equations-container {
-    background-color: white;
-    padding: var(--spacing-lg);
+/* Apply card styles to various containers */
+.equations-section, .equations-container,
+.answers-section, .solution-container,
+.profile-message, .stats-card, .coming-soon,
+.welcome-section {
+    background-color: var(--card-background);
     border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.equations-section, .equations-container {
+    padding: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
     box-shadow: var(--shadow-sm);
 }
 
 .equation-content, .equation {
-    font-size: 1.4rem;
+    font-size: var(--font-size-lg);
     margin: var(--spacing-sm) 0;
-    font-family: monospace;
-}
-
-.answers-section, .solution-container {
-    background-color: white;
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    margin-bottom: var(--spacing-lg);
+    font-family: var(--font-family-mono);
 }
 
 .answer-group, .input-group {
@@ -315,10 +411,10 @@ header h1 {
 
 /* Form Elements */
 input[type="number"] {
-    font-size: 1.2rem;
+    font-size: var(--font-size-md);
     padding: var(--spacing-sm);
-    border: 2px solid #ddd;
-    border-radius: 8px;
+    border: 2px solid var(--border-color-light);
+    border-radius: var(--border-radius-md);
     width: 100px;
     margin: 0 var(--spacing-sm);
     -moz-appearance: textfield;
@@ -332,12 +428,12 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input.correct {
     border-color: var(--pokemon-green);
-    background-color: rgba(76, 175, 80, 0.1);
+    background-color: var(--green-transparent);
 }
 
 input.incorrect {
     border-color: var(--pokemon-red);
-    background-color: rgba(244, 67, 54, 0.1);
+    background-color: var(--red-transparent);
 }
 
 .quiz-controls {
@@ -354,29 +450,29 @@ input.incorrect {
     padding: var(--spacing-md);
     border-radius: var(--border-radius-lg);
     text-align: center;
-    font-size: 1.4rem;
+    font-size: var(--font-size-lg);
 }
 
 .result-correct, .result-container.correct {
-    background-color: rgba(76, 175, 80, 0.1);
+    background-color: var(--green-transparent);
     border: 1px solid var(--pokemon-green);
-    color: var(--pokemon-dark);
+    color: var(--text-color);
 }
 
 .result-incorrect, .result-container.incorrect {
-    background-color: rgba(244, 67, 54, 0.1);
+    background-color: var(--red-transparent);
     border: 1px solid var(--pokemon-red);
-    color: var(--pokemon-dark);
+    color: var(--text-color);
 }
 
 .result-partial {
-    background-color: rgba(255, 215, 51, 0.1);
+    background-color: var(--yellow-transparent);
     border: 1px solid var(--pokemon-yellow);
-    color: var(--pokemon-dark);
+    color: var(--text-color);
 }
 
 .score {
-    font-size: 1.5rem;
+    font-size: var(--font-size-xl);
     margin: var(--spacing-sm) 0;
     font-weight: bold;
 }
@@ -393,16 +489,18 @@ input.incorrect {
     margin: 0 5px;
 }
 
+.celebration-gif, .incorrect-gif {
+    display: none;
+}
+
 .celebration-gif {
     width: 30px;
     height: 30px;
-    display: none;
 }
 
 .incorrect-gif {
     width: 35px;
     height: 35px;
-    display: none;
 }
 
 .celebration-gif img, .incorrect-gif img {
@@ -412,110 +510,14 @@ input.incorrect {
 }
 
 /* Debug info */
-.debug-info {
+.debug-info, #nextQuiz {
     display: none;
-}
-
-/* Hide Next Question button by default */
-#nextQuiz {
-    display: none;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    :root {
-        --spacing-xl: 1.5rem;
-        --spacing-lg: 1.2rem;
-        --spacing-md: 0.8rem;
-        --spacing-sm: 0.4rem;
-    }
-
-    main {
-        padding: var(--spacing-md);
-    }
-
-    header h1 {
-        font-size: 2rem;
-    }
-
-    .equation {
-        font-size: 1.2rem;
-        padding: var(--spacing-md);
-    }
-
-    .quiz-list {
-        grid-template-columns: 1fr;
-        gap: var(--spacing-md);
-    }
-
-    input[type="number"] {
-        font-size: 1rem;
-        width: 80px;
-    }
-
-    .button-base {
-        padding: 0.8rem 1.5rem;
-        font-size: 1.1rem;
-        min-width: 140px;
-    }
-
-    .quiz-controls, .button-container {
-        flex-direction: column;
-        gap: var(--spacing-sm);
-        width: 100%;
-    }
-
-    .quiz-controls .button-base, .button-container .button-base {
-        width: 100%;
-    }
-
-    .result-correct, .result-incorrect, .result-partial, .result-container {
-        font-size: 1.2rem;
-        padding: var(--spacing-sm);
-    }
-
-    .main-nav ul {
-        flex-direction: column;
-        gap: var(--spacing-sm);
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-        gap: var(--spacing-md);
-    }
-    
-    .difficulty-buttons {
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 480px) {
-    header h1 {
-        font-size: 1.8rem;
-    }
-
-    .equation {
-        font-size: 1.1rem;
-    }
-
-    .answers-section, .solution-container {
-        padding: var(--spacing-md);
-    }
-
-    .welcome-section {
-        padding: var(--spacing-md);
-    }
-    
-    .profile-container,
-    .new-exercise-container {
-        padding: var(--spacing-sm);
-    }
 }
 
 .equals-sign {
-    font-size: 1.4rem;
+    font-size: var(--font-size-lg);
     margin: 0 var(--spacing-sm);
-    color: var(--pokemon-dark);
+    color: var(--text-color);
 }
 
 /* Footer */
@@ -524,10 +526,10 @@ footer {
     width: 100%;
     background-color: #f5f5f5;
     text-align: center;
-    font-size: 0.7rem;
-    color: #666;
+    font-size: var(--font-size-sm);
+    color: var(--text-color-muted);
     padding: 5px 0;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-color-light);
     margin-top: var(--spacing-xl);
 }
 
@@ -549,5 +551,87 @@ footer {
 }
 
 .version-info {
-    color: #666;
+    color: var(--text-color-muted);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    :root {
+        --spacing-xl: 1.5rem;
+        --spacing-lg: 1.2rem;
+        --spacing-md: 0.8rem;
+        --spacing-sm: 0.4rem;
+    }
+
+    main {
+        padding: var(--spacing-md);
+    }
+
+    header h1 {
+        font-size: var(--font-size-xxl);
+    }
+
+    .equation {
+        font-size: var(--font-size-md);
+        padding: var(--spacing-md);
+    }
+
+    .quiz-list {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    input[type="number"] {
+        font-size: var(--font-size-base);
+        width: 80px;
+    }
+
+    .button-base {
+        padding: 0.8rem 1.5rem;
+        font-size: 1.1rem;
+        min-width: 140px;
+    }
+
+    .quiz-controls, .button-container {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        width: 100%;
+    }
+
+    .quiz-controls .button-base, .button-container .button-base {
+        width: 100%;
+    }
+
+    .result-correct, .result-incorrect, .result-partial, .result-container {
+        font-size: var(--font-size-md);
+        padding: var(--spacing-sm);
+    }
+
+    .main-nav ul,
+    .action-buttons,
+    .difficulty-buttons {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .equation {
+        font-size: 1.1rem;
+    }
+
+    .answers-section, .solution-container,
+    .welcome-section, .profile-container,
+    .new-exercise-container {
+        padding: var(--spacing-md);
+    }
+    
+    .profile-container,
+    .new-exercise-container {
+        padding: var(--spacing-sm);
+    }
 } 
