@@ -21,11 +21,23 @@ class GameManager:
         self.session_manager = session_manager
 
     @classmethod
-    def start_session(cls, quiz_data: GameConfig) -> 'GameManager':
-        """Create a new quiz session."""
+    def start_session(cls, quiz_data: GameConfig, session_manager: Optional[SessionManager] = None) -> 'GameManager':
+        """
+        Create a new quiz session.
+        
+        Args:
+            quiz_data: The game configuration
+            session_manager: Optional session manager. If not provided, one will be loaded from Flask session.
+        
+        Returns:
+            A new GameManager instance
+        """
+        if session_manager is None:
+            session_manager = SessionManager.load_from_flask_session()
+            
         return cls(
             game_config=quiz_data,
-            session_manager=SessionManager.load_from_flask_session()
+            session_manager=session_manager
         )
 
     def save_session(self):

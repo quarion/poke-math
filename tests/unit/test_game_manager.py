@@ -8,7 +8,7 @@ import pytest
 from pathlib import Path
 from src.app.game.game_config import load_game_config
 from src.app.game.game_manager import GameManager
-from src.app.game.session_manager import SessionManager
+from src.app.game.session_manager import SessionManager, SessionState
 
 @pytest.fixture
 def test_data_path():
@@ -19,9 +19,17 @@ def quiz_data(test_data_path):
     return load_game_config(test_data_path)
 
 @pytest.fixture
-def quiz_session(quiz_data):
-    """Fixture providing a fresh GameManager instance."""
-    return GameManager.start_session(quiz_data)
+def mock_session_manager():
+    """Create a SessionManager that doesn't depend on Flask session."""
+    session_manager = SessionManager()
+    # Initialize with empty state
+    session_manager.state = SessionState()
+    return session_manager
+
+@pytest.fixture
+def quiz_session(quiz_data, mock_session_manager):
+    """Fixture providing a fresh GameManager instance with injected SessionManager."""
+    return GameManager.start_session(quiz_data, session_manager=mock_session_manager)
 
 def test_game_manager_creation(quiz_session, quiz_data):
     """Test if GameManager is created with correct initial state."""

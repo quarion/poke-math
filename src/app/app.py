@@ -23,6 +23,7 @@ def get_quiz_session() -> GameManager:
     """
     Get a GameManager instance with session data loaded from Flask session.
     """
+    # We don't provide a session_manager here, so it will be loaded from Flask session
     return GameManager.start_session(QUIZ_DATA)
 
 @app.route('/')

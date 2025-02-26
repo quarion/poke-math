@@ -38,12 +38,22 @@ def quiz_data(test_data_path):
 
 
 @pytest.fixture
-def game_manager(quiz_data):
+def mock_session_manager():
+    """Create a SessionManager that doesn't depend on Flask session."""
+    from src.app.game.session_manager import SessionManager, SessionState
+    session_manager = SessionManager()
+    # Initialize with empty state
+    session_manager.state = SessionState()
+    return session_manager
+
+
+@pytest.fixture
+def game_manager(quiz_data, mock_session_manager):
     """
     Fixture providing a fresh GameManager instance for each test.
     Creates new instance to ensure tests start with clean state.
     """
-    return GameManager.start_session(quiz_data)
+    return GameManager.start_session(quiz_data, session_manager=mock_session_manager)
 
 
 @pytest.fixture
