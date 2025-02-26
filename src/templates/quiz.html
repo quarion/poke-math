@@ -1,198 +1,101 @@
 {% extends "base.html" %}
-{% block title %}{% if is_random %}Random Exercise{% else %}{{ quiz.title }}{% endif %} - Pokemath!{% endblock %}
+{% block title %}{{ quiz.title }} - Pokemath!{% endblock %}
 
 {% block content %}
   <!-- Debug info (hidden) -->
   <div class="debug-info" style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; display: block;">
     <h4>Debug Information</h4>
-    {% if is_random %}
-      <p>Random Quiz ID: {{ quiz_id }}</p>
-      <p>Difficulty: {{ difficulty.name }}</p>
-      <p>Equations (raw): {{ equations }}</p>
-      <p>Pokemon Variables: {{ pokemon_vars }}</p>
-      <p>Solution: {{ solution }}</p>
-      
+    <p>Quiz: {{ quiz }}</p>
+    <p>Pokemon vars: {{ quiz.pokemon_vars }}</p>
+    
+    {% if quiz.is_random %}
       <h5>Equation Replacement Debug:</h5>
-      {% for equation in equations %}
+      {% for equation in quiz.equations %}
         <div style="margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px;">
           <p>Original equation: {{ equation }}</p>
-          <p>After replacement:</p>
-          {% set ns = namespace(equation=equation) %}
-          {% for var, image_file in pokemon_vars.items() %}
-            <p>Checking for variable: {{ var }}</p>
-            <!-- Try both direct variable name and {var} format -->
-            {% if var in ns.equation %}
-              <p>✅ Found direct match for {{ var }}</p>
-              {% set ns.equation = ns.equation | replace(var, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ var ~ '">') %}
-            {% else %}
-              {% set placeholder = "{" ~ var ~ "}" %}
-              {% if placeholder in ns.equation %}
-                <p>✅ Found placeholder match for {{ placeholder }}</p>
-                {% set ns.equation = ns.equation | replace(placeholder, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ var ~ '">') %}
-              {% else %}
-                <p>❌ Variable {{ var }} not found in equation (tried both {{ var }} and {{ placeholder }})</p>
-              {% endif %}
-            {% endif %}
-          {% endfor %}
-          <p>Final equation: {{ ns.equation | safe }}</p>
+          <p>Final equation (after replacement): {{ quiz.replace_variables_with_images(equation) | safe }}</p>
         </div>
       {% endfor %}
-    {% else %}
-      <p>Quiz: {{ quiz }}</p>
-      <p>Pokemon vars: {{ pokemon_vars }}</p>
     {% endif %}
   </div>
 
   <article class="quiz-content">
-    {% if is_random %}
-      <div class="quiz-header">
-        <h2>Random Exercise</h2>
-        <div class="difficulty-tag">{{ difficulty.name }}</div>
-      </div>
-    {% else %}
+    <div class="quiz-header">
       <h2>{{ quiz.title }}</h2>
+      {% if quiz.has_difficulty() %}
+        <div class="difficulty-tag">{{ quiz.difficulty.name }}</div>
+      {% endif %}
+    </div>
+    
+    {% if quiz.description %}
       <p>{{ quiz.description }}</p>
     {% endif %}
 
-    <form id="quizForm" method="POST" action="{% if is_random %}{{ url_for('random_quiz', quiz_id=quiz_id) }}{% endif %}">
+    <form id="quizForm" method="POST" action="{{ request.path }}">
       <div class="equations-section">
-        {% if is_random %}
-          {% for equation in equations %}
-            {% set ns = namespace(equation=equation) %}
-            {% for var, image_file in pokemon_vars.items() %}
-              <!-- Try both direct variable name and {var} format -->
-              {% if var in ns.equation %}
-                {% set ns.equation = ns.equation | replace(var, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ var ~ '">') %}
-              {% else %}
-                {% set placeholder = "{" ~ var ~ "}" %}
-                {% if placeholder in ns.equation %}
-                  {% set ns.equation = ns.equation | replace(placeholder, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ var ~ '">') %}
-                {% endif %}
-              {% endif %}
-            {% endfor %}
-            <div class="equation">
-              <div class="equation-content">{{ ns.equation | safe }}</div>
-            </div>
-          {% endfor %}
-        {% else %}
-          {% for equation in quiz.equations %}
-            {% set ns = namespace(equation=equation) %}
-            {% for pokemon_name, image_file in pokemon_vars.items() %}
-              <!-- Try both direct variable name and {var} format -->
-              {% if pokemon_name in ns.equation %}
-                {% set ns.equation = ns.equation | replace(pokemon_name, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ pokemon_name ~ '">') %}
-              {% else %}
-                {% set placeholder = "{" ~ pokemon_name ~ "}" %}
-                {% if placeholder in ns.equation %}
-                  {% set ns.equation = ns.equation | replace(placeholder, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ pokemon_name ~ '">') %}
-                {% endif %}
-              {% endif %}
-            {% endfor %}
-            <div class="equation">
-              <div class="equation-content">{{ ns.equation | safe }}</div>
-            </div>
-          {% endfor %}
-        {% endif %}
+        {% for equation in quiz.equations %}
+          <div class="equation">
+            <div class="equation-content">{{ quiz.replace_variables_with_images(equation) | safe }}</div>
+          </div>
+        {% endfor %}
       </div>
 
       <div class="answers-section">
         <h3>Your Answers</h3>
-        {% if is_random %}
-          <div class="answer-inputs">
-            {% for var, _ in solution.items() %}
-              <div class="input-group">
-                <div class="answer-input">
-                  <label for="{{ var }}">
-                    <img src="/static/images/{{ pokemon_vars[var] }}" class="pokemon-var" alt="{{ var }}">
-                  </label>
-                  <span class="equals-sign">=</span>
-                  <input 
-                    type="number" 
-                    name="{{ var }}" 
-                    id="{{ var }}" 
-                    value="{{ user_answers[var] if var in user_answers else '' }}"
-                    {% if result and var in result.correct_answers %}
-                      class="{{ 'correct' if result.correct_answers[var] else 'incorrect' }}"
-                    {% endif %}
-                    required
-                  >
-                </div>
-                <div class="celebration-gif" id="celebration-{{ var }}" {% if result and var in result.correct_answers and result.correct_answers[var] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
-                  <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
-                </div>
-                <div class="incorrect-gif" id="incorrect-{{ var }}" {% if result and var in result.correct_answers and not result.correct_answers[var] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
-                  <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
-                </div>
+        <div class="answer-inputs">
+          {% for var in quiz.variables %}
+            <div class="input-group">
+              <div class="answer-input">
+                <label for="{{ var }}">
+                  <img src="/static/images/{{ quiz.get_pokemon_image(var) }}" class="pokemon-var" alt="{{ var }}">
+                </label>
+                <span class="equals-sign">=</span>
+                <input 
+                  type="number" 
+                  name="{{ var }}" 
+                  id="{{ var }}" 
+                  value="{{ user_answers[var] if var in user_answers else '' }}"
+                  {% if result and var in result.correct_answers %}
+                    class="{{ 'correct' if result.correct_answers[var] else 'incorrect' }}"
+                  {% endif %}
+                  required
+                >
               </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="answer-inputs">
-            {% for unknown, correct_value in quiz.answer.values.items() %}
-              <div class="input-group">
-                <div class="answer-input">
-                  <label for="{{ unknown }}">
-                    <img src="/static/images/{{ pokemon_vars[unknown] }}" class="pokemon-var" alt="{{ unknown }}">
-                  </label>
-                  <span class="equals-sign">=</span>
-                  <input 
-                    type="number" 
-                    name="{{ unknown }}" 
-                    id="{{ unknown }}" 
-                    value="{{ user_answers[unknown] if unknown in user_answers else '' }}"
-                    {% if result and unknown in result.correct_answers %}
-                      class="{{ 'correct' if result.correct_answers[unknown] else 'incorrect' }}"
-                    {% endif %}
-                    required
-                  >
-                </div>
-                <div class="celebration-gif" id="celebration-{{ unknown }}" {% if result and unknown in result.correct_answers and result.correct_answers[unknown] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
-                  <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
-                </div>
-                <div class="incorrect-gif" id="incorrect-{{ unknown }}" {% if result and unknown in result.correct_answers and not result.correct_answers[unknown] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
-                  <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
-                </div>
+              <div class="celebration-gif" id="celebration-{{ var }}" {% if result and var in result.correct_answers and result.correct_answers[var] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+                <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
               </div>
-            {% endfor %}
-          </div>
-        {% endif %}
+              <div class="incorrect-gif" id="incorrect-{{ var }}" {% if result and var in result.correct_answers and not result.correct_answers[var] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+                <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
+              </div>
+            </div>
+          {% endfor %}
+        </div>
       </div>
 
       <div class="quiz-controls">
-        {% if is_random %}
+        {% if quiz.is_random %}
           <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Back to Difficulty Selection</a>
-          <button type="submit" id="submitBtn" class="button-base button-green">Check Answers</button>
         {% else %}
           <a href="{{ url_for('index') }}" class="button-base button-dark">Back to List</a>
-          <button type="submit" id="submitBtn" class="button-base button-green">Check Answers</button>
-          {% if quiz.next_quiz_id %}
-            <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" id="nextQuiz" {% if not result or not result.correct %}style="display: none;"{% endif %}>Next Question →</a>
-          {% endif %}
+        {% endif %}
+        <button type="submit" id="submitBtn" class="button-base button-green">Check Answers</button>
+        {% if quiz.next_quiz_id %}
+          <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" id="nextQuiz" {% if not result or not result.correct %}style="display: none;"{% endif %}>Next Question →</a>
         {% endif %}
       </div>
     </form>
 
-    {% if is_random and result %}
+    {% if result %}
       <div class="result-container {{ 'correct' if result.correct else 'incorrect' }}">
         <h3>{{ "Correct!" if result.correct else "Not quite right..." }}</h3>
         <div class="score">{{ result.correct_count }} / {{ result.total_count }} correct</div>
         
         {% if result.correct %}
         <div class="congratulations">
-          <p>Congratulations! You solved the random equation!</p>
-          <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try Another Exercise</a>
-        </div>
-        {% endif %}
-      </div>
-    {% elif not is_random and result %}
-      <div class="result-container {{ 'correct' if result.correct else 'incorrect' }}">
-        <h3>{{ "Correct!" if result.correct else "Not quite right..." }}</h3>
-        <div class="score">{{ result.correct_count }} / {{ result.total_count }} correct</div>
-        
-        {% if result.correct %}
-        <div class="congratulations">
-          <p>Congratulations! You solved the equation!</p>
-          {% if quiz.next_quiz_id %}
+          <p>Congratulations! You solved the {% if quiz.is_random %}random {% endif %}equation!</p>
+          {% if quiz.is_random %}
+            <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try Another Exercise</a>
+          {% elif quiz.next_quiz_id %}
             <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue">Next Question →</a>
           {% endif %}
         </div>
@@ -203,10 +106,22 @@
     {% endif %}
   </article>
 
-  {% if is_random %}
+  {# Render some data as JSON for JavaScript to use #}
+  <script type="application/json" id="quiz-data">
+    {
+      "isRandom": {{ quiz.is_random|tojson }},
+      "newExerciseUrl": {{ url_for('new_exercise')|tojson }}
+    }
+  </script>
+
   <script>
-    // Script for random quiz - make it use AJAX like the non-random quizzes
+    // Unified script for both random and non-random quizzes
     document.addEventListener('DOMContentLoaded', function() {
+      // Get data from the JSON script tag
+      const quizData = JSON.parse(document.getElementById('quiz-data').textContent);
+      const isRandom = quizData.isRandom;
+      const newExerciseUrl = quizData.newExerciseUrl;
+      
       const form = document.getElementById('quizForm');
       
       form.addEventListener('submit', function(e) {
@@ -252,9 +167,16 @@
             }
           });
           
-          // Update the result container based on the result
+          // Get references to UI elements
+          const resultsDiv = document.getElementById('quiz-results');
+          const nextButton = document.getElementById('nextQuiz');
+          const submitButton = document.getElementById('submitBtn');
+          
+          // Handle the result display for both quiz types
           const resultContainer = document.querySelector('.result-container');
+          
           if (resultContainer) {
+            // Update existing result container
             resultContainer.className = `result-container ${data.correct ? 'correct' : 'incorrect'}`;
             
             const heading = resultContainer.querySelector('h3');
@@ -271,132 +193,68 @@
             if (congratsDiv) {
               congratsDiv.style.display = data.correct ? 'block' : 'none';
             }
-          } else {
-            // If result container doesn't exist yet, create it
-            const newResultContainer = document.createElement('div');
-            newResultContainer.className = `result-container ${data.correct ? 'correct' : 'incorrect'}`;
-            newResultContainer.innerHTML = `
-              <h3>${data.correct ? 'Correct!' : 'Not quite right...'}</h3>
-              <div class="score">${data.correct_count} / ${data.total_count} correct</div>
-              ${data.correct ? `
-                <div class="congratulations">
-                  <p>Congratulations! You solved the random equation!</p>
-                  <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try Another Exercise</a>
-                </div>
-              ` : ''}
-            `;
+          } else if (resultsDiv) {
+            // Create new result in the resultsDiv
+            let resultHtml;
             
-            // Insert after the form
-            form.parentNode.insertBefore(newResultContainer, form.nextSibling);
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
-      });
-    });
-  </script>
-  {% else %}
-  <script>
-    // Script for non-random quiz - uses AJAX form submission
-    document.addEventListener('DOMContentLoaded', function() {
-      const form = document.getElementById('quizForm');
-      
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        fetch(window.location.pathname, {
-          method: 'POST',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          const resultsDiv = document.getElementById('quiz-results');
-          const nextButton = document.getElementById('nextQuiz');
-          const submitButton = document.getElementById('submitBtn');
-          
-          // Hide all celebration and incorrect gifs first
-          document.querySelectorAll('.celebration-gif, .incorrect-gif').forEach(gif => {
-            gif.style.display = 'none';
-          });
-          
-          // Update input classes for correct/incorrect answers
-          Object.entries(data.correct_answers).forEach(([pokemon, isCorrect]) => {
-            const input = document.getElementById(pokemon);
-            if (input) {
-              input.className = isCorrect ? 'correct' : 'incorrect';
-            }
-            
-            // Only show gifs for answers that were provided
-            if (formData.has(pokemon) && formData.get(pokemon).trim() !== '') {
-              if (isCorrect) {
-                // Show pokeball for correct answers
-                const celebrationGif = document.getElementById(`celebration-${pokemon}`);
-                if (celebrationGif) {
-                  celebrationGif.style.display = 'block';
-                }
-              } else {
-                // Show psyduck for incorrect answers
-                const incorrectGif = document.getElementById(`incorrect-${pokemon}`);
-                if (incorrectGif) {
-                  incorrectGif.style.display = 'block';
-                }
-              }
-            }
-          });
-          
-          if (data.correct) {
-            // All answers are correct and all questions were answered
-            resultsDiv.innerHTML = `
-              <div class="result-container correct">
-                <h3>Correct!</h3>
-                <div class="score">${data.correct_count} / ${data.total_count} correct</div>
-                <div class="congratulations">
-                  <p>Congratulations! You solved the equation!</p>
-                </div>
-              </div>
-            `;
-            submitButton.style.display = 'none';
-            if (nextButton) {
-              nextButton.style.display = 'inline-block';
-              nextButton.focus();
-            }
-          } else {
-            // Not all correct or not all answered
-            if (data.correct_count > 0) {
-              // Some answers are correct
-              resultsDiv.innerHTML = `
-                <div class="result-container incorrect">
-                  <h3>Making Progress!</h3>
+            if (data.correct) {
+              // All answers are correct and all questions were answered
+              const tryAnotherLink = isRandom ? 
+                '<a href="' + newExerciseUrl + '" class="button-base button-blue">Try Another Exercise</a>' : 
+                '';
+                
+              resultHtml = `
+                <div class="result-container correct">
+                  <h3>Correct!</h3>
                   <div class="score">${data.correct_count} / ${data.total_count} correct</div>
-                  ${!data.all_answered ? '<p>Try filling in all the answers!</p>' : ''}
-                </div>
-              `;
-            } else if (!data.all_answered && data.correct_count === 0) {
-              // No answers or all wrong
-              resultsDiv.innerHTML = `
-                <div class="result-container incorrect">
-                  <h3>Keep trying!</h3>
-                  <p>Fill in your answers and try again.</p>
+                  <div class="congratulations">
+                    <p>Congratulations! You solved the ${isRandom ? 'random ' : ''}equation!</p>
+                    ${tryAnotherLink}
+                  </div>
                 </div>
               `;
             } else {
-              // All answered but all wrong
-              resultsDiv.innerHTML = `
-                <div class="result-container incorrect">
-                  <h3>Keep trying!</h3>
-                  <p>None of your answers are correct yet.</p>
-                </div>
-              `;
+              // Not all correct or not all answered
+              if (data.correct_count > 0) {
+                // Some answers are correct
+                resultHtml = `
+                  <div class="result-container incorrect">
+                    <h3>Making Progress!</h3>
+                    <div class="score">${data.correct_count} / ${data.total_count} correct</div>
+                    ${!data.all_answered ? '<p>Try filling in all the answers!</p>' : ''}
+                  </div>
+                `;
+              } else if (!data.all_answered && data.correct_count === 0) {
+                // No answers or all wrong
+                resultHtml = `
+                  <div class="result-container incorrect">
+                    <h3>Keep trying!</h3>
+                    <p>Fill in your answers and try again.</p>
+                  </div>
+                `;
+              } else {
+                // All answered but all wrong
+                resultHtml = `
+                  <div class="result-container incorrect">
+                    <h3>Keep trying!</h3>
+                    <p>None of your answers are correct yet.</p>
+                  </div>
+                `;
+              }
             }
             
-            submitButton.style.display = 'inline-block';
-            if (nextButton) {
-              nextButton.style.display = 'none';
+            resultsDiv.innerHTML = resultHtml;
+          }
+          
+          // Update button visibility
+          if (submitButton) {
+            submitButton.style.display = data.correct ? 'none' : 'inline-block';
+          }
+          
+          if (nextButton) {
+            nextButton.style.display = data.correct ? 'inline-block' : 'none';
+            if (data.correct) {
+              nextButton.focus();
             }
           }
         })
@@ -406,5 +264,4 @@
       });
     });
   </script>
-  {% endif %}
 {% endblock %}

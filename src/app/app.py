@@ -6,6 +6,9 @@ from src.app.equations.equations_generator import MathEquationGenerator
 import os
 import uuid
 import random
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Any, Union
+import dataclasses
 
 # Create Flask app with correct template and static folders
 app = Flask(__name__,
@@ -38,6 +41,201 @@ def get_quiz_session() -> GameManager:
     """
     # We don't provide a session_manager here, so it will be loaded from Flask session
     return GameManager.start_session(GAME_CONFIG)
+
+
+@dataclass
+class QuizViewModel:
+    """Strongly typed view model for quiz templates."""
+    # Basic quiz information
+    id: str
+    title: str
+    equations: List[str]
+    variables: List[str]
+    pokemon_vars: Dict[str, str]  # Variable name -> Pokemon image path
+    
+    # Optional fields with default values must come after required fields
+    description: str = ""
+    is_random: bool = False
+    difficulty: Optional[Dict[str, Any]] = None
+    next_quiz_id: Optional[str] = None
+    has_next: bool = False
+    
+    def get_pokemon_image(self, variable: str) -> str:
+        """Get the Pokemon image filename for a variable."""
+        return self.pokemon_vars.get(variable, "default.png")
+    
+    def has_difficulty(self) -> bool:
+        """Check if this quiz has difficulty information."""
+        return self.difficulty is not None
+    
+    def replace_variables_with_images(self, equation: str) -> str:
+        """Replace variable placeholders with Pokemon images in an equation."""
+        result = equation
+        for var, img_path in self.pokemon_vars.items():
+            img_tag = f'<img src="/static/images/{img_path}" class="pokemon-var" alt="{var}">'
+            
+            # Replace direct variable name
+            result = result.replace(var, img_tag)
+            
+            # Also replace {var} placeholders
+            placeholder = "{" + var + "}"
+            result = result.replace(placeholder, img_tag)
+            
+        return result
+    
+    @classmethod
+    def from_random_quiz(cls, quiz_data: Dict[str, Any], pokemon_vars: Dict[str, str]) -> 'QuizViewModel':
+        """Create a QuizViewModel from a random quiz dictionary."""
+        return cls(
+            id=quiz_data['quiz_id'],
+            title='Random Exercise',
+            equations=quiz_data['equations'],
+            variables=list(quiz_data['solution'].keys()),
+            pokemon_vars=pokemon_vars,
+            description='',
+            is_random=True,
+            difficulty=quiz_data['difficulty'],
+            next_quiz_id=None,
+            has_next=False
+        )
+    
+    @classmethod
+    def from_regular_quiz(cls, quiz_data: Any, pokemon_vars: Dict[str, str]) -> 'QuizViewModel':
+        """Create a QuizViewModel from a regular quiz object."""
+        return cls(
+            id=quiz_data.id,
+            title=quiz_data.title,
+            equations=quiz_data.equations,
+            variables=list(quiz_data.answer.values.keys()),
+            pokemon_vars=pokemon_vars,
+            description=quiz_data.description,
+            is_random=False,
+            next_quiz_id=quiz_data.next_quiz_id,
+            has_next=quiz_data.next_quiz_id is not None
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the view model to a dictionary for debugging."""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'equations': self.equations,
+            'variables': self.variables,
+            'pokemon_vars': self.pokemon_vars,
+            'is_random': self.is_random,
+            'difficulty': self.difficulty,
+            'next_quiz_id': self.next_quiz_id,
+            'has_next': self.has_next
+        }
+        
+    def __str__(self) -> str:
+        """String representation for debugging."""
+        return f"QuizViewModel(id={self.id}, title='{self.title}', variables={self.variables})"
+
+
+@dataclass
+class QuizResultViewModel:
+    """Strongly typed view model for quiz results."""
+    correct: bool
+    correct_answers: Dict[str, bool]  # Variable name -> bool indicating if correct
+    all_answered: bool
+    correct_count: int
+    total_count: int
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the view model to a dictionary for debugging and API responses."""
+        return {
+            'correct': self.correct,
+            'correct_answers': self.correct_answers,
+            'all_answered': self.all_answered,
+            'correct_count': self.correct_count,
+            'total_count': self.total_count
+        }
+    
+    def __str__(self) -> str:
+        """String representation for debugging."""
+        return f"QuizResultViewModel(correct={self.correct}, score={self.correct_count}/{self.total_count})"
+
+
+def process_quiz_answers(user_answers: Dict[str, int], expected_answers: Dict[str, Union[int, str]]) -> QuizResultViewModel:
+    """
+    Generic helper function to process quiz answers for both random and regular quizzes.
+    
+    Args:
+        user_answers: Dictionary of user-provided answers {var: value}
+        expected_answers: Dictionary of expected answers {var: value}
+        
+    Returns:
+        QuizResultViewModel: A standardized result object containing quiz results data
+    """
+    # Check each answer
+    correct_answers = {}
+    all_correct = True
+    all_answered = len(user_answers) == len(expected_answers)
+    
+    for var, expected in expected_answers.items():
+        if var in user_answers:
+            # For random quizzes, expected might be a string
+            expected_value = int(float(expected)) if isinstance(expected, str) else expected
+            is_correct = user_answers[var] == expected_value
+            
+            correct_answers[var] = is_correct
+            if not is_correct:
+                all_correct = False
+        else:
+            all_answered = False
+    
+    # Count correct answers
+    correct_count = sum(1 for is_correct in correct_answers.values() if is_correct)
+    total_count = len(expected_answers)
+    
+    # Return a strongly typed result view model
+    return QuizResultViewModel(
+        correct=all_correct and all_answered,
+        correct_answers=correct_answers,
+        all_answered=all_answered,
+        correct_count=correct_count,
+        total_count=total_count
+    )
+
+
+def render_quiz_template(
+    is_random: bool, 
+    quiz_data: Union[Dict[str, Any], object], 
+    pokemon_vars: Dict[str, str], 
+    result: Optional[QuizResultViewModel] = None, 
+    user_answers: Optional[Dict[str, int]] = None
+) -> Any:
+    """
+    Standardized function to render the quiz template for both random and regular quizzes.
+    
+    Args:
+        is_random: Whether this is a random quiz (included in the unified data)
+        quiz_data: For random quizzes, a dictionary with equations, solution, etc. 
+                  For regular quizzes, the quiz object from GameManager
+        pokemon_vars: Dictionary mapping variable names to Pokemon image paths
+        result: Optional result object from checking answers
+        user_answers: Optional dictionary of user submitted answers
+        
+    Returns:
+        Response: Flask response with rendered template
+    """
+    if user_answers is None:
+        user_answers = {}
+    
+    # Create a strongly-typed view model based on the quiz type
+    quiz = (QuizViewModel.from_random_quiz(quiz_data, pokemon_vars) if is_random 
+            else QuizViewModel.from_regular_quiz(quiz_data, pokemon_vars))
+    
+    template_args = {
+        'quiz': quiz,  # Strongly typed view model
+        'result': result,
+        'user_answers': user_answers,
+        'version_info': get_version_info(),
+    }
+    
+    return render_template('quiz.html', **template_args)
 
 
 @app.route('/')
@@ -145,6 +343,8 @@ def random_quiz(quiz_id):
         return "Quiz not found", 404
 
     stored_quiz = session['random_quizzes'][quiz_id]
+    # Add quiz_id to the stored_quiz for the template
+    stored_quiz['quiz_id'] = quiz_id
 
     if request.method == 'POST':
         # Filter out empty inputs
@@ -154,59 +354,28 @@ def random_quiz(quiz_id):
             if value.strip() and key in stored_quiz['solution']  # Only include non-empty values for solution variables
         }
 
-        # Check the answers
-        correct_answers = {}
-        all_correct = True
-        all_answered = len(user_answers) == len(stored_quiz['solution'])
-
-        for var, expected in stored_quiz['solution'].items():
-            if var in user_answers:
-                is_correct = user_answers[var] == int(float(expected))
-                correct_answers[var] = is_correct
-                if not is_correct:
-                    all_correct = False
-            else:
-                all_answered = False
-
-        # Count correct answers
-        correct_count = sum(1 for is_correct in correct_answers.values() if is_correct)
-        total_count = len(stored_quiz['solution'])
-
-        result = {
-            'correct': all_correct and all_answered,
-            'correct_answers': correct_answers,
-            'all_answered': all_answered,
-            'correct_count': correct_count,
-            'total_count': total_count
-        }
+        result = process_quiz_answers(user_answers, stored_quiz['solution'])
 
         # If it's an AJAX request, return JSON
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify(result)
+            # Use our to_dict method for cleaner JSON serialization
+            return jsonify(result.to_dict())
 
         # For regular form submissions (fallback)
-        return render_template('quiz.html',
-                               is_random=True,
-                               quiz_id=quiz_id,
-                               equations=stored_quiz['equations'],
-                               solution=stored_quiz['solution'],
-                               difficulty=stored_quiz['difficulty'],
-                               pokemon_vars=stored_quiz['pokemon_vars'],
-                               result=result,
-                               user_answers=user_answers,
-                               version_info=get_version_info())
+        return render_quiz_template(
+            is_random=True,
+            quiz_data=stored_quiz,
+            pokemon_vars=stored_quiz['pokemon_vars'],
+            result=result,
+            user_answers=user_answers
+        )
 
     # GET request - just display the quiz
-    return render_template('quiz.html',
-                           is_random=True,
-                           quiz_id=quiz_id,
-                           equations=stored_quiz['equations'],
-                           solution=stored_quiz['solution'],
-                           difficulty=stored_quiz['difficulty'],
-                           pokemon_vars=stored_quiz['pokemon_vars'],
-                           result=None,
-                           user_answers={},
-                           version_info=get_version_info())
+    return render_quiz_template(
+        is_random=True,
+        quiz_data=stored_quiz,
+        pokemon_vars=stored_quiz['pokemon_vars']
+    )
 
 
 @app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
@@ -225,30 +394,34 @@ def quiz(quiz_id):
             if value.strip()  # Only include non-empty values
         }
 
-        result = quiz_session.check_answers(quiz_id, user_answers)
-        # Save the updated session state
-        quiz_session.save_session()
+        # Process answers with our helper function
+        expected_answers = quiz_state['quiz'].answer.values
+        result = process_quiz_answers(user_answers, expected_answers)
+        
+        # Update session data if all answers are correct
+        if result.correct:
+            quiz_session.session_manager.mark_quiz_solved(quiz_id)
+            quiz_session.save_session()
 
         # If it's an AJAX request, return JSON
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify(result)
+            # Use our to_dict method for cleaner JSON serialization
+            return jsonify(result.to_dict())
 
         # For regular form submissions (fallback)
-        return render_template('quiz.html',
-                               is_random=False,
-                               quiz=quiz_state['quiz'],
-                               pokemon_vars=quiz_state['pokemon_vars'],
-                               result=result,
-                               user_answers=user_answers,
-                               version_info=get_version_info())
+        return render_quiz_template(
+            is_random=False,
+            quiz_data=quiz_state['quiz'],
+            pokemon_vars=quiz_state['pokemon_vars'],
+            result=result,
+            user_answers=user_answers
+        )
 
-    return render_template('quiz.html',
-                           is_random=False,
-                           quiz=quiz_state['quiz'],
-                           pokemon_vars=quiz_state['pokemon_vars'],
-                           result=None,
-                           user_answers={},
-                           version_info=get_version_info())
+    return render_quiz_template(
+        is_random=False,
+        quiz_data=quiz_state['quiz'],
+        pokemon_vars=quiz_state['pokemon_vars']
+    )
 
 
 @app.route('/reset_progress', methods=['POST'])
