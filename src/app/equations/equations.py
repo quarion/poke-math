@@ -156,7 +156,11 @@ class MathEquationGenerator:
             # Ensure at least two terms for the first variable to guarantee an operation
             if len(var_symbols) == 1:
                 # If only one variable, make sure to have at least 2 terms
-                coef = random.randint(2, max_per_var)
+                # But if max_per_var is less than 2, use max_per_var to avoid ValueError
+                if max_per_var < 2:
+                    coef = max_per_var  # Use the max possible value
+                else:
+                    coef = random.randint(2, max_per_var)
             else:
                 coef = random.randint(1, max_per_var)
 
@@ -386,120 +390,85 @@ class MathEquationGenerator:
 if __name__ == "__main__":
     generator = MathEquationGenerator()
 
-    # Define different difficulty configurations
-    configrations_simple = [
+    # TODO: review the num_helper_equations parameter - how it affects the generation and do we need it
+    # TODO: review the "complexity" parameter as above
+
+    configurations_simple = [
         {
             "name": "Very Simple (Grade 1-2)",
+            "difficulty": 1,
             "params": {
                 "num_unknowns": 1,
-                "complexity": 1,
                 "num_equations": 1,
-                "max_elements": 3,
-                "allow_fractions": False,
-                "allow_division": False,
+                "max_elements": 1,
                 "very_simple": True,
                 "ensure_operation": False
             }
         },
         {
             "name": "Very Simple 2 (Grade 1-2)",
+            "difficulty": 2,
             "params": {
                 "num_unknowns": 1,
                 "num_equations": 1,
-                "max_elements": 3,
-                "complexity": 1,
-                "allow_fractions": False,
-                "allow_division": False,
+                "max_elements": 2,
                 "very_simple": True,
-                "ensure_operation": True
             }
         },
         {
             "name": "Very Simple 3 (Grade 1-2)",
+            "difficulty": 3,
             "params": {
                 "num_unknowns": 1,
                 "num_equations": 2,
-                "max_elements": 3,
-                "complexity": 1,
-                "allow_fractions": False,
-                "allow_division": False,
+                "max_elements": 2,
                 "very_simple": True,
-                "ensure_operation": True
             }
         },
         {
             "name": "Very Simple 4 (Grade 1-2)",
+            "difficulty": 4,
             "params": {
                 "num_unknowns": 1,
                 "num_equations": 2,
-                "complexity": 1,
-                "allow_fractions": False,
-                "allow_division": False,
-                "very_simple": True,
                 "max_elements": 3,
-                "ensure_operation": True
+                "very_simple": True,
             }
         },
         {
             "name": "Basic (Grade 3-4)",
+            "difficulty": 5,
             "params": {
                 "num_unknowns": 2,
-                "num_equations": 2,
-                "complexity": 1,
-                "allow_fractions": False,
-                "allow_division": False,
-                "very_simple": False,
-                "max_elements": 3,
-                "ensure_operation": True
-            }
-        }
-    ]
-
-    configrations_advanced = [
-        {
-            "name": "Intermediate (Grade 5-6)",
-            "params": {
-                "num_unknowns": 1,
-                "num_equations": 2,
-                "complexity": 2,
-                "allow_fractions": True,
-                "allow_division": False,
-                "very_simple": False,
-                "max_elements": 5,  # Limit to 5 elements for intermediate equations
-                "ensure_operation": True  # Ensure at least one operation
-            }
-        },
-        {
-            "name": "Advanced (Grade 7-8)",
-            "params": {
-                "num_unknowns": 2,
-                "num_equations": 2,
-                "complexity": 2,
-                "allow_fractions": True,
-                "allow_division": True,
-                "very_simple": False,
-                "max_elements": 6,  # Limit to 6 elements for advanced equations
-                "ensure_operation": True  # Ensure at least one operation
-            }
-        },
-        {
-            "name": "Challenge (Grade 9+)",
-            "params": {
-                "num_unknowns": 3,
                 "num_equations": 3,
-                "complexity": 3,
-                "allow_fractions": True,
-                "allow_division": True,
+                "max_elements": 3,
+                "very_simple": True,
+            },
+        },
+        {
+            "name": "Basic 2 (Grade 3-4)",
+            "difficulty": 6,
+            "params": {
+                "num_unknowns": 2,
+                "num_equations": 3,
+                "max_elements": 3,
                 "very_simple": False,
-                "num_helper_equations": 1,
-                "max_elements": 8, # Limit to 8 elements for challenge equations
-                "ensure_operation": True  # Ensure at least one operation
+            }
+        },
+        {
+            "name": "Basic 2 (Grade 3-4)",
+            "difficulty": 7,
+            "params": {
+                "num_unknowns": 2,
+                "num_equations": 2,
+                "max_elements": 3,
+                "very_simple": False,
             }
         }
     ]
 
     # Generate and print examples for each difficulty level
-    for config in configrations_simple:
+    for config in configurations_simple:
         print(f"\n{'=' * 60}")
         print(f"DIFFICULTY LEVEL: {config['name']}")
         print(f"Settings: {config['params']}")
@@ -516,48 +485,3 @@ if __name__ == "__main__":
             for var, val in quiz.solution.human_readable.items():
                 print(f"{var} = {val}")
             print(f"{'-' * 40}")
-
-    # Test for single-variable equations to ensure they have operations
-    print("\nTESTING SINGLE VARIABLE EQUATIONS WITH OPERATION REQUIREMENT:")
-    for i in range(5):
-        test_simple = generator.generate_quiz(
-            num_unknowns=1,
-            complexity=1,
-            ensure_operation=True
-        )
-        print(f"Test {i + 1}:")
-        for j, eq in enumerate(test_simple.equations, 1):
-            print(f"Equation {j}: {eq.formatted}")
-    print("-" * 40)
-
-    # Test for a specific issue with duplicate equations
-    print("\nTESTING SYSTEM OF EQUATIONS FOR UNIQUENESS:")
-    test_system = generator.generate_quiz(
-        num_unknowns=2,
-        num_equations=2,
-        complexity=2,
-        max_elements=5  # Test with element limit
-    )
-    print("Equations:")
-    for j, eq in enumerate(test_system.equations, 1):
-        print(f"Equation {j}: {eq.formatted}")
-    print("\nSolution:")
-    for var, val in test_system.solution.human_readable.items():
-        print(f"{var} = {val}")
-    print("-" * 40)
-
-    # Test with very simple equations and element limit
-    print("\nTESTING VERY SIMPLE EQUATIONS WITH ELEMENT LIMIT:")
-    test_simple = generator.generate_quiz(
-        num_unknowns=2,
-        complexity=1,
-        very_simple=True,
-        max_elements=3  # Limit to 3 elements total
-    )
-    print("Equations:")
-    for j, eq in enumerate(test_simple.equations, 1):
-        print(f"Equation {j}: {eq.formatted}")
-    print("\nSolution:")
-    for var, val in test_simple.solution.human_readable.items():
-        print(f"{var} = {val}")
-    print("-" * 40)
