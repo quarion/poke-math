@@ -2,13 +2,14 @@
 {% block title %}{{ quiz.title }} - Pokemath!{% endblock %}
 
 {% block content %}
-  <!-- Debug info (hidden) -->
-  <div class="debug-info" style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; display: block;">
+  <!-- Debug info (only visible in development) -->
+  {% if request.host.startswith('127.0.0.1') or request.host.startswith('localhost') %}
+  <div class="debug-info">
     <h4>Debug Information</h4>
+    <p>Host: {{ request.host }}</p>
     <p>Quiz: {{ quiz }}</p>
     <p>Pokemon vars: {{ quiz.pokemon_vars }}</p>
     
-    {% if quiz.is_random %}
       <h5>Equation Replacement Debug:</h5>
       {% for equation in quiz.equations %}
         <div style="margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px;">
@@ -16,8 +17,8 @@
           <p>Final equation (after replacement): {{ quiz.replace_variables_with_images(equation) | safe }}</p>
         </div>
       {% endfor %}
-    {% endif %}
   </div>
+  {% endif %}
 
   <article class="quiz-content">
     <div class="quiz-header">
@@ -28,43 +29,42 @@
     </div>
     
     {% if quiz.description %}
-      <p>{{ quiz.description }}</p>
+      <p class="text-center">{{ quiz.description }}</p>
     {% endif %}
 
     <form id="quizForm" method="POST" action="{{ request.path }}">
-      <div class="equations-section">
-        {% for equation in quiz.equations %}
-          <div class="equation">
-            <div class="equation-content">{{ quiz.replace_variables_with_images(equation) | safe }}</div>
-          </div>
-        {% endfor %}
-      </div>
-
-      <div class="answers-section">
-        <h3>Your Answers</h3>
-        <div class="answer-inputs">
+      <!-- Combined equations and answers in a grid layout -->
+      <div class="quiz-grid">
+        <!-- Equations section with heading -->
+        <div class="quiz-section equations-section">
+          <h3>Equations</h3>
+          {% for equation in quiz.equations %}
+            <div class="equation">
+              {{ quiz.replace_variables_with_images(equation) | safe }}
+            </div>
+          {% endfor %}
+        </div>
+        
+        <!-- Answers section with heading -->
+        <div class="quiz-section answers-section">
+          <h3>Your Answers</h3>
           {% for var in quiz.variables %}
-            <div class="input-group">
-              <div class="answer-input">
-                <label for="{{ var }}">
-                  <img src="/static/images/{{ quiz.get_pokemon_image(var) }}" class="pokemon-var" alt="{{ var }}">
-                </label>
-                <span class="equals-sign">=</span>
-                <input 
-                  type="number" 
-                  name="{{ var }}" 
-                  id="{{ var }}" 
-                  value="{{ user_answers[var] if var in user_answers else '' }}"
-                  {% if result and var in result.correct_answers %}
-                    class="{{ 'correct' if result.correct_answers[var] else 'incorrect' }}"
-                  {% endif %}
-                  required
-                >
-              </div>
-              <div class="celebration-gif" id="celebration-{{ var }}" {% if result and var in result.correct_answers and result.correct_answers[var] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+            <div class="answer-row">
+              <img src="/static/images/{{ quiz.get_pokemon_image(var) }}" class="pokemon-var" alt="{{ var }}">
+              <span class="equals-sign">=</span>
+              <input 
+                type="number" 
+                name="{{ var }}" 
+                id="{{ var }}" 
+                value="{{ user_answers[var] if var in user_answers else '' }}"
+                {% if result and var in result.correct_answers %}
+                  class="{{ 'correct' if result.correct_answers[var] else 'incorrect' }}"
+                {% endif %}
+              >
+              <div class="celebration-gif {% if result and var in result.correct_answers and result.correct_answers[var] %}visible{% endif %}" id="celebration-{{ var }}">
                 <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
               </div>
-              <div class="incorrect-gif" id="incorrect-{{ var }}" {% if result and var in result.correct_answers and not result.correct_answers[var] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+              <div class="incorrect-gif {% if result and var in result.correct_answers and not result.correct_answers[var] %}visible{% endif %}" id="incorrect-{{ var }}">
                 <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
               </div>
             </div>
@@ -80,7 +80,7 @@
         {% endif %}
         <button type="submit" id="submitBtn" class="button-base button-green">Check Answers</button>
         {% if quiz.next_quiz_id %}
-          <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" id="nextQuiz" {% if not result or not result.correct %}style="display: none;"{% endif %}>Next Question →</a>
+          <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" id="nextQuiz" {% if result and result.correct %}class="visible"{% endif %}>Next Question →</a>
         {% endif %}
       </div>
     </form>
@@ -139,7 +139,7 @@
         .then(data => {
           // Hide all celebration and incorrect gifs first
           document.querySelectorAll('.celebration-gif, .incorrect-gif').forEach(gif => {
-            gif.style.display = 'none';
+            gif.classList.remove('visible');
           });
           
           // Update input classes for correct/incorrect answers
@@ -149,20 +149,18 @@
               input.className = isCorrect ? 'correct' : 'incorrect';
             }
             
-            // Only show gifs for answers that were provided
-            if (formData.has(variable) && formData.get(variable).trim() !== '') {
-              if (isCorrect) {
-                // Show pokeball for correct answers
-                const celebrationGif = document.getElementById(`celebration-${variable}`);
-                if (celebrationGif) {
-                  celebrationGif.style.display = 'block';
-                }
-              } else {
-                // Show psyduck for incorrect answers
-                const incorrectGif = document.getElementById(`incorrect-${variable}`);
-                if (incorrectGif) {
-                  incorrectGif.style.display = 'block';
-                }
+            // Show gifs for all answers regardless of whether they were provided
+            if (isCorrect) {
+              // Show pokeball for correct answers
+              const celebrationGif = document.getElementById(`celebration-${variable}`);
+              if (celebrationGif) {
+                celebrationGif.classList.add('visible');
+              }
+            } else {
+              // Show psyduck for incorrect answers
+              const incorrectGif = document.getElementById(`incorrect-${variable}`);
+              if (incorrectGif) {
+                incorrectGif.classList.add('visible');
               }
             }
           });
@@ -198,7 +196,7 @@
             let resultHtml;
             
             if (data.correct) {
-              // All answers are correct and all questions were answered
+              // All answers are correct
               const tryAnotherLink = isRandom ? 
                 '<a href="' + newExerciseUrl + '" class="button-base button-blue">Try Another Exercise</a>' : 
                 '';
@@ -214,26 +212,17 @@
                 </div>
               `;
             } else {
-              // Not all correct or not all answered
+              // Not all correct
               if (data.correct_count > 0) {
                 // Some answers are correct
                 resultHtml = `
                   <div class="result-container incorrect">
                     <h3>Making Progress!</h3>
                     <div class="score">${data.correct_count} / ${data.total_count} correct</div>
-                    ${!data.all_answered ? '<p>Try filling in all the answers!</p>' : ''}
-                  </div>
-                `;
-              } else if (!data.all_answered && data.correct_count === 0) {
-                // No answers or all wrong
-                resultHtml = `
-                  <div class="result-container incorrect">
-                    <h3>Keep trying!</h3>
-                    <p>Fill in your answers and try again.</p>
                   </div>
                 `;
               } else {
-                // All answered but all wrong
+                // All wrong
                 resultHtml = `
                   <div class="result-container incorrect">
                     <h3>Keep trying!</h3>
@@ -252,9 +241,11 @@
           }
           
           if (nextButton) {
-            nextButton.style.display = data.correct ? 'inline-block' : 'none';
             if (data.correct) {
+              nextButton.classList.add('visible');
               nextButton.focus();
+            } else {
+              nextButton.classList.remove('visible');
             }
           }
         })

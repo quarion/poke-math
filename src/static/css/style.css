@@ -362,6 +362,11 @@ header h1 {
 }
 
 /* Quiz Content */
+.quiz-content {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+}
+
 .quiz-header {
     display: flex;
     justify-content: space-between;
@@ -369,54 +374,75 @@ header h1 {
     margin-bottom: var(--spacing-lg);
 }
 
-/* Apply card styles to various containers */
-.equations-section, .equations-container,
-.answers-section, .solution-container,
-.profile-message, .stats-card, .coming-soon,
-.welcome-section {
+/* Quiz Grid Layout */
+.quiz-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Common styles for quiz sections */
+.quiz-section {
     background-color: var(--card-background);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
-}
-
-.equations-section, .equations-container {
     padding: var(--spacing-lg);
+}
+
+.quiz-section h3 {
+    margin-top: 0;
     margin-bottom: var(--spacing-lg);
-    box-shadow: var(--shadow-sm);
-}
-
-.equation-content, .equation {
     font-size: var(--font-size-lg);
-    margin: var(--spacing-sm) 0;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color-light);
+    padding-bottom: var(--spacing-sm);
+}
+
+/* Equation styles */
+.equation {
+    font-size: var(--font-size-lg);
     font-family: var(--font-family-mono);
-}
-
-.answer-group, .input-group {
-    display: flex;
-    flex-direction: column;
     margin-bottom: var(--spacing-md);
-}
-
-.answer-inputs {
     display: flex;
+    align-items: center;
     flex-wrap: wrap;
-    gap: var(--spacing-md);
 }
 
-.button-container {
+.equation img {
+    margin: 0 var(--spacing-md);
+    vertical-align: middle;
+    max-height: 40px;
+    width: auto;
+}
+
+/* Answer row styles */
+.answer-row {
     display: flex;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-lg);
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    gap: 5px; /* Small gap between all elements */
 }
 
-/* Form Elements */
+/* Pokemon variable images */
+.pokemon-var {
+    height: 40px;
+    width: auto;
+    vertical-align: middle;
+}
+
+.equals-sign {
+    font-size: var(--font-size-lg);
+    color: var(--text-color);
+}
+
+/* Form elements */
 input[type="number"] {
     font-size: var(--font-size-md);
     padding: var(--spacing-sm);
     border: 2px solid var(--border-color-light);
     border-radius: var(--border-radius-md);
     width: 100px;
-    margin: 0 var(--spacing-sm);
     -moz-appearance: textfield;
 }
 
@@ -436,6 +462,25 @@ input.incorrect {
     background-color: var(--red-transparent);
 }
 
+/* Celebration and Incorrect GIFs */
+.celebration-gif, .incorrect-gif {
+    display: none;
+    height: 40px;
+    width: 40px;
+}
+
+.celebration-gif.visible, .incorrect-gif.visible {
+    display: block;
+}
+
+.celebration-gif img, .incorrect-gif img {
+    height: 40px;
+    width: 40px;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+/* Quiz controls */
 .quiz-controls {
     margin: var(--spacing-xl) 0;
     display: flex;
@@ -481,43 +526,21 @@ input.incorrect {
     margin-top: var(--spacing-md);
 }
 
-/* Pokemon Images */
-.pokemon-var {
-    height: 40px;
-    width: auto;
-    vertical-align: middle;
-    margin: 0 5px;
-}
-
-.celebration-gif, .incorrect-gif {
-    display: none;
-}
-
-.celebration-gif {
-    width: 30px;
-    height: 30px;
-}
-
-.incorrect-gif {
-    width: 35px;
-    height: 35px;
-}
-
-.celebration-gif img, .incorrect-gif img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
 /* Debug info */
-.debug-info, #nextQuiz {
+.debug-info {
+    background-color: #f0f0f0;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+}
+
+/* Next Quiz Button */
+#nextQuiz {
     display: none;
 }
 
-.equals-sign {
-    font-size: var(--font-size-lg);
-    margin: 0 var(--spacing-sm);
-    color: var(--text-color);
+#nextQuiz.visible {
+    display: inline-block;
 }
 
 /* Footer */
@@ -613,6 +636,31 @@ footer {
         flex-direction: column;
         gap: var(--spacing-sm);
     }
+
+    .answer-inputs {
+        margin-right: auto;
+        margin-left: var(--spacing-sm);
+    }
+    
+    .answers-section h3 {
+        margin-left: var(--spacing-sm);
+    }
+
+    .quiz-section {
+        padding: var(--spacing-md);
+    }
+    
+    .equation, .answer-row {
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .quiz-grid {
+        gap: var(--spacing-md);
+    }
+    
+    .celebration-gif img, .incorrect-gif img {
+        height: 30px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -633,5 +681,17 @@ footer {
     .profile-container,
     .new-exercise-container {
         padding: var(--spacing-sm);
+    }
+}
+
+/* Responsive design */
+@media (min-width: 768px) {
+    .quiz-grid {
+        grid-template-columns: 1fr 1fr;
+        align-items: flex-start;
+    }
+    
+    .equations-section, .answers-section {
+        margin-top: 0;
     }
 } 
