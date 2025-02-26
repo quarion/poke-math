@@ -36,6 +36,12 @@ def get_version_info():
     }
 
 
+# Add context processor to make version_info available to all templates
+@app.context_processor
+def inject_version_info():
+    return {'version_info': get_version_info()}
+
+
 def get_quiz_session() -> GameManager:
     """
     Get a GameManager instance with session data loaded from the persistent storage.
@@ -246,7 +252,6 @@ def render_quiz_template(
         'quiz': quiz,  # Strongly typed view model
         'result': result,
         'user_answers': user_answers,
-        'version_info': get_version_info(),
     }
     
     return render_template('quiz.html', **template_args)
@@ -257,8 +262,7 @@ def index():
     """
     Display the home page with welcome message.
     """
-    return render_template('index.html',
-                           version_info=get_version_info())
+    return render_template('index.html')
 
 
 @app.route('/exercises')
@@ -270,8 +274,7 @@ def all_exercises():
     return render_template('all_exercises.html',
                            title="Community Exercises",
                            sections=GAME_CONFIG.sections,
-                           solved_quizzes=quiz_session.session_manager.solved_quizzes,
-                           version_info=get_version_info())
+                           solved_quizzes=quiz_session.session_manager.solved_quizzes)
 
 
 @app.route('/profile')
@@ -286,8 +289,7 @@ def profile():
 
     return render_template('profile.html',
                            points=points,
-                           solved_count=solved_count,
-                           version_info=get_version_info())
+                           solved_count=solved_count)
 
 
 @app.route('/new-exercise')
@@ -296,8 +298,7 @@ def new_exercise():
     Display difficulty selection screen for random exercise generation.
     """
     return render_template('new_exercise.html',
-                           difficulties=EQUATION_DIFFICULTIES,
-                           version_info=get_version_info())
+                           difficulties=EQUATION_DIFFICULTIES)
 
 
 @app.route('/generate-random-exercise/<difficulty_id>')
