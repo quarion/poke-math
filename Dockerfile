@@ -4,6 +4,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONPATH=/app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -26,4 +27,4 @@ ENV COMMIT_SHA=${COMMIT_SHA}
 COPY . .
 
 # Runtime command (adjust for your WSGI server)
-CMD exec gunicorn --bind :${PORT:-5002} --workers 1 --threads 8 --timeout 0 app:app 
+CMD exec gunicorn --bind :${PORT:-5002} --workers 1 --threads 8 --timeout 0 src.app.app:app 

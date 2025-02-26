@@ -32,7 +32,7 @@
 
       <div class="answers-section">
         <h3>Your Answers</h3>
-        {% for unknown, correct_value in quiz.answer.items() %}
+        {% for unknown, correct_value in quiz.answer.values.items() %}
           <div class="answer-group">
             <div class="answer-input">
               <label for="{{ unknown }}">
