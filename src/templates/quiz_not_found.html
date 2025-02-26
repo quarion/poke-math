@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Not Found{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-message">
+        <h1>Quiz Not Available</h1>
+        <p>Sorry, the quiz you're looking for ({{ quiz_id }}) is no longer available in our community exercises.</p>
+        <p>It may have been removed or updated.</p>
+        
+        <div class="actions">
+            <a href="{{ url_for('all_exercises') }}" class="btn btn-primary">Browse Community Exercises</a>
+            <a href="{{ url_for('my_quizzes') }}" class="btn btn-secondary">My Quizzes</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

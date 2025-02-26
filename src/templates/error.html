@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Error - Pokemath!{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-message">
+        <h1>Oops! Something went wrong</h1>
+        <p>{{ error_message }}</p>
+        
+        {% if error_details and request.host.startswith(('127.0.0.1', 'localhost')) %}
+        <div class="error-details">
+            <h3>Technical Details (only visible in development):</h3>
+            <pre>{{ error_details }}</pre>
+        </div>
+        {% endif %}
+        
+        <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Return Home</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

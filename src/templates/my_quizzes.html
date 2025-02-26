@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}My Quizzes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>My Quizzes</h1>
+    
+    <div class="summary-box">
+        <h2>Summary</h2>
+        <p>Total quizzes attempted: {{ stats.total_attempts }}</p>
+        <p>Quizzes solved: {{ stats.total_solved }}</p>
+    </div>
+    
+    {% if attempts %}
+    <div class="quiz-list">
+        {% for attempt in attempts %}
+        <div class="quiz-card">
+            <div class="quiz-info">
+                <h3>{{ attempt.title }}</h3>
+                <p>Date: {{ attempt.timestamp }}</p>
+                <p>Score: {{ attempt.score }}</p>
+                <p class="status">
+                    {% if attempt.solved %}
+                    <span class="solved">Solved</span>
+                    {% else %}
+                    <span class="unsolved">Not Solved</span>
+                    {% endif %}
+                </p>
+                {% if not attempt.exists %}
+                <p class="warning">This quiz is no longer available in the community exercises.</p>
+                {% endif %}
+            </div>
+            <div class="quiz-actions">
+                {% if attempt.exists %}
+                <a href="{{ url_for('quiz', quiz_id=attempt.id) }}" class="btn btn-primary">Open</a>
+                {% else %}
+                <button disabled class="btn btn-primary disabled">Not Available</button>
+                {% endif %}
+                <form action="{{ url_for('forget_quiz') }}" method="post">
+                    <input type="hidden" name="timestamp" value="{{ attempt.timestamp }}">
+                    <button type="submit" class="btn btn-danger">Forget</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>You haven't attempted any quizzes yet.</p>
+        <a href="{{ url_for('all_exercises') }}" class="btn btn-primary">Browse Community Exercises</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

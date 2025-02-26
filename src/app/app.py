@@ -9,6 +9,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Union
 import dataclasses
+from src.app.game.storage.session_factory import create_session_manager
 
 # Create Flask app with correct template and static folders
 app = Flask(__name__,
@@ -37,10 +38,23 @@ def get_version_info():
 
 def get_quiz_session() -> GameManager:
     """
-    Get a GameManager instance with session data loaded from Flask session.
+    Get a GameManager instance with session data loaded from the persistent storage.
+    
+    Raises:
+        Exception: If Firestore storage is enabled but not available
     """
-    # We don't provide a session_manager here, so it will be loaded from Flask session
-    return GameManager.start_session(GAME_CONFIG)
+    try:
+        # Create a session manager with Firestore persistence
+        # Set use_firestore=False to use Flask session storage instead
+        session_manager = create_session_manager(use_firestore=True)
+        
+        # Create a GameManager with the session manager
+        return GameManager.start_session(GAME_CONFIG, session_manager)
+    except Exception as e:
+        # Log the error
+        app.logger.error(f"Error connecting to Firestore: {e}")
+        # Re-raise the exception to be handled by route handlers
+        raise
 
 
 @dataclass
@@ -250,12 +264,13 @@ def index():
 @app.route('/exercises')
 def all_exercises():
     """
-    Display all available exercises.
+    Display all available community exercises.
     """
     quiz_session = get_quiz_session()
     return render_template('all_exercises.html',
+                           title="Community Exercises",
                            sections=GAME_CONFIG.sections,
-                           solved_quizzes=quiz_session.solved_quizzes,
+                           solved_quizzes=quiz_session.session_manager.solved_quizzes,
                            version_info=get_version_info())
 
 
@@ -338,9 +353,11 @@ def random_quiz(quiz_id):
     """
     Display a randomly generated quiz.
     """
+    quiz_session = get_quiz_session()
+    
     # Get the stored quiz from the session
     if 'random_quizzes' not in session or quiz_id not in session['random_quizzes']:
-        return "Quiz not found", 404
+        return render_template('quiz_not_found.html', quiz_id=quiz_id)
 
     stored_quiz = session['random_quizzes'][quiz_id]
     # Add quiz_id to the stored_quiz for the template
@@ -355,10 +372,22 @@ def random_quiz(quiz_id):
         }
 
         result = process_quiz_answers(user_answers, stored_quiz['solution'])
+        
+        # Update session data if all answers are correct
+        if result.correct:
+            quiz_session.session_manager.mark_quiz_solved(quiz_id)
+        
+        # Record the quiz attempt
+        quiz_session.session_manager.add_quiz_attempt(
+            quiz_id=quiz_id,
+            quiz_data=stored_quiz,
+            score=result.correct_count,
+            total=result.total_count,
+            completed=result.all_answered
+        )
 
         # If it's an AJAX request, return JSON
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            # Use our to_dict method for cleaner JSON serialization
             return jsonify(result.to_dict())
 
         # For regular form submissions (fallback)
@@ -381,47 +410,129 @@ def random_quiz(quiz_id):
 @app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
 def quiz(quiz_id):
     quiz_session = get_quiz_session()
-    quiz_state = quiz_session.get_quiz_state(quiz_id)
+    
+    # Check if quiz exists in current GAME_CONFIG
+    quiz_exists = False
+    is_random = quiz_id.startswith('random_')
+    stored_quiz_data = None
+    
+    if is_random:
+        # For random quizzes, we need to check the session data
+        for attempt in quiz_session.session_manager.get_quiz_attempts():
+            if attempt['quiz_id'] == quiz_id and 'quiz_data' in attempt:
+                quiz_exists = True
+                stored_quiz_data = attempt['quiz_data']
+                break
+    else:
+        # For regular quizzes, check the game config
+        quiz_state = quiz_session.get_quiz_state(quiz_id)
+        if quiz_state:
+            quiz_exists = True
 
-    if not quiz_state:
-        return "Quiz not found", 404
+    if not quiz_exists:
+        # Quiz no longer exists, show an error page
+        return render_template('quiz_not_found.html', quiz_id=quiz_id)
+    
+    # For random quizzes, use the stored data
+    if is_random and stored_quiz_data:
+        # Process the random quiz
+        if request.method == 'POST':
+            # Filter out empty inputs
+            user_answers = {
+                key: int(value)
+                for key, value in request.form.items()
+                if value.strip() and key in stored_quiz_data['solution']  # Only include non-empty values for solution variables
+            }
 
-    if request.method == 'POST':
-        # Filter out empty inputs
-        user_answers = {
-            key: int(value)
-            for key, value in request.form.items()
-            if value.strip()  # Only include non-empty values
-        }
+            result = process_quiz_answers(user_answers, stored_quiz_data['solution'])
+            
+            # Update session data if all answers are correct
+            if result.correct:
+                quiz_session.session_manager.mark_quiz_solved(quiz_id)
+            
+            # Record the quiz attempt
+            quiz_session.session_manager.add_quiz_attempt(
+                quiz_id=quiz_id,
+                quiz_data=stored_quiz_data,
+                score=result.correct_count,
+                total=result.total_count,
+                completed=result.all_answered
+            )
 
-        # Process answers with our helper function
-        expected_answers = quiz_state['quiz'].answer.values
-        result = process_quiz_answers(user_answers, expected_answers)
+            # If it's an AJAX request, return JSON
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(result.to_dict())
+
+            # For regular form submissions
+            return render_quiz_template(
+                is_random=True,
+                quiz_data=stored_quiz_data,
+                pokemon_vars=stored_quiz_data.get('pokemon_vars', {}),
+                result=result,
+                user_answers=user_answers
+            )
+
+        # GET request - just display the quiz
+        return render_quiz_template(
+            is_random=True,
+            quiz_data=stored_quiz_data,
+            pokemon_vars=stored_quiz_data.get('pokemon_vars', {})
+        )
+    else:
+        # Normal quiz handling for non-random quizzes
+        quiz_state = quiz_session.get_quiz_state(quiz_id)
         
-        # Update session data if all answers are correct
-        if result.correct:
-            quiz_session.session_manager.mark_quiz_solved(quiz_id)
-            quiz_session.save_session()
+        if request.method == 'POST':
+            # Filter out empty inputs
+            user_answers = {
+                key: int(value)
+                for key, value in request.form.items()
+                if value.strip()  # Only include non-empty values
+            }
 
-        # If it's an AJAX request, return JSON
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            # Use our to_dict method for cleaner JSON serialization
-            return jsonify(result.to_dict())
+            # Process answers with our helper function
+            expected_answers = quiz_state['quiz'].answer.values
+            result = process_quiz_answers(user_answers, expected_answers)
+            
+            # Update session data if all answers are correct
+            if result.correct:
+                quiz_session.session_manager.mark_quiz_solved(quiz_id)
+            
+            # Record the quiz attempt with full quiz data for restoration
+            quiz_data = {
+                'quiz_id': quiz_id,
+                'title': quiz_state['quiz'].title,
+                'equations': quiz_state['quiz'].equations,
+                'solution': quiz_state['quiz'].answer.values,
+                'is_random': False
+            }
+            
+            quiz_session.session_manager.add_quiz_attempt(
+                quiz_id=quiz_id,
+                quiz_data=quiz_data,
+                score=result.correct_count,
+                total=result.total_count,
+                completed=result.all_answered
+            )
 
-        # For regular form submissions (fallback)
+            # If it's an AJAX request, return JSON
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(result.to_dict())
+
+            # For regular form submissions (fallback)
+            return render_quiz_template(
+                is_random=False,
+                quiz_data=quiz_state['quiz'],
+                pokemon_vars=quiz_state['pokemon_vars'],
+                result=result,
+                user_answers=user_answers
+            )
+
         return render_quiz_template(
             is_random=False,
             quiz_data=quiz_state['quiz'],
-            pokemon_vars=quiz_state['pokemon_vars'],
-            result=result,
-            user_answers=user_answers
+            pokemon_vars=quiz_state['pokemon_vars']
         )
-
-    return render_quiz_template(
-        is_random=False,
-        quiz_data=quiz_state['quiz'],
-        pokemon_vars=quiz_state['pokemon_vars']
-    )
 
 
 @app.route('/reset_progress', methods=['POST'])
@@ -433,6 +544,91 @@ def reset_progress():
     return redirect(url_for('index'))
 
 
+@app.route('/my-quizzes')
+def my_quizzes():
+    """Display the user's quiz attempts."""
+    quiz_session = get_quiz_session()
+    attempts = quiz_session.session_manager.get_quiz_attempts()
+    
+    # Format attempts for display
+    formatted_attempts = []
+    for attempt in attempts:
+        quiz_id = attempt.get('quiz_id')
+        quiz_exists = False
+        quiz_title = 'Unknown Quiz'
+        
+        # Check if it's a random quiz with stored data
+        if quiz_id.startswith('random_') and 'quiz_data' in attempt:
+            quiz_exists = True
+            quiz_title = 'Random Exercise'
+            quiz_data = attempt.get('quiz_data', {})
+            if 'title' in quiz_data:
+                quiz_title = quiz_data['title']
+        else:
+            # Check if regular quiz still exists
+            quiz = GAME_CONFIG.quizzes_by_id.get(quiz_id)
+            if quiz:
+                quiz_exists = True
+                quiz_title = quiz.title
+        
+        formatted_attempts.append({
+            'id': quiz_id,
+            'title': quiz_title,
+            'timestamp': attempt.get('timestamp'),
+            'score': f"{attempt.get('score')}/{attempt.get('total')}",
+            'completed': attempt.get('completed'),
+            'solved': quiz_session.session_manager.is_quiz_solved(quiz_id),
+            'exists': quiz_exists  # Flag to indicate if quiz still exists
+        })
+    
+    # Sort by timestamp, most recent first
+    formatted_attempts.sort(key=lambda x: x['timestamp'], reverse=True)
+    
+    # Calculate total stats
+    total_attempts = len(formatted_attempts)
+    total_solved = sum(1 for attempt in formatted_attempts if attempt['solved'])
+    
+    return render_template(
+        'my_quizzes.html',
+        attempts=formatted_attempts,
+        stats={
+            'total_attempts': total_attempts,
+            'total_solved': total_solved
+        }
+    )
+
+
+@app.route('/forget-quiz', methods=['POST'])
+def forget_quiz():
+    """Remove a quiz attempt from the user's history."""
+    quiz_session = get_quiz_session()
+    timestamp = request.form.get('timestamp')
+    
+    if timestamp:
+        quiz_session.session_manager.remove_quiz_attempt(timestamp)
+    
+    return redirect(url_for('my_quizzes'))
+
+
 if __name__ == '__main__':
     # For local development
     app.run(debug=True, host='0.0.0.0')
+
+
+# Add error handlers
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle exceptions from Firestore and other services."""
+    # Log the error
+    app.logger.error(f"Unhandled exception: {e}")
+    
+    # Customize error message based on error type
+    error_message = "An unexpected error occurred."
+    
+    if "Firebase" in str(e) or "Firestore" in str(e):
+        error_message = "Could not connect to the database. Please try again later."
+    
+    # Render error template
+    return render_template('error.html', 
+                           error_message=error_message,
+                           error_details=str(e)), 500

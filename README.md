@@ -23,6 +23,3 @@ After that, the infrastructure will be managed automatically by CI/CD (eventuall
 
 # Impl plan:
 - Add more pokemon images
-- Add persistence of equation. This will blow up session size, so we need to think about introducing DB or dumping them to file (file per user could work)
-    - For files we would need to hook up cloud storage anyway, so it might not be less time
-    - Think if we want sharing options. Probably yes. 
