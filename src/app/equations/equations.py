@@ -1,7 +1,26 @@
 import random
-import sympy as sp
-import numpy as np
 from fractions import Fraction
+from typing import List, Dict, Tuple, Set, Union, Optional, Any, NamedTuple
+
+import sympy as sp
+
+
+class Equation(NamedTuple):
+    """Strongly typed representation of a generated equation."""
+    symbolic: Any  # SymPy equation
+    formatted: str  # Human-readable format
+
+
+class DynamicQuizSolution(NamedTuple):
+    """Strongly typed representation of variable solutions."""
+    symbolic: Dict[Any, Union[int, Fraction]]  # SymPy symbols to values
+    human_readable: Dict[str, Union[int, Fraction]]  # Variable names to values
+
+
+class DynamicQuiz(NamedTuple):
+    """Strongly typed representation of a complete quiz with equations and solutions."""
+    equations: List[Equation]
+    solution: DynamicQuizSolution
 
 
 class MathEquationGenerator:
@@ -9,11 +28,11 @@ class MathEquationGenerator:
         self.variables = list('xyzwvu')
         self.operations = ['+', '-', '*']
 
-    def generate_quiz(self, num_unknowns=1, num_equations=1,
-                      allow_fractions=False, allow_division=False,
-                      complexity=1, num_helper_equations=0,
-                      very_simple=False, max_elements=None,
-                      ensure_operation=True):
+    def generate_quiz(self, num_unknowns: int = 1, num_equations: int = 1,
+                      allow_fractions: bool = False, allow_division: bool = False,
+                      complexity: int = 1, num_helper_equations: int = 0,
+                      very_simple: bool = False, max_elements: Optional[int] = None,
+                      ensure_operation: bool = True) -> DynamicQuiz:
         """
         Generate a system of equations with guaranteed solutions.
 
@@ -32,7 +51,7 @@ class MathEquationGenerator:
                            (not just "x = 2")
 
         Returns:
-        - dictionary with equations, solution, and formatted output
+        - Quiz object containing equations and solution
         """
         # Constrain parameters to valid ranges
         num_unknowns = min(max(1, num_unknowns), 3)
@@ -66,7 +85,7 @@ class MathEquationGenerator:
         # Generate the required number of equations
         equations = []
         formatted_equations = []
-        coefficient_sets = set()  # Track the coefficient sets to avoid duplicates
+        coefficient_sets: Set[Tuple] = set()  # Track the coefficient sets to avoid duplicates
 
         attempt_count = 0
         max_attempts = 50  # Maximum attempts to generate unique equations
@@ -89,30 +108,26 @@ class MathEquationGenerator:
                 equations.append(equation)
                 formatted_equations.append(formatted_eq)
 
-        # If we couldn't generate enough unique equations, inform the user
-        if len(equations) < (num_equations + num_helper_equations):
-            formatted_equations.append("Note: Could not generate enough unique equations with the given constraints.")
+        # Create list of Equation objects
+        equation_objects = [
+            Equation(symbolic=eq, formatted=fmt)
+            for eq, fmt in zip(equations, formatted_equations)
+        ]
 
-        # Format the output
-        quiz_text = "Solve the following system of equations:\n\n"
-        for i, eq in enumerate(formatted_equations, 1):
-            quiz_text += f"Equation {i}: {eq}\n"
+        # Create solution object
+        quiz_solution = DynamicQuizSolution(
+            symbolic=solution_dict,
+            human_readable=solution
+        )
 
-        solution_text = "Solution:\n"
-        for var, val in solution.items():
-            solution_text += f"{var} = {val}\n"
-
-        return {
-            "equations": equations,
-            "formatted_equations": formatted_equations,
-            "symbolic_solution": solution_dict,
-            "solution": solution,
-            "quiz_text": quiz_text,
-            "solution_text": solution_text
-        }
+        # Create and return Quiz object
+        return DynamicQuiz(
+            equations=equation_objects,
+            solution=quiz_solution
+        )
 
     def _generate_equation(self, var_symbols, solution_dict, complexity, allow_division, very_simple,
-                           max_elements=None):
+                           max_elements=None) -> Tuple[Any, str, Tuple, bool]:
         """
         Generate a single equation that is satisfied by the solution.
         Returns the equation, formatted equation, a coefficient tuple for uniqueness checking,
@@ -356,20 +371,15 @@ class MathEquationGenerator:
 
         return equation, formatted_equation, coefficient_tuple, has_operation
 
-    def generate_quiz_worksheet(self, num_problems=5, **kwargs):
+    def generate_quiz_worksheet(self, num_problems: int = 5, **kwargs) -> List[DynamicQuiz]:
         """Generate a complete worksheet with multiple problems."""
-        worksheet = "MATH EQUATIONS WORKSHEET\n\n"
-        solutions = "SOLUTIONS\n\n"
+        quizzes = []
 
-        for i in range(1, num_problems + 1):
+        for _ in range(num_problems):
             quiz = self.generate_quiz(**kwargs)
-            worksheet += f"Problem {i}:\n{quiz['quiz_text']}\n\n"
-            solutions += f"Problem {i}:\n{quiz['solution_text']}\n\n"
+            quizzes.append(quiz)
 
-        return {
-            "worksheet": worksheet,
-            "solutions": solutions
-        }
+        return quizzes
 
 
 # Example usage
@@ -499,11 +509,15 @@ if __name__ == "__main__":
         for i in range(1, 5):
             quiz = generator.generate_quiz(**config['params'])
             print(f"\nExample {i}:")
-            print(quiz["quiz_text"])
-            print(quiz["solution_text"])
+            print(f"Equations:")
+            for j, eq in enumerate(quiz.equations, 1):
+                print(f"Equation {j}: {eq.formatted}")
+            print("\nSolution:")
+            for var, val in quiz.solution.human_readable.items():
+                print(f"{var} = {val}")
             print(f"{'-' * 40}")
 
-        # Test for single-variable equations to ensure they have operations
+    # Test for single-variable equations to ensure they have operations
     print("\nTESTING SINGLE VARIABLE EQUATIONS WITH OPERATION REQUIREMENT:")
     for i in range(5):
         test_simple = generator.generate_quiz(
@@ -512,7 +526,8 @@ if __name__ == "__main__":
             ensure_operation=True
         )
         print(f"Test {i + 1}:")
-        print(test_simple["quiz_text"])
+        for j, eq in enumerate(test_simple.equations, 1):
+            print(f"Equation {j}: {eq.formatted}")
     print("-" * 40)
 
     # Test for a specific issue with duplicate equations
@@ -523,8 +538,12 @@ if __name__ == "__main__":
         complexity=2,
         max_elements=5  # Test with element limit
     )
-    print(test_system["quiz_text"])
-    print(test_system["solution_text"])
+    print("Equations:")
+    for j, eq in enumerate(test_system.equations, 1):
+        print(f"Equation {j}: {eq.formatted}")
+    print("\nSolution:")
+    for var, val in test_system.solution.human_readable.items():
+        print(f"{var} = {val}")
     print("-" * 40)
 
     # Test with very simple equations and element limit
@@ -535,6 +554,10 @@ if __name__ == "__main__":
         very_simple=True,
         max_elements=3  # Limit to 3 elements total
     )
-    print(test_simple["quiz_text"])
-    print(test_simple["solution_text"])
+    print("Equations:")
+    for j, eq in enumerate(test_simple.equations, 1):
+        print(f"Equation {j}: {eq.formatted}")
+    print("\nSolution:")
+    for var, val in test_simple.solution.human_readable.items():
+        print(f"{var} = {val}")
     print("-" * 40)
