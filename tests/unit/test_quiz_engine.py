@@ -67,23 +67,26 @@ def test_check_quiz_answers(sample_quiz):
     """Test checking quiz answers."""
     # Test with correct answers
     correct_answers = {"x": 5, "y": 5, "z": 2}
-    all_correct, correct_dict = check_quiz_answers(sample_quiz, correct_answers)
+    all_correct, correct_dict, all_answered = check_quiz_answers(sample_quiz, correct_answers)
     assert all_correct is True
     assert all(correct_dict.values())
+    assert all_answered is True
     
     # Test with some incorrect answers
     wrong_answers = {"x": 5, "y": 4, "z": 2}
-    all_correct, correct_dict = check_quiz_answers(sample_quiz, wrong_answers)
+    all_correct, correct_dict, all_answered = check_quiz_answers(sample_quiz, wrong_answers)
     assert all_correct is False
     assert correct_dict["x"] is True
     assert correct_dict["y"] is False
     assert correct_dict["z"] is True
+    assert all_answered is True
     
     # Test with missing answers
     incomplete_answers = {"x": 5, "z": 2}
-    all_correct, correct_dict = check_quiz_answers(sample_quiz, incomplete_answers)
+    all_correct, correct_dict, all_answered = check_quiz_answers(sample_quiz, incomplete_answers)
     assert all_correct is False
     assert correct_dict["y"] is False
+    assert all_answered is False
 
 def test_get_display_variables(sample_quiz, sample_pokemon, quiz_data):
     """Test getting display variables for a quiz."""
