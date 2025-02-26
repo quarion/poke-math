@@ -1,8 +1,19 @@
 ---
-description: Running unit tests
-globs: 
+description: Creating and running unit tests
+globs: test_*.py
 alwaysApply: false
 ---
-# Executing tests
-Use `python -m pytest -v` to execute all tests
+# Testing Rules and Best Practices
+
+## Basics
+
+This project uses pytest for unit testing. 
+
+## Creating New Tests
+
+1. Place them in the appropriate directory (`tests/unit/` for unit tests)
+
+
+## Executing tests
+1. Use `python -m pytest -v` to execute all tests
 
