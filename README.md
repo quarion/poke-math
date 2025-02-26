@@ -20,6 +20,7 @@ After that, the infrastructure will be managed automatically by CI/CD (eventuall
     - Run `terraform plan`
     - Run `terraform apply`
 4. Create Cloud Build trigger in the portal
-
+5. Set up firebase:
+   - Download the service key to firebase-credentials.json
 # Impl plan:
 - Add more pokemon images

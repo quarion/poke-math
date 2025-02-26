@@ -57,3 +57,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 infrastructure/backend.hcl
+
+# Firestore
+firebase-credentials.json
