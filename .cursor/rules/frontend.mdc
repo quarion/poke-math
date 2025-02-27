@@ -1,5 +1,5 @@
 ---
-description: Rule for editing and creating UI with HTML, CSS and JS
+description: Changing and creating UI with HTML, CSS and JS
 globs: *.html, *.css
 alwaysApply: false
 ---
@@ -8,10 +8,9 @@ alwaysApply: false
 - Make sure the layout is responsive
 
 # Styling
-- Use [style.css](mdc:src/static/css/style.css) for global styling (colors, common button styling, other re-usable components)
-- Do NOT inline styles
-- For component (html page) specific styling use <style> tag to keep it simple, but make it easy to move to dedicated css file
-- Make sure to use consistent styling, re-use existing styles to keep the UI consistent and not create duplicates
+- Use [style.css](mdc:src/static/css/style.css) for styling
+- Do NOT inline styles in html files
+- Make sure to use consistent styling, re-use as much as possible and not create duplicates
 
  # Examples
 

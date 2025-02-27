@@ -1,0 +1,10 @@
+---
+description: General rules for all code changes in all languages
+globs: *.html, *.js, *.py
+alwaysApply: false
+---
+# Comments
+- Keep comments focused on explaining "why" rather than "what" the code does.
+- Omit comments for self-explanatory code with descriptive function/variable names
+- Comment non-obvious logic, complex algorithms, or business rules
+- Retain docstrings for modules, classes and selected library-like public functions, but keep them concise
