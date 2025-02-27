@@ -898,11 +898,8 @@ def auth_callback():
         
         # Verify the ID token and log in the user
         if AuthManager.login_with_google(id_token):
-            # Check if user has a name, if so redirect to home page, otherwise to name input
-            if AuthManager.get_user_name():
-                return jsonify({'success': True, 'redirect': url_for('index')})
-            else:
-                return jsonify({'success': True, 'redirect': url_for('name_input')})
+            # Always redirect to name input page to let the user choose their display name
+            return jsonify({'success': True, 'redirect': url_for('name_input')})
         else:
             app.logger.error("Failed to authenticate with Google token")
             return jsonify({'success': False, 'error': 'Failed to authenticate'}), 401

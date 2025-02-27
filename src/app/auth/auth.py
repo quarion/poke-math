@@ -208,7 +208,9 @@ class AuthManager:
             session['auth_type'] = 'google'
             session['authenticated'] = True
             session['email'] = user_data.get('email')
-            session['display_name'] = user_data.get('name')
+            # Store Google name separately instead of as display_name
+            # This allows users to choose their own game display name
+            session['google_name'] = user_data.get('name')
             session['picture'] = user_data.get('picture')
             session['login_time'] = datetime.now().isoformat()
             

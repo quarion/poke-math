@@ -8,3 +8,4 @@ alwaysApply: false
 - Omit comments for self-explanatory code with descriptive function/variable names
 - Comment non-obvious logic, complex algorithms, or business rules
 - Retain docstrings for modules, classes and selected library-like public functions, but keep them concise
+- Do not leave comments about code you have removed during the edit
