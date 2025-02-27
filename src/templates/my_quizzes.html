@@ -3,6 +3,45 @@
 {% block title %}My Missions{% endblock %}
 
 {% block content %}
+<style>
+    .pokemon-to-catch {
+        margin: 15px 0;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+    
+    .pokemon-label {
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: var(--pokemon-blue);
+    }
+    
+    .pokemon-images {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+    }
+    
+    .pokemon-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .pokemon-var {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        transition: transform 0.2s ease;
+    }
+    
+    .pokemon-var:hover {
+        transform: scale(1.2);
+    }
+</style>
+
 <div class="container">
     <h1 class="text-center font-xxl">My Missions</h1>
     
@@ -25,6 +64,22 @@
         {% for attempt in attempts %}
         <div class="card">
             <h3 class="font-lg">{{ attempt.title }}</h3>
+            
+            {% if attempt.exists and 'quiz_data' in attempt %}
+                {% if 'pokemon_vars' in attempt.quiz_data and attempt.quiz_data.pokemon_vars|length > 0 %}
+                <div class="pokemon-to-catch">
+                    <p class="pokemon-label">Pokemon to catch:</p>
+                    <div class="pokemon-images">
+                        {% for var, img_path in attempt.quiz_data.pokemon_vars.items() %}
+                            <div class="pokemon-item">
+                                <img src="{{ url_for('static', filename='images/' + img_path) }}" class="pokemon-var" alt="{{ var }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+            
             <p class="played-on">Played on: 
                 {% set timestamp_parts = attempt.timestamp.split('T') %}
                 {% if timestamp_parts|length > 1 %}

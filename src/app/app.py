@@ -661,8 +661,25 @@ def my_quizzes():
             if quiz:
                 quiz_exists = True
                 quiz_title = quiz.title
+                
+                # For regular quizzes, we need to get the pokemon_vars from the quiz_state
+                quiz_state = quiz_session.get_quiz_state(quiz_id)
+                if quiz_state and 'pokemon_vars' in quiz_state:
+                    # If quiz_data doesn't exist, create it
+                    if 'quiz_data' not in attempt:
+                        attempt['quiz_data'] = {
+                            'quiz_id': quiz_id,
+                            'title': quiz_title,
+                            'equations': quiz.equations,
+                            'solution': quiz.answer.values,
+                            'is_random': False,
+                            'pokemon_vars': quiz_state['pokemon_vars']
+                        }
+                    # If quiz_data exists but doesn't have pokemon_vars, add them
+                    elif 'pokemon_vars' not in attempt['quiz_data']:
+                        attempt['quiz_data']['pokemon_vars'] = quiz_state['pokemon_vars']
         
-        formatted_attempts.append({
+        formatted_attempt = {
             'id': quiz_id,
             'title': quiz_title,
             'timestamp': attempt.get('timestamp'),
@@ -670,7 +687,13 @@ def my_quizzes():
             'completed': attempt.get('completed'),
             'solved': quiz_session.session_manager.is_quiz_solved(quiz_id),
             'exists': quiz_exists  # Flag to indicate if quiz still exists
-        })
+        }
+        
+        # Include quiz_data if it exists
+        if 'quiz_data' in attempt:
+            formatted_attempt['quiz_data'] = attempt['quiz_data']
+        
+        formatted_attempts.append(formatted_attempt)
     
     # Sort by timestamp, most recent first
     formatted_attempts.sort(key=lambda x: x['timestamp'], reverse=True)
