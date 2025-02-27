@@ -35,8 +35,8 @@
     {% if already_solved %}
     <div class="already-solved-banner">
       <div class="alert alert-success">
-        <h3>Quiz Already Completed!</h3>
-        <p>You've already solved this quiz successfully. The correct answers are shown below in the input fields.</p>
+        <h3>Mission Already Completed!</h3>
+        <p>You've already solved this mission successfully. The correct answers are shown below in the input fields.</p>
         <p class="small text-muted">You can view the answers but you can't submit them again.</p>
       </div>
     </div>
@@ -109,7 +109,7 @@
         <div class="congratulations">
           <p>Congratulations! You solved the {% if quiz.is_random %}random {% endif %}equation!</p>
           {% if quiz.is_random %}
-            <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try Another Exercise</a>
+            <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try Another Mission</a>
           {% elif quiz.next_quiz_id %}
             <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue">Next Question →</a>
           {% endif %}
@@ -220,7 +220,7 @@
             if (data.correct) {
               // All answers are correct
               const tryAnotherLink = isRandom ? 
-                '<a href="' + newExerciseUrl + '" class="button-base button-blue">Try Another Exercise</a>' : 
+                '<a href="' + newExerciseUrl + '" class="button-base button-blue">Try Another Mission</a>' : 
                 '';
                 
               resultHtml = `

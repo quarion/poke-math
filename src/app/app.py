@@ -108,7 +108,7 @@ class QuizViewModel:
         """Create a QuizViewModel from a random quiz dictionary."""
         return cls(
             id=quiz_data['quiz_id'],
-            title='Random Exercise',
+            title='Random Mission',
             equations=quiz_data['equations'],
             variables=list(quiz_data['solution'].keys()),
             pokemon_vars=pokemon_vars,
@@ -646,12 +646,12 @@ def my_quizzes():
     for attempt in attempts:
         quiz_id = attempt.get('quiz_id')
         quiz_exists = False
-        quiz_title = 'Unknown Quiz'
+        quiz_title = 'Unknown Mission'
         
         # Check if it's a random quiz with stored data
         if quiz_id.startswith('random_') and 'quiz_data' in attempt:
             quiz_exists = True
-            quiz_title = 'Random Exercise'
+            quiz_title = 'Random Mission'
             quiz_data = attempt.get('quiz_data', {})
             if 'title' in quiz_data:
                 quiz_title = quiz_data['title']

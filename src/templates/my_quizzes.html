@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}My Quizzes{% endblock %}
+{% block title %}My Missions{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1 class="text-center font-xxl">My Quizzes</h1>
+    <h1 class="text-center font-xxl">My Missions</h1>
     
     <div class="card">
         <h2 class="text-center font-xl">Summary</h2>
         <div class="flex flex-center flex-gap-lg">
             <div class="stat-item text-center">
                 <div class="stat-value font-xl">{{ stats.total_attempts }}</div>
-                <div class="stat-label" style="padding-left: 5px;">Quizzes Attempted</div>
+                <div class="stat-label" style="padding-left: 5px;">Missions Attempted</div>
             </div>
             <div class="stat-item text-center">
                 <div class="stat-value font-xl">{{ stats.total_solved }}</div>
-                <div class="stat-label" style="padding-left: 5px;">Quizzes Completed</div>
+                <div class="stat-label" style="padding-left: 5px;">Missions Completed</div>
             </div>
         </div>
     </div>
@@ -70,7 +70,7 @@
             {% endif %}
             
             {% if not attempt.exists %}
-            <p class="font-bold" style="color: var(--pokemon-red);">This quiz is no longer available.</p>
+            <p class="font-bold" style="color: var(--pokemon-red);">This mission is no longer available.</p>
             {% endif %}
             
             <div class="quiz-buttons">
@@ -95,9 +95,9 @@
     {% else %}
     <div class="card text-center">
         <div class="empty-state">
-            <img src="{{ url_for('static', filename='images/psyduck_wonder.gif') }}" alt="No quizzes yet" width="120" height="120">
-            <p class="font-md">You haven't attempted any quizzes yet.</p>
-            <a href="{{ url_for('all_exercises') }}" class="button-base button-blue">Browse Community Exercises</a>
+            <img src="{{ url_for('static', filename='images/psyduck_wonder.gif') }}" alt="No missions yet" width="120" height="120">
+            <p class="font-md">You haven't attempted any missions yet.</p>
+            <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try a New Mission</a>
         </div>
     </div>
     {% endif %}

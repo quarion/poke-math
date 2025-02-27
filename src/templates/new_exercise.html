@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}New Exercise - Pokemath!{% endblock %}
+{% block title %}New Mission - Pokemath!{% endblock %}
 
 {% block content %}
   <div class="new-exercise-container">
-    <h2>New Random Exercise</h2>
+    <h2>New Random Mission</h2>
     
     <div class="difficulty-selection">
       <h3>Select Difficulty Level</h3>
-      <p>Choose a difficulty level to generate a random math exercise:</p>
+      <p>Choose a difficulty level to generate a random math mission:</p>
       
       <div class="difficulty-buttons">
         {% for difficulty in difficulties %}
@@ -19,7 +19,7 @@
     </div>
     
     <div class="action-buttons">
-      <a href="{{ url_for('index') }}" class="button-base button-blue">Back to Exercises</a>
+      <a href="{{ url_for('index') }}" class="button-base button-blue">Back to Home</a>
     </div>
   </div>
 {% endblock %} 
