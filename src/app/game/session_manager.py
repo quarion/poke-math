@@ -166,7 +166,7 @@ class SessionManager:
         # Create session manager with specified storage and user ID from Flask session
         return cls(storage=storage)
     
-    def save_to_flask_session(self):
+    def save_session(self):
         """
         Save user_id to Flask session and state to storage.
         """

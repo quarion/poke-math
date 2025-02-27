@@ -22,5 +22,8 @@ After that, the infrastructure will be managed automatically by CI/CD (eventuall
 4. Create Cloud Build trigger in the portal
 5. Set up firebase:
    - Download the service key to firebase-credentials.json
+
 # Impl plan:
 - Add more pokemon images
+- Add account creation
+- Add uniqe ids to attempts to not use timestamps to identify them

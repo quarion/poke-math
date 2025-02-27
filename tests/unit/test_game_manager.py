@@ -29,7 +29,7 @@ def mock_session_manager():
 @pytest.fixture
 def quiz_session(quiz_data, mock_session_manager):
     """Fixture providing a fresh GameManager instance with injected SessionManager."""
-    return GameManager.start_session(quiz_data, session_manager=mock_session_manager)
+    return GameManager.initialize_from_session(quiz_data, session_manager=mock_session_manager)
 
 def test_game_manager_creation(quiz_session, quiz_data):
     """Test if GameManager is created with correct initial state."""

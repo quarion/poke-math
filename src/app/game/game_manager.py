@@ -21,7 +21,7 @@ class GameManager:
         self.session_manager = session_manager
 
     @classmethod
-    def start_session(cls, quiz_data: GameConfig, session_manager: Optional[SessionManager] = None) -> 'GameManager':
+    def initialize_from_session(cls, quiz_data: GameConfig, session_manager: Optional[SessionManager] = None) -> 'GameManager':
         """
         Create a new quiz session.
         
@@ -42,7 +42,7 @@ class GameManager:
 
     def save_session(self):
         """Save the current session state."""
-        self.session_manager.save_to_flask_session()
+        self.session_manager.save_session()
 
     def get_quiz_state(self, quiz_id: str) -> Optional[Dict]:
         """
