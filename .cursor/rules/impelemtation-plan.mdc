@@ -1,0 +1,12 @@
+---
+description: 
+globs: docs/plans/*
+alwaysApply: false
+---
+# Creating implementation plan
+
+- Reference [architecture.md](mdc:docs/architecture.md) for current architecture overview
+- Write the plan for yourself so you can follow it in next iteration
+- Show the plan to the user for acceptance
+- When plan is accepted output it to the original plan .md file below the requirements
+- Summarize manual actions required (like server side configuration) in separate paragraph so user can carry it out for you
