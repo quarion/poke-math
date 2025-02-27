@@ -40,6 +40,17 @@
     .pokemon-var:hover {
         transform: scale(1.2);
     }
+    
+    .played-on {
+        margin: 10px 0;
+        color: var(--text-muted);
+        font-size: 0.9em;
+    }
+    
+    .timestamp {
+        font-weight: 500;
+        color: var(--text-color);
+    }
 </style>
 
 <div class="container">
@@ -80,41 +91,8 @@
                 {% endif %}
             {% endif %}
             
-            <p class="played-on">Played on: 
-                {% set timestamp_parts = attempt.timestamp.split('T') %}
-                {% if timestamp_parts|length > 1 %}
-                    {% set date_part = timestamp_parts[0].split('-') %}
-                    {% set time_part = timestamp_parts[1].split(':') %}
-                    {% set year = date_part[0]|int %}
-                    {% set month = date_part[1]|int %}
-                    {% set day = date_part[2]|int %}
-                    {% set hour = time_part[0]|int %}
-                    {% set minute = time_part[1]|int %}
-                    
-                    {% set months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
-                    {% set month_name = months[month-1] %}
-                    
-                    {% set formatted_time = '%02d'|format(hour) + ':' + '%02d'|format(minute) %}
-                    
-                    {# Get current date for comparison #}
-                    {% set now = now|default(None) %}
-                    {% if now is none %}
-                        {% set now = {'year': 2025, 'month': 2, 'day': 26} %}
-                    {% endif %}
-                    
-                    {# Check if date is today or yesterday #}
-                    {% if year == now.year and month == now.month and day == now.day %}
-                        Today at {{ formatted_time }}
-                    {% elif year == now.year and month == now.month and day == now.day - 1 %}
-                        Yesterday at {{ formatted_time }}
-                    {% elif year == now.year %}
-                        {{ day }} {{ month_name }} at {{ formatted_time }}
-                    {% else %}
-                        {{ day }} {{ month_name }} {{ year }} at {{ formatted_time }}
-                    {% endif %}
-                {% else %}
-                    {{ attempt.timestamp }}
-                {% endif %}
+            <p class="played-on">
+                Played on: <span class="timestamp" data-timestamp="{{ attempt.timestamp }}">{{ attempt.timestamp }}</span>
             </p>
             
             {% if attempt.solved %}
@@ -157,4 +135,66 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Format all timestamps
+    const timestampElements = document.querySelectorAll('.timestamp');
+    
+    timestampElements.forEach(function(element) {
+      const timestamp = element.getAttribute('data-timestamp');
+      element.textContent = formatTimestamp(timestamp);
+    });
+    
+    /**
+     * Format a timestamp with "Today", "Yesterday", or date
+     * @param {string} timestamp - ISO timestamp string
+     * @return {string} Formatted date string
+     */
+    function formatTimestamp(timestamp) {
+      if (!timestamp) return 'Unknown date';
+      
+      try {
+        // Parse the timestamp
+        const date = new Date(timestamp);
+        if (isNaN(date.getTime())) return timestamp; // Invalid date
+        
+        // Format time part (HH:MM)
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}`;
+        
+        // Get current date for comparison
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        // Check if date is today or yesterday
+        if (date.getFullYear() === today.getFullYear() && 
+            date.getMonth() === today.getMonth() && 
+            date.getDate() === today.getDate()) {
+          return `Today at ${timeStr}`;
+        } else if (date.getFullYear() === yesterday.getFullYear() && 
+                  date.getMonth() === yesterday.getMonth() && 
+                  date.getDate() === yesterday.getDate()) {
+          return `Yesterday at ${timeStr}`;
+        } else if (date.getFullYear() === now.getFullYear()) {
+          // Same year, show day and month
+          const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                         'July', 'August', 'September', 'October', 'November', 'December'];
+          return `${date.getDate()} ${months[date.getMonth()]} at ${timeStr}`;
+        } else {
+          // Different year, show full date
+          const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                         'July', 'August', 'September', 'October', 'November', 'December'];
+          return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} at ${timeStr}`;
+        }
+      } catch (e) {
+        console.error('Error formatting timestamp:', e);
+        return timestamp; // Return original on error
+      }
+    }
+  });
+</script>
 {% endblock %} 
