@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Quiz Already Solved - Pokemath!{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="alert alert-info">
+        <h2>Quiz Already Completed!</h2>
+        <p>You've already solved this quiz successfully. Each quiz can only be completed once!</p>
+        
+        <div class="text-center mt-4">
+            <img src="/static/images/pokemon-celebration.gif" alt="Celebration" class="celebration-img">
+        </div>
+        
+        <div class="mt-4">
+            <h3>What would you like to do next?</h3>
+            <div class="button-container">
+                <a href="{{ url_for('index') }}" class="button-base button-blue">Return to Home</a>
+                <a href="{{ url_for('all_exercises') }}" class="button-base button-green">Try Another Exercise</a>
+                <a href="{{ url_for('my_quizzes') }}" class="button-base button-dark">View My Progress</a>
+            </div>
+            
+            <div class="mt-4">
+                <p>Want to review your answers? <a href="{{ url_for('quiz', quiz_id=quiz_id) }}" class="btn-link">View your completed quiz</a></p>
+                <p class="text-muted">Your correct answers will be displayed in the input fields.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-link {
+        color: #007bff;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    
+    .btn-link:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+    
+    .text-muted {
+        color: #6c757d;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %} 

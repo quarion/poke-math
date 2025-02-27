@@ -225,7 +225,8 @@ def render_quiz_template(
     quiz_data: Union[Dict[str, Any], object], 
     pokemon_vars: Dict[str, str], 
     result: Optional[QuizResultViewModel] = None, 
-    user_answers: Optional[Dict[str, int]] = None
+    user_answers: Optional[Dict[str, int]] = None,
+    already_solved: bool = False
 ) -> Any:
     """
     Standardized function to render the quiz template for both random and regular quizzes.
@@ -237,6 +238,7 @@ def render_quiz_template(
         pokemon_vars: Dictionary mapping variable names to Pokemon image paths
         result: Optional result object from checking answers
         user_answers: Optional dictionary of user submitted answers
+        already_solved: Flag indicating if the quiz is already solved
         
     Returns:
         Response: Flask response with rendered template
@@ -252,6 +254,7 @@ def render_quiz_template(
         'quiz': quiz,  # Strongly typed view model
         'result': result,
         'user_answers': user_answers,
+        'already_solved': already_solved
     }
     
     return render_template('quiz.html', **template_args)
@@ -364,7 +367,20 @@ def random_quiz(quiz_id):
     # Add quiz_id to the stored_quiz for the template
     stored_quiz['quiz_id'] = quiz_id
 
+    # Check if this quiz is already solved
+    already_solved = quiz_session.session_manager.is_quiz_solved(quiz_id)
+
+    # Pre-populate answers if the quiz is already solved
+    user_answers = {}
+    if already_solved:
+        # Show the correct answers for an already solved quiz
+        user_answers = {var: int(float(val)) for var, val in stored_quiz['solution'].items()}
+
     if request.method == 'POST':
+        # If the quiz is already solved, don't process the answers again
+        if already_solved:
+            return render_template('already_solved.html', quiz_id=quiz_id)
+            
         # Filter out empty inputs
         user_answers = {
             key: int(value)
@@ -378,7 +394,7 @@ def random_quiz(quiz_id):
         if result.correct:
             quiz_session.session_manager.mark_quiz_solved(quiz_id)
         
-        # Record the quiz attempt
+        # Record the quiz attempt - this will update an existing attempt or create a new one
         quiz_session.session_manager.add_quiz_attempt(
             quiz_id=quiz_id,
             quiz_data=stored_quiz,
@@ -397,14 +413,28 @@ def random_quiz(quiz_id):
             quiz_data=stored_quiz,
             pokemon_vars=stored_quiz['pokemon_vars'],
             result=result,
-            user_answers=user_answers
+            user_answers=user_answers,
+            already_solved=already_solved
         )
 
-    # GET request - just display the quiz
+    # GET request - track that the user viewed this quiz (for incomplete tracking)
+    if not already_solved:
+        # Add or update quiz attempt with initial data
+        quiz_session.session_manager.add_quiz_attempt(
+            quiz_id=quiz_id,
+            quiz_data=stored_quiz,
+            score=0,
+            total=len(stored_quiz['solution']),
+            completed=False
+        )
+    
+    # Display the quiz with a flag indicating if it's already solved
     return render_quiz_template(
         is_random=True,
         quiz_data=stored_quiz,
-        pokemon_vars=stored_quiz['pokemon_vars']
+        pokemon_vars=stored_quiz['pokemon_vars'],
+        user_answers=user_answers,
+        already_solved=already_solved
     )
 
 
@@ -434,10 +464,24 @@ def quiz(quiz_id):
         # Quiz no longer exists, show an error page
         return render_template('quiz_not_found.html', quiz_id=quiz_id)
     
+    # Check if this quiz is already solved
+    already_solved = quiz_session.session_manager.is_quiz_solved(quiz_id)
+    
+    # Pre-populate answers if the quiz is already solved
+    user_answers = {}
+    
     # For random quizzes, use the stored data
     if is_random and stored_quiz_data:
+        # If quiz is already solved, show the solution
+        if already_solved:
+            user_answers = {var: int(float(val)) for var, val in stored_quiz_data['solution'].items()}
+            
         # Process the random quiz
         if request.method == 'POST':
+            # If the quiz is already solved, don't process the answers again
+            if already_solved:
+                return render_template('already_solved.html', quiz_id=quiz_id)
+                
             # Filter out empty inputs
             user_answers = {
                 key: int(value)
@@ -451,7 +495,7 @@ def quiz(quiz_id):
             if result.correct:
                 quiz_session.session_manager.mark_quiz_solved(quiz_id)
             
-            # Record the quiz attempt
+            # Record the quiz attempt - will update existing if present
             quiz_session.session_manager.add_quiz_attempt(
                 quiz_id=quiz_id,
                 quiz_data=stored_quiz_data,
@@ -470,20 +514,42 @@ def quiz(quiz_id):
                 quiz_data=stored_quiz_data,
                 pokemon_vars=stored_quiz_data.get('pokemon_vars', {}),
                 result=result,
-                user_answers=user_answers
+                user_answers=user_answers,
+                already_solved=already_solved
             )
 
-        # GET request - just display the quiz
+        # GET request - track that the user viewed this quiz (for incomplete tracking)
+        if not already_solved:
+            # Add or update quiz attempt with initial data
+            quiz_session.session_manager.add_quiz_attempt(
+                quiz_id=quiz_id,
+                quiz_data=stored_quiz_data,
+                score=0,
+                total=len(stored_quiz_data.get('solution', {})),
+                completed=False
+            )
+        
+        # Display the quiz
         return render_quiz_template(
             is_random=True,
             quiz_data=stored_quiz_data,
-            pokemon_vars=stored_quiz_data.get('pokemon_vars', {})
+            pokemon_vars=stored_quiz_data.get('pokemon_vars', {}),
+            user_answers=user_answers,
+            already_solved=already_solved
         )
     else:
         # Normal quiz handling for non-random quizzes
         quiz_state = quiz_session.get_quiz_state(quiz_id)
         
+        # If quiz is already solved, show the solution
+        if already_solved:
+            user_answers = {var: int(float(val)) for var, val in quiz_state['quiz'].answer.values.items()}
+        
         if request.method == 'POST':
+            # If the quiz is already solved, don't process the answers again
+            if already_solved:
+                return render_template('already_solved.html', quiz_id=quiz_id)
+                
             # Filter out empty inputs
             user_answers = {
                 key: int(value)
@@ -499,7 +565,7 @@ def quiz(quiz_id):
             if result.correct:
                 quiz_session.session_manager.mark_quiz_solved(quiz_id)
             
-            # Record the quiz attempt with full quiz data for restoration
+            # Create quiz data for storing attempts
             quiz_data = {
                 'quiz_id': quiz_id,
                 'title': quiz_state['quiz'].title,
@@ -508,6 +574,7 @@ def quiz(quiz_id):
                 'is_random': False
             }
             
+            # Record the quiz attempt - will update existing if present
             quiz_session.session_manager.add_quiz_attempt(
                 quiz_id=quiz_id,
                 quiz_data=quiz_data,
@@ -526,13 +593,36 @@ def quiz(quiz_id):
                 quiz_data=quiz_state['quiz'],
                 pokemon_vars=quiz_state['pokemon_vars'],
                 result=result,
-                user_answers=user_answers
+                user_answers=user_answers,
+                already_solved=already_solved
+            )
+
+        # GET request - track that the user viewed this quiz (for incomplete tracking)
+        if not already_solved:
+            # Create quiz data for storing attempts
+            quiz_data = {
+                'quiz_id': quiz_id,
+                'title': quiz_state['quiz'].title,
+                'equations': quiz_state['quiz'].equations,
+                'solution': quiz_state['quiz'].answer.values,
+                'is_random': False
+            }
+            
+            # Add or update quiz attempt with initial data
+            quiz_session.session_manager.add_quiz_attempt(
+                quiz_id=quiz_id,
+                quiz_data=quiz_data,
+                score=0,
+                total=len(quiz_state['quiz'].answer.values),
+                completed=False
             )
 
         return render_quiz_template(
             is_random=False,
             quiz_data=quiz_state['quiz'],
-            pokemon_vars=quiz_state['pokemon_vars']
+            pokemon_vars=quiz_state['pokemon_vars'],
+            user_answers=user_answers,
+            already_solved=already_solved
         )
 
 

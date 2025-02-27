@@ -186,15 +186,44 @@ class SessionManager:
             total: Total number of possible points
             completed: Whether the quiz was fully completed
         """
-        self.state.quiz_attempts.append({
-            'quiz_id': quiz_id,
-            'timestamp': datetime.now().isoformat(),
-            'score': score,
-            'total': total,
-            'completed': completed,
-            'quiz_data': quiz_data,  # Store complete quiz data for restoration
-        })
+        # Check if an attempt already exists for this quiz
+        existing_attempt_index = self.find_quiz_attempt_index(quiz_id)
+        
+        if existing_attempt_index != -1:
+            # Update the existing attempt instead of creating a new one
+            self.state.quiz_attempts[existing_attempt_index].update({
+                'timestamp': datetime.now().isoformat(),
+                'score': score,
+                'total': total,
+                'completed': completed,
+                'quiz_data': quiz_data,
+            })
+        else:
+            # Create a new attempt if none exists
+            self.state.quiz_attempts.append({
+                'quiz_id': quiz_id,
+                'timestamp': datetime.now().isoformat(),
+                'score': score,
+                'total': total,
+                'completed': completed,
+                'quiz_data': quiz_data,  # Store complete quiz data for restoration
+            })
         self._save_state()
+    
+    def find_quiz_attempt_index(self, quiz_id: str) -> int:
+        """
+        Find the index of an existing quiz attempt by quiz_id.
+        
+        Args:
+            quiz_id: The ID of the quiz to find
+            
+        Returns:
+            Index of the attempt or -1 if not found
+        """
+        for i, attempt in enumerate(self.state.quiz_attempts):
+            if attempt.get('quiz_id') == quiz_id:
+                return i
+        return -1
     
     def get_quiz_attempts(self) -> List[Dict[str, Any]]:
         """

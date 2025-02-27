@@ -4,51 +4,101 @@
 
 {% block content %}
 <div class="container">
-    <h1>My Quizzes</h1>
+    <h1 class="text-center font-xxl">My Quizzes</h1>
     
-    <div class="summary-box">
-        <h2>Summary</h2>
-        <p>Total quizzes attempted: {{ stats.total_attempts }}</p>
-        <p>Quizzes solved: {{ stats.total_solved }}</p>
+    <div class="card">
+        <h2 class="text-center font-xl">Summary</h2>
+        <div class="flex flex-center flex-gap-lg">
+            <div class="stat-item text-center">
+                <div class="stat-value font-xl">{{ stats.total_attempts }}</div>
+                <div class="stat-label" style="padding-left: 5px;">Quizzes Attempted</div>
+            </div>
+            <div class="stat-item text-center">
+                <div class="stat-value font-xl">{{ stats.total_solved }}</div>
+                <div class="stat-label" style="padding-left: 5px;">Quizzes Completed</div>
+            </div>
+        </div>
     </div>
     
     {% if attempts %}
     <div class="quiz-list">
         {% for attempt in attempts %}
-        <div class="quiz-card">
-            <div class="quiz-info">
-                <h3>{{ attempt.title }}</h3>
-                <p>Date: {{ attempt.timestamp }}</p>
-                <p>Score: {{ attempt.score }}</p>
-                <p class="status">
-                    {% if attempt.solved %}
-                    <span class="solved">Solved</span>
-                    {% else %}
-                    <span class="unsolved">Not Solved</span>
+        <div class="card">
+            <h3 class="font-lg">{{ attempt.title }}</h3>
+            <p class="played-on">Played on: 
+                {% set timestamp_parts = attempt.timestamp.split('T') %}
+                {% if timestamp_parts|length > 1 %}
+                    {% set date_part = timestamp_parts[0].split('-') %}
+                    {% set time_part = timestamp_parts[1].split(':') %}
+                    {% set year = date_part[0]|int %}
+                    {% set month = date_part[1]|int %}
+                    {% set day = date_part[2]|int %}
+                    {% set hour = time_part[0]|int %}
+                    {% set minute = time_part[1]|int %}
+                    
+                    {% set months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
+                    {% set month_name = months[month-1] %}
+                    
+                    {% set formatted_time = '%02d'|format(hour) + ':' + '%02d'|format(minute) %}
+                    
+                    {# Get current date for comparison #}
+                    {% set now = now|default(None) %}
+                    {% if now is none %}
+                        {% set now = {'year': 2025, 'month': 2, 'day': 26} %}
                     {% endif %}
-                </p>
-                {% if not attempt.exists %}
-                <p class="warning">This quiz is no longer available in the community exercises.</p>
-                {% endif %}
-            </div>
-            <div class="quiz-actions">
-                {% if attempt.exists %}
-                <a href="{{ url_for('quiz', quiz_id=attempt.id) }}" class="btn btn-primary">Open</a>
+                    
+                    {# Check if date is today or yesterday #}
+                    {% if year == now.year and month == now.month and day == now.day %}
+                        Today at {{ formatted_time }}
+                    {% elif year == now.year and month == now.month and day == now.day - 1 %}
+                        Yesterday at {{ formatted_time }}
+                    {% elif year == now.year %}
+                        {{ day }} {{ month_name }} at {{ formatted_time }}
+                    {% else %}
+                        {{ day }} {{ month_name }} {{ year }} at {{ formatted_time }}
+                    {% endif %}
                 {% else %}
-                <button disabled class="btn btn-primary disabled">Not Available</button>
+                    {{ attempt.timestamp }}
                 {% endif %}
-                <form action="{{ url_for('forget_quiz') }}" method="post">
+            </p>
+            
+            {% if attempt.solved %}
+            <div class="completion-badge">
+                <img src="{{ url_for('static', filename='images/pokeball-1.gif') }}" alt="Pokeball" width="24" height="24">
+                <span class="font-bold" style="color: var(--pokemon-green);">Completed!</span>
+            </div>
+            {% endif %}
+            
+            {% if not attempt.exists %}
+            <p class="font-bold" style="color: var(--pokemon-red);">This quiz is no longer available.</p>
+            {% endif %}
+            
+            <div class="quiz-buttons">
+                {% if attempt.exists %}
+                <div class="button-wrapper">
+                    <a href="{{ url_for('quiz', quiz_id=attempt.id) }}" class="button-base button-blue">Play Again</a>
+                </div>
+                {% else %}
+                <div class="button-wrapper">
+                    <button disabled class="button-base button-dark">Not Available</button>
+                </div>
+                {% endif %}
+                
+                <form action="{{ url_for('forget_quiz') }}" method="post" class="remove-form">
                     <input type="hidden" name="timestamp" value="{{ attempt.timestamp }}">
-                    <button type="submit" class="btn btn-danger">Forget</button>
+                    <button type="submit" class="button-base button-red">Remove</button>
                 </form>
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="empty-state">
-        <p>You haven't attempted any quizzes yet.</p>
-        <a href="{{ url_for('all_exercises') }}" class="btn btn-primary">Browse Community Exercises</a>
+    <div class="card text-center">
+        <div class="empty-state">
+            <img src="{{ url_for('static', filename='images/psyduck_wonder.gif') }}" alt="No quizzes yet" width="120" height="120">
+            <p class="font-md">You haven't attempted any quizzes yet.</p>
+            <a href="{{ url_for('all_exercises') }}" class="button-base button-blue">Browse Community Exercises</a>
+        </div>
     </div>
     {% endif %}
 </div>

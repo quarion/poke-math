@@ -329,12 +329,10 @@ header h1 {
 }
 
 .quiz-list {
+    margin-top: var(--spacing-lg);
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--spacing-lg);
-    padding: var(--spacing-md);
-    list-style: none;
-    margin: 0;
 }
 
 .quiz-item {
@@ -577,6 +575,56 @@ footer {
     color: var(--text-color-muted);
 }
 
+/* Debug Information Styles */
+.debug-info .equation-debug-item {
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 5px;
+}
+
+/* Already Solved Banner Styles */
+.already-solved-banner {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.already-solved-banner .alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+    padding: 15px;
+    margin-bottom: 0;
+}
+
+.already-solved-banner h3 {
+    margin-top: 0;
+}
+
+/* Disabled Input Styles */
+input[disabled] {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    border-color: #dee2e6;
+}
+
+/* Solved Answer Styles */
+.solved-answer {
+    background-color: #e8f4ff;
+    color: #0056b3;
+    font-weight: bold;
+    border: 1px solid #81b0ff;
+    border-radius: 4px;
+    padding: 5px;
+    text-align: center;
+}
+
+/* Small Text Styling */
+.small.text-muted {
+    font-size: 0.85em;
+    color: #6c757d;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     :root {
@@ -601,7 +649,6 @@ footer {
 
     .quiz-list {
         grid-template-columns: 1fr;
-        gap: var(--spacing-md);
     }
 
     input[type="number"] {
@@ -661,6 +708,19 @@ footer {
     .celebration-gif img, .incorrect-gif img {
         height: 30px;
     }
+
+    .quiz-actions {
+        position: static;
+        margin-top: var(--spacing-lg);
+    }
+    
+    .button-container {
+        flex-direction: column;
+    }
+
+    .quiz-buttons {
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 480px) {
@@ -694,4 +754,136 @@ footer {
     .equations-section, .answers-section {
         margin-top: 0;
     }
+}
+
+/* Quiz List Styles */
+.quiz-list {
+    margin-top: var(--spacing-lg);
+}
+
+.quiz-card {
+    position: relative;
+    padding-bottom: 80px;
+}
+
+.quiz-info {
+    flex: 1;
+}
+
+.quiz-actions {
+    position: absolute;
+    bottom: var(--spacing-md);
+    right: var(--spacing-lg);
+    left: var(--spacing-lg);
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.button-container .button-base,
+.button-container form {
+    flex: 1;
+}
+
+.button-container form {
+    margin: 0;
+}
+
+.achievement-badge {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+}
+
+.achievement-badge img {
+    object-fit: contain;
+}
+
+.empty-state {
+    padding: var(--spacing-xl) 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.empty-state img {
+    max-width: 120px;
+    height: auto;
+}
+
+.played-on {
+    color: var(--text-color-muted);
+    font-size: var(--font-size-base);
+}
+
+.stat-item {
+    padding: var(--spacing-md);
+}
+
+.stat-value {
+    font-weight: bold;
+    color: var(--pokemon-blue);
+    margin-bottom: var(--spacing-sm);
+}
+
+.stat-label {
+    color: var(--text-color-muted);
+}
+
+.quiz-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.quiz-buttons .button-base,
+.quiz-buttons .button-wrapper .button-base,
+.quiz-buttons .remove-form .button-base {
+    flex: 1;
+    min-width: 0;
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+    width: 100%;
+}
+
+.remove-form {
+    flex: 1;
+    margin: 0;
+}
+
+.button-wrapper {
+    flex: 1;
+    margin: 0;
+}
+
+.completion-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
+}
+
+.played-on {
+    color: var(--text-color-muted);
+    font-size: var(--font-size-base);
+    margin-top: var(--spacing-sm);
+}
+
+.stat-item {
+    padding: var(--spacing-md);
+}
+
+.stat-value {
+    font-weight: bold;
+    color: var(--pokemon-blue);
+    margin-bottom: var(--spacing-sm);
+}
+
+.stat-label {
+    color: var(--text-color-muted);
 } 

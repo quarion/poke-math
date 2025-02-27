@@ -12,7 +12,7 @@
     
       <h5>Equation Replacement Debug:</h5>
       {% for equation in quiz.equations %}
-        <div style="margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px;">
+        <div class="equation-debug-item">
           <p>Original equation: {{ equation }}</p>
           <p>Final equation (after replacement): {{ quiz.replace_variables_with_images(equation) | safe }}</p>
         </div>
@@ -30,6 +30,16 @@
     
     {% if quiz.description %}
       <p class="text-center">{{ quiz.description }}</p>
+    {% endif %}
+    
+    {% if already_solved %}
+    <div class="already-solved-banner">
+      <div class="alert alert-success">
+        <h3>Quiz Already Completed!</h3>
+        <p>You've already solved this quiz successfully. The correct answers are shown below in the input fields.</p>
+        <p class="small text-muted">You can view the answers but you can't submit them again.</p>
+      </div>
+    </div>
     {% endif %}
 
     <form id="quizForm" method="POST" action="{{ request.path }}">
@@ -59,7 +69,10 @@
                 value="{{ user_answers[var] if var in user_answers else '' }}"
                 {% if result and var in result.correct_answers %}
                   class="{{ 'correct' if result.correct_answers[var] else 'incorrect' }}"
+                {% elif already_solved %}
+                  class="solved-answer"
                 {% endif %}
+                {% if already_solved %}disabled="disabled"{% endif %}
               >
               <div class="celebration-gif {% if result and var in result.correct_answers and result.correct_answers[var] %}visible{% endif %}" id="celebration-{{ var }}">
                 <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
@@ -78,7 +91,9 @@
         {% else %}
           <a href="{{ url_for('index') }}" class="button-base button-dark">Back to List</a>
         {% endif %}
+        {% if not already_solved %}
         <button type="submit" id="submitBtn" class="button-base button-green">Check Answers</button>
+        {% endif %}
         {% if quiz.next_quiz_id %}
           <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" id="nextQuiz" {% if result and result.correct %}class="visible"{% endif %}>Next Question →</a>
         {% endif %}
@@ -110,7 +125,8 @@
   <script type="application/json" id="quiz-data">
     {
       "isRandom": {{ quiz.is_random|tojson }},
-      "newExerciseUrl": {{ url_for('new_exercise')|tojson }}
+      "newExerciseUrl": {{ url_for('new_exercise')|tojson }},
+      "alreadySolved": {{ already_solved|tojson }}
     }
   </script>
 
@@ -121,8 +137,14 @@
       const quizData = JSON.parse(document.getElementById('quiz-data').textContent);
       const isRandom = quizData.isRandom;
       const newExerciseUrl = quizData.newExerciseUrl;
+      const alreadySolved = quizData.alreadySolved;
       
       const form = document.getElementById('quizForm');
+      
+      // Don't handle form submissions if quiz is already solved
+      if (alreadySolved) {
+        return;
+      }
       
       form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -248,9 +270,18 @@
               nextButton.classList.remove('visible');
             }
           }
+          
+          // If all answers are correct, disable inputs after a short delay
+          if (data.correct) {
+            setTimeout(() => {
+              document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.disabled = true;
+              });
+            }, 1000);
+          }
         })
         .catch(error => {
-          console.error('Error:', error);
+          console.error('Error submitting form:', error);
         });
       });
     });
