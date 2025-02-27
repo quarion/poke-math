@@ -5,6 +5,11 @@ This module contains the Flask web application for PokeMath, including:
 - Main application setup and configuration
 - Route definitions and handlers
 - View models and helper functions
+
+Authentication:
+- Users can log in with Google or as a guest
+- Guest accounts are persisted using cookies for 30 days
+- Progress is saved for both Google and guest accounts
 """
 
 import os
@@ -16,6 +21,7 @@ from typing import Dict, List, Optional, Any, Union
 from functools import wraps
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask_wtf.csrf import CSRFProtect
 
 from src.app.game.game_config import load_game_config, load_equation_difficulties
 from src.app.game.game_manager import GameManager
@@ -58,6 +64,14 @@ def create_flask_app():
                       template_folder=str(Path(__file__).parent.parent / 'templates'),
                       static_folder=str(Path(__file__).parent.parent / 'static'))
     flask_app.secret_key = 'your-secret-key-here'  # Required for session management
+    
+    # Initialize CSRF protection
+    csrf = CSRFProtect(flask_app)
+
+    # Configure CSRF protection
+    flask_app.config['WTF_CSRF_ENABLED'] = True
+    flask_app.config['WTF_CSRF_SECRET_KEY'] = 'a-very-secret-key'  # Should be a strong random key in production
+    flask_app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour in seconds
 
     # Add version info to all templates
     @flask_app.context_processor
@@ -85,6 +99,34 @@ def get_version_info():
 
 # Create Flask app
 app = create_flask_app()
+
+# Initialize CSRF protection separately to make it available globally
+csrf = CSRFProtect(app)
+
+# Configure CSRF protection
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_SECRET_KEY'] = 'a-very-secret-key'  # Should be a strong random key in production
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour in seconds
+
+# Add after_request handler to set guest cookie
+@app.after_request
+def after_request(response):
+    """
+    Process response after each request.
+    
+    This function:
+    1. Sets the guest cookie for guest users
+    
+    Args:
+        response: Flask response object
+        
+    Returns:
+        Modified response
+    """
+    # Set guest cookie if user is a guest
+    AuthManager.set_guest_cookie(response)
+    
+    return response
 
 # Load game configuration
 GAME_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'quizzes.json'
@@ -650,6 +692,7 @@ def quiz(quiz_id):
 @login_required
 def reset_quiz(quiz_id):
     """Reset a solved quiz to allow it to be solved again."""
+    # This route is protected by CSRF token via the form submission
     game_manager = create_game_manager()
 
     # Check if this quiz is already solved
@@ -753,6 +796,7 @@ def my_quizzes():
 @login_required
 def forget_quiz():
     """Remove a quiz attempt from the user's history."""
+    # This route is protected by CSRF token via the form submission
     game_manager = create_game_manager()
 
     # Get the timestamp from the form
@@ -769,6 +813,7 @@ def forget_quiz():
 @login_required
 def reset_progress():
     """Reset all user progress, including solved quizzes and attempts."""
+    # This route is protected by CSRF token via the form submission
     game_manager = create_game_manager()
     game_manager.reset()
     game_manager.save_session()
@@ -803,20 +848,26 @@ def login():
     return render_template('login.html', **firebase_config)
 
 @app.route('/guest-login')
+@csrf.exempt  # Exempt this route from CSRF protection since it's a GET request
 def guest_login():
     """
     Log in as a guest user.
     
+    This will either:
+    1. Create a new guest account with a unique ID, or
+    2. Reuse an existing guest account ID from cookies
+    
     Returns:
         Redirect to name input page
     """
-    # Create a guest user
+    # Create or reuse a guest user
     AuthManager.create_guest_user()
     
     # Redirect to name input page
     return redirect(url_for('name_input'))
 
 @app.route('/auth-callback', methods=['POST'])
+@csrf.exempt  # Exempt this route from CSRF protection
 def auth_callback():
     """
     Handle Google authentication callback.
@@ -864,22 +915,26 @@ def save_name():
     Returns:
         Redirect to home page or name input page with error
     """
-    # Get the trainer name from the form
-    trainer_name = request.form.get('trainer_name', '').strip()
-    
-    # Validate the trainer name
-    if not trainer_name:
-        return render_template('name_input.html', error='Please enter a name')
-    
-    if len(trainer_name) > 20:
-        return render_template('name_input.html', error='Name must be 20 characters or less')
-    
-    # Save the trainer name
-    session_manager = create_session_manager()
-    session_manager.set_user_name(trainer_name)
-    
-    # Redirect to home page
-    return redirect(url_for('index'))
+    try:
+        # Get the trainer name from the form
+        trainer_name = request.form.get('trainer_name', '').strip()
+        
+        # Validate the trainer name
+        if not trainer_name:
+            return render_template('name_input.html', error='Please enter a name')
+        
+        if len(trainer_name) > 20:
+            return render_template('name_input.html', error='Name must be 20 characters or less')
+        
+        # Save the trainer name
+        session_manager = create_session_manager()
+        session_manager.set_user_name(trainer_name)
+        
+        # Redirect to home page
+        return redirect(url_for('index'))
+    except Exception as e:
+        app.logger.error(f"Error in save_name: {e}")
+        return render_template('name_input.html', error=f'An error occurred: {str(e)}')
 
 @app.route('/logout')
 def logout():
@@ -892,16 +947,20 @@ def logout():
     AuthManager.logout()
     return redirect(url_for('login'))
 
-# Update context processor to add is_authenticated to templates
+# Update context processor to add is_authenticated and csrf_token to templates
 @app.context_processor
 def inject_auth_status():
     """
-    Add authentication status to all templates.
+    Add authentication status and CSRF token to all templates.
     
     Returns:
-        Dictionary with is_authenticated value
+        Dictionary with is_authenticated value and csrf_token function
     """
-    return {'is_authenticated': AuthManager.is_authenticated()}
+    from flask_wtf.csrf import generate_csrf
+    return {
+        'is_authenticated': AuthManager.is_authenticated(),
+        'csrf_token': generate_csrf
+    }
 
 # -----------------------------------------------------------------------------
 # Error Handlers

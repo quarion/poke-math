@@ -13,6 +13,7 @@ from flask import session, redirect, url_for, request
 from functools import wraps
 import firebase_admin
 from firebase_admin import credentials, auth
+from flask_wtf.csrf import generate_csrf
 
 # Initialize Firebase Admin SDK if not already initialized
 if not firebase_admin._apps:
@@ -25,22 +26,66 @@ if not firebase_admin._apps:
 class AuthManager:
     """
     Manages user authentication and session data.
+    
+    Features:
+    - Google authentication using Firebase
+    - Guest user authentication
+    - Guest account persistence using cookies (30 days)
+    - Session management
     """
+    
+    # Cookie name for storing guest ID
+    GUEST_COOKIE_NAME = 'pokemath_guest_id'
+    # Cookie expiration in days
+    GUEST_COOKIE_EXPIRY = 30
     
     @staticmethod
     def create_guest_user() -> str:
         """
-        Create a guest user with a unique ID.
+        Create a guest user with a unique ID or reuse an existing guest ID from cookies.
         
         Returns:
-            str: The generated guest user ID
+            str: The guest user ID
         """
-        guest_id = f"guest_{uuid.uuid4()}"
+        # Check if there's an existing guest ID in cookies
+        existing_guest_id = request.cookies.get(AuthManager.GUEST_COOKIE_NAME)
+        
+        if existing_guest_id and existing_guest_id.startswith('guest_'):
+            # Reuse the existing guest ID
+            guest_id = existing_guest_id
+        else:
+            # Generate a new guest ID
+            guest_id = f"guest_{uuid.uuid4()}"
+        
+        # Store in session
         session['user_id'] = guest_id
         session['auth_type'] = 'guest'
         session['authenticated'] = True
         session['display_name'] = None
+        
+        # The cookie will be set in the response
         return guest_id
+    
+    @staticmethod
+    def set_guest_cookie(response) -> None:
+        """
+        Set a persistent cookie with the guest ID.
+        
+        Args:
+            response: Flask response object
+        """
+        if session.get('auth_type') == 'guest' and session.get('user_id'):
+            # Calculate expiry time in seconds (days * 24 hours * 60 minutes * 60 seconds)
+            max_age = AuthManager.GUEST_COOKIE_EXPIRY * 24 * 60 * 60
+            
+            # Set the cookie
+            response.set_cookie(
+                AuthManager.GUEST_COOKIE_NAME,
+                session['user_id'],
+                max_age=max_age,
+                httponly=True,
+                samesite='Lax'
+            )
     
     @staticmethod
     def set_user_name(name: str) -> None:
@@ -100,12 +145,19 @@ class AuthManager:
         # Keep some session data like CSRF token
         csrf_token = session.get('csrf_token')
         
+        # Remember if this was a guest account
+        was_guest = session.get('auth_type') == 'guest'
+        guest_id = session.get('user_id') if was_guest else None
+        
         # Clear the session
         session.clear()
         
         # Restore CSRF token if it existed
         if csrf_token:
             session['csrf_token'] = csrf_token
+            
+        # Ensure CSRF token is preserved for Flask-WTF
+        generate_csrf()
     
     @staticmethod
     def verify_google_token(id_token: str) -> Tuple[bool, Optional[Dict[str, Any]]]:

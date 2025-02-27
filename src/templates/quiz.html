@@ -43,6 +43,7 @@
     {% endif %}
 
     <form id="quizForm" method="POST" action="{{ request.path }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <!-- Combined equations and answers in a grid layout -->
       <div class="quiz-grid">
         <!-- Equations section with heading -->

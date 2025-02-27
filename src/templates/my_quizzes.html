@@ -118,6 +118,7 @@
                 {% endif %}
                 
                 <form action="{{ url_for('forget_quiz') }}" method="post" class="remove-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="timestamp" value="{{ attempt.timestamp }}">
                     <button type="submit" class="button-base button-red">Remove</button>
                 </form>

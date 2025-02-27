@@ -58,8 +58,7 @@
         fetch('{{ url_for("auth_callback") }}', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token() }}'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ id_token: idToken })
         })
