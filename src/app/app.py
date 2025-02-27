@@ -72,6 +72,8 @@ def create_flask_app():
     flask_app.config['WTF_CSRF_ENABLED'] = True
     flask_app.config['WTF_CSRF_SECRET_KEY'] = 'a-very-secret-key'  # Should be a strong random key in production
     flask_app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour in seconds
+    flask_app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # Don't check CSRF by default, only where explicitly required
+    flask_app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']  # Only check these methods
 
     # Add version info to all templates
     @flask_app.context_processor
@@ -107,6 +109,8 @@ csrf = CSRFProtect(app)
 app.config['WTF_CSRF_ENABLED'] = True
 app.config['WTF_CSRF_SECRET_KEY'] = 'a-very-secret-key'  # Should be a strong random key in production
 app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour in seconds
+app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # Don't check CSRF by default, only where explicitly required
+app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']  # Only check these methods
 
 # Add after_request handler to set guest cookie
 @app.after_request
@@ -875,22 +879,36 @@ def auth_callback():
     Returns:
         JSON response with success status and redirect URL
     """
-    # Get the ID token from the request
-    data = request.json
-    id_token = data.get('id_token')
-    
-    if not id_token:
-        return jsonify({'success': False, 'error': 'No ID token provided'})
-    
-    # Verify the ID token and log in the user
-    if AuthManager.login_with_google(id_token):
-        # Check if user has a name, if so redirect to home page, otherwise to name input
-        if AuthManager.get_user_name():
-            return jsonify({'success': True, 'redirect': url_for('index')})
+    try:
+        # Log the request for debugging
+        app.logger.info("Auth callback received")
+        app.logger.info(f"Request content type: {request.content_type}")
+        
+        # Get the ID token from the request
+        data = request.json
+        if not data:
+            app.logger.error("No JSON data received in auth_callback")
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+            
+        id_token = data.get('id_token')
+        
+        if not id_token:
+            app.logger.error("No ID token provided in auth_callback")
+            return jsonify({'success': False, 'error': 'No ID token provided'}), 400
+        
+        # Verify the ID token and log in the user
+        if AuthManager.login_with_google(id_token):
+            # Check if user has a name, if so redirect to home page, otherwise to name input
+            if AuthManager.get_user_name():
+                return jsonify({'success': True, 'redirect': url_for('index')})
+            else:
+                return jsonify({'success': True, 'redirect': url_for('name_input')})
         else:
-            return jsonify({'success': True, 'redirect': url_for('name_input')})
-    else:
-        return jsonify({'success': False, 'error': 'Failed to authenticate'})
+            app.logger.error("Failed to authenticate with Google token")
+            return jsonify({'success': False, 'error': 'Failed to authenticate'}), 401
+    except Exception as e:
+        app.logger.error(f"Error in auth_callback: {str(e)}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/name')
 @login_required

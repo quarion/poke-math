@@ -7,6 +7,9 @@
     <h2>Welcome to Pokemath!</h2>
     <p class="login-description">Train your brain with fun Pokemon-themed math exercises and become a true Math Pokemon Master!</p>
     
+    <!-- Error message container -->
+    <div id="error-message" class="error-message" style="display: none;"></div>
+    
     <div class="login-options">
       <div class="login-option">
         <h3>Sign in with Google</h3>
@@ -35,6 +38,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
 <script>
+  // Function to display error messages
+  function showError(message) {
+    const errorElement = document.getElementById('error-message');
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    console.error(message);
+  }
+
   // Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyClyfiMLAAF2VJ4Zm0SXLy5vGmJT7vG4Uc",
@@ -46,42 +57,65 @@
   };
 
   // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
+  try {
+    firebase.initializeApp(firebaseConfig);
+    console.log("Firebase initialized successfully");
+  } catch (error) {
+    showError("Firebase initialization error: " + error.message);
+  }
   
   // Set up Google sign-in
   document.getElementById('google-signin').addEventListener('click', function() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider)
-      .then((result) => {
-        // Get the Google ID token
-        const idToken = result.credential.idToken;
-        
-        // Send the token to the server
-        fetch('{{ url_for("auth_callback") }}', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ id_token: idToken })
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      console.log("Starting Google sign-in process");
+      
+      firebase.auth().signInWithPopup(provider)
+        .then((result) => {
+          console.log("Google sign-in successful");
+          
+          // Get the Google ID token using the recommended method
+          return firebase.auth().currentUser.getIdToken(/* forceRefresh */ true);
         })
-        .then(response => response.json())
+        .then((idToken) => {
+          console.log("ID token obtained");
+          
+          // Send the token to the server
+          console.log("Sending token to server...");
+          return fetch('{{ url_for("auth_callback") }}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ id_token: idToken })
+          });
+        })
+        .then(response => {
+          console.log("Server response received:", response.status);
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
         .then(data => {
+          console.log("Response data:", data);
           if (data.success) {
             // Redirect to name input or home page
+            console.log("Authentication successful, redirecting to:", data.redirect);
             window.location.href = data.redirect;
           } else {
-            alert('Authentication failed: ' + data.error);
+            showError('Authentication failed: ' + (data.error || 'Unknown error'));
           }
         })
         .catch(error => {
-          console.error('Error:', error);
-          alert('Authentication failed. Please try again.');
+          console.error('Error during authentication process:', error);
+          showError('Authentication failed: ' + error.message);
         });
-      })
-      .catch((error) => {
-        console.error('Google sign-in error:', error);
-        alert('Google sign-in failed. Please try again.');
-      });
+    } catch (error) {
+      console.error('Error initiating Google sign-in:', error);
+      showError('Failed to start Google sign-in: ' + error.message);
+    }
   });
 </script>
 {% endblock %} 
