@@ -886,4 +886,198 @@ input[disabled] {
 
 .stat-label {
     color: var(--text-color-muted);
+}
+
+/* Login Page Styles */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+}
+
+.login-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+.login-description {
+    margin-bottom: 2rem;
+    color: #555;
+    font-size: 1.1rem;
+}
+
+.login-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.login-option {
+    padding: 1.5rem;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.login-option h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.login-divider {
+    position: relative;
+    text-align: center;
+    margin: 0.5rem 0;
+}
+
+.login-divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #ddd;
+    z-index: 0;
+}
+
+.login-divider span {
+    position: relative;
+    background-color: #fff;
+    padding: 0 1rem;
+    color: #777;
+    z-index: 1;
+}
+
+.guest-warning {
+    color: #e67e22;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.google-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Name Input Page Styles */
+.name-input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+}
+
+.name-input-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+}
+
+.pokemon-trainer {
+    margin: 1.5rem 0;
+}
+
+.trainer-image {
+    max-width: 150px;
+    height: auto;
+}
+
+.name-description {
+    margin-bottom: 1.5rem;
+    color: #555;
+}
+
+.name-form {
+    text-align: left;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.error-message {
+    color: #e74c3c;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background-color: #fadbd8;
+    border-radius: 5px;
+}
+
+/* Login/Logout Link Styles */
+.login-link, .logout-link {
+    font-weight: bold;
+}
+
+.login-link {
+    color: #3498db;
+}
+
+.logout-link {
+    color: #e74c3c;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 768px) {
+    .login-options {
+        flex-direction: row;
+    }
+    
+    .login-option {
+        flex: 1;
+    }
+    
+    .login-divider {
+        display: flex;
+        align-items: center;
+        width: auto;
+        margin: 0 1rem;
+    }
+    
+    .login-divider::before {
+        width: 1px;
+        height: 100%;
+        top: 0;
+        left: 50%;
+        right: auto;
+    }
 } 

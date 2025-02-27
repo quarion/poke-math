@@ -3,7 +3,7 @@
 
 {% block content %}
   <div class="profile-container">
-    <h2>Your Pokemath Profile</h2>
+    <h2>{% if user_name %}{{ user_name }}'s{% else %}Your{% endif %} Pokemath Profile</h2>
     
     <div class="profile-stats">
       <div class="stats-card">
@@ -16,11 +16,21 @@
           <span class="stat-label">Exercises Completed:</span>
           <span class="stat-value">{{ solved_count }}</span>
         </div>
+        {% if user_name %}
+        <div class="stat-item">
+          <span class="stat-label">Trainer Name:</span>
+          <span class="stat-value">{{ user_name }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Account Type:</span>
+          <span class="stat-value">{{ "Guest" if is_guest else "Google" }}</span>
+        </div>
+        {% endif %}
       </div>
     </div>
     
     <div class="profile-message">
-      <h3>Keep Going, Math Pokemon Trainer!</h3>
+      <h3>Keep Going, {% if user_name %}{{ user_name }}{% else %}Math Pokemon Trainer{% endif %}!</h3>
       <p>Every math problem you solve makes you stronger! Continue your journey to become a Math Pokemon Master.</p>
       {% if points > 0 %}
         <p>You've earned {{ points }} points so far. That's awesome!</p>
@@ -30,6 +40,9 @@
     </div>
     
     <div class="profile-actions">
+      <a href="{{ url_for('name_input') }}" class="button-base button-blue">
+        {% if user_name %}Change{% else %}Set{% endif %} Trainer Name
+      </a>
       <button onclick="confirmReset()" class="button-base button-red">
         Reset Progress
       </button>

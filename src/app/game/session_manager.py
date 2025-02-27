@@ -5,6 +5,7 @@ from datetime import datetime
 
 from src.app.storage.storage_interface import UserStorageInterface
 from src.app.storage.flask_session_storage import FlaskSessionStorage
+from src.app.auth.auth import AuthManager
 
 class SessionState:
     """
@@ -15,19 +16,22 @@ class SessionState:
         self.solved_quizzes: Set[str] = set()
         self.variable_mappings: Dict[str, Dict[str, str]] = {}
         self.quiz_attempts: List[Dict[str, Any]] = []  # New field for quiz attempts
+        self.user_name: Optional[str] = None  # Added for storing user's Pokemon-style name
     
     def reset(self):
         """Reset the session state."""
         self.solved_quizzes.clear()
         self.variable_mappings.clear()
         self.quiz_attempts.clear()
+        # Don't clear user_name on reset - that should persist
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert the session state to a dictionary for serialization."""
         return {
             'solved_quizzes': list(self.solved_quizzes),
             'variable_mappings': self.variable_mappings,
-            'quiz_attempts': self.quiz_attempts
+            'quiz_attempts': self.quiz_attempts,
+            'user_name': self.user_name
         }
     
     def from_dict(self, data: Dict[str, Any]):
@@ -35,6 +39,7 @@ class SessionState:
         self.solved_quizzes = set(data.get('solved_quizzes', []))
         self.variable_mappings = data.get('variable_mappings', {})
         self.quiz_attempts = data.get('quiz_attempts', [])
+        self.user_name = data.get('user_name')
 
 class SessionManager:
     """
@@ -52,7 +57,8 @@ class SessionManager:
                     or a new one will be generated.
         """
         self.storage = storage or FlaskSessionStorage()
-        self.user_id = user_id or self._get_or_create_user_id()
+        # Use AuthManager to get user_id if available
+        self.user_id = user_id or AuthManager.get_user_id() or self._get_or_create_user_id()
         self.state = SessionState()
         self._load_state()
     
@@ -64,7 +70,8 @@ class SessionManager:
             User ID string
         """
         if 'user_id' not in flask_session:
-            flask_session['user_id'] = str(uuid.uuid4())
+            # Create a guest user if no user ID exists
+            return AuthManager.create_guest_user()
         return flask_session['user_id']
     
     def _load_state(self):
@@ -72,6 +79,12 @@ class SessionManager:
         data = self.storage.load_user_data(self.user_id)
         if 'session_state' in data:
             self.state.from_dict(data['session_state'])
+            
+        # Sync user name with AuthManager if available
+        if AuthManager.get_user_name() and not self.state.user_name:
+            self.state.user_name = AuthManager.get_user_name()
+        elif self.state.user_name and not AuthManager.get_user_name():
+            AuthManager.set_user_name(self.state.user_name)
     
     def _save_state(self):
         """Save state to storage."""
@@ -173,7 +186,30 @@ class SessionManager:
         flask_session['user_id'] = self.user_id
         self._save_state()
     
-    # New methods for quiz attempts
+    # User name management methods
+    
+    def set_user_name(self, name: str):
+        """
+        Set the user's Pokemon-style name.
+        
+        Args:
+            name: The user's Pokemon-style name
+        """
+        self.state.user_name = name
+        # Also update in AuthManager for session consistency
+        AuthManager.set_user_name(name)
+        self._save_state()
+    
+    def get_user_name(self) -> Optional[str]:
+        """
+        Get the user's Pokemon-style name.
+        
+        Returns:
+            The user's name or None if not set
+        """
+        return self.state.user_name
+    
+    # Quiz attempts methods
     
     def add_quiz_attempt(self, quiz_id: str, quiz_data: Dict[str, Any], score: int, total: int, completed: bool):
         """

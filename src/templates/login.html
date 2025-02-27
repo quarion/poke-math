@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Login - Pokemath!{% endblock %}
+
+{% block content %}
+<div class="login-container">
+  <div class="login-card">
+    <h2>Welcome to Pokemath!</h2>
+    <p class="login-description">Train your brain with fun Pokemon-themed math exercises and become a true Math Pokemon Master!</p>
+    
+    <div class="login-options">
+      <div class="login-option">
+        <h3>Sign in with Google</h3>
+        <p>Save your progress and access it from any device.</p>
+        <button id="google-signin" class="button-base button-blue">
+          <img src="{{ url_for('static', filename='images/google-icon.svg') }}" alt="Google" class="google-icon">
+          Sign in with Google
+        </button>
+      </div>
+      
+      <div class="login-divider">
+        <span>or</span>
+      </div>
+      
+      <div class="login-option">
+        <h3>Continue as Guest</h3>
+        <p class="guest-warning">Your progress will only be saved on this device and may be lost if you clear your browser data.</p>
+        <a href="{{ url_for('guest_login') }}" class="button-base button-green">Continue as Guest</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase Authentication UI -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+<script>
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "{{ firebase_api_key }}",
+    authDomain: "{{ firebase_auth_domain }}",
+    projectId: "{{ firebase_project_id }}",
+    appId: "{{ firebase_app_id }}"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  
+  // Set up Google sign-in
+  document.getElementById('google-signin').addEventListener('click', function() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider)
+      .then((result) => {
+        // Get the Google ID token
+        const idToken = result.credential.idToken;
+        
+        // Send the token to the server
+        fetch('{{ url_for("auth_callback") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+          },
+          body: JSON.stringify({ id_token: idToken })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Redirect to name input or home page
+            window.location.href = data.redirect;
+          } else {
+            alert('Authentication failed: ' + data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Authentication failed. Please try again.');
+        });
+      })
+      .catch((error) => {
+        console.error('Google sign-in error:', error);
+        alert('Google sign-in failed. Please try again.');
+      });
+  });
+</script>
+{% endblock %} 

@@ -19,6 +19,11 @@
                 <li><a href="{{ url_for('my_quizzes') }}">My Missions</a></li>
                 <li><a href="{{ url_for('new_exercise') }}">New Mission</a></li>
                 <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                {% if is_authenticated %}
+                <li><a href="{{ url_for('logout') }}" class="logout-link">Logout</a></li>
+                {% else %}
+                <li><a href="{{ url_for('login') }}" class="login-link">Login</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>

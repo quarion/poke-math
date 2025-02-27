@@ -3,7 +3,7 @@
 
 {% block content %}
   <div class="welcome-section">
-    <h2>Welcome to Pokemath!</h2>
+    <h2>Welcome to Pokemath{% if user_name %}, {{ user_name }}{% endif %}!</h2>
     <p class="welcome-message">Hey there, Pokemon Math Maniacs! Ready to catch some numbers and evolve your math skills?</p>
     <p>Train your brain with fun Pokemon-themed math exercises and become a true Math Pokemon Master!</p>
     

@@ -13,6 +13,7 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
+from functools import wraps
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 
@@ -20,6 +21,26 @@ from src.app.game.game_config import load_game_config, load_equation_difficultie
 from src.app.game.game_manager import GameManager
 from src.app.equations.equations_generator import MathEquationGenerator
 from src.app.storage.session_factory import create_session_manager
+from src.app.auth.auth import AuthManager
+import json
+
+
+# -----------------------------------------------------------------------------
+# Authentication Helper
+# -----------------------------------------------------------------------------
+
+def login_required(f):
+    """
+    Decorator to require authentication for routes.
+    When applied to a route function, it will check if the user is authenticated
+    before allowing access to the route.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not AuthManager.is_authenticated():
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 # -----------------------------------------------------------------------------
@@ -375,12 +396,23 @@ def generate_random_quiz_data(difficulty: Dict[str, Any]) -> Dict[str, Any]:
 # -----------------------------------------------------------------------------
 
 @app.route('/')
+@login_required
 def index():
-    """Display the home page with welcome message."""
-    return render_template('index.html')
+    """
+    Display the home page.
+    
+    Returns:
+        Rendered index page template
+    """
+    # Get the user name from the session manager
+    session_manager = create_session_manager()
+    user_name = session_manager.get_user_name()
+    
+    return render_template('index.html', user_name=user_name)
 
 
 @app.route('/exercises')
+@login_required
 def all_exercises():
     """Display all available community exercises."""
     game_manager = create_game_manager()
@@ -391,19 +423,27 @@ def all_exercises():
 
 
 @app.route('/profile')
+@login_required
 def profile():
     """Display the user's profile with points and progress."""
     game_manager = create_game_manager()
     solved_count = len(game_manager.solved_quizzes)
     # Each solved quiz is worth 1 point
     points = solved_count
+    
+    # Get user name and guest status
+    user_name = game_manager.session_manager.get_user_name()
+    is_guest = AuthManager.is_guest()
 
     return render_template('profile.html',
                            points=points,
-                           solved_count=solved_count)
+                           solved_count=solved_count,
+                           user_name=user_name,
+                           is_guest=is_guest)
 
 
 @app.route('/new-exercise')
+@login_required
 def new_exercise():
     """Display difficulty selection screen for random exercise generation."""
     return render_template('new_exercise.html',
@@ -411,6 +451,7 @@ def new_exercise():
 
 
 @app.route('/generate-random-exercise/<difficulty_id>')
+@login_required
 def generate_random_exercise(difficulty_id):
     """Generate a random exercise based on the selected difficulty."""
     # Find the selected difficulty
@@ -435,6 +476,7 @@ def generate_random_exercise(difficulty_id):
 
 
 @app.route('/random-quiz/<quiz_id>', methods=['GET', 'POST'])
+@login_required
 def random_quiz(quiz_id):
     """Display a randomly generated quiz and process answers."""
     game_manager = create_game_manager()
@@ -516,6 +558,7 @@ def random_quiz(quiz_id):
 
 
 @app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
+@login_required
 def quiz(quiz_id):
     """Display a predefined quiz and process answers."""
     game_manager = create_game_manager()
@@ -604,6 +647,7 @@ def quiz(quiz_id):
 
 
 @app.route('/api/quiz/<quiz_id>/reset', methods=['POST'])
+@login_required
 def reset_quiz(quiz_id):
     """Reset a solved quiz to allow it to be solved again."""
     game_manager = create_game_manager()
@@ -627,6 +671,7 @@ def reset_quiz(quiz_id):
 
 
 @app.route('/section/<section_id>')
+@login_required
 def section(section_id):
     """Display quizzes for a specific section."""
     game_manager = create_game_manager()
@@ -643,6 +688,7 @@ def section(section_id):
 
 
 @app.route('/my-quizzes')
+@login_required
 def my_quizzes():
     """Display the user's missions/quizzes."""
     game_manager = create_game_manager()
@@ -650,6 +696,9 @@ def my_quizzes():
     # Get all quiz attempts
     attempts = game_manager.session_manager.get_quiz_attempts()
 
+    # Get user name for personalization
+    user_name = game_manager.session_manager.get_user_name()
+    
     # Prepare data for the template
     formatted_attempts = []
     for attempt in attempts:
@@ -696,10 +745,12 @@ def my_quizzes():
 
     return render_template('my_quizzes.html',
                            attempts=formatted_attempts,
-                           stats=stats)
+                           stats=stats,
+                           user_name=user_name)
 
 
 @app.route('/forget-quiz', methods=['POST'])
+@login_required
 def forget_quiz():
     """Remove a quiz attempt from the user's history."""
     game_manager = create_game_manager()
@@ -715,6 +766,7 @@ def forget_quiz():
 
 
 @app.route('/reset-progress', methods=['POST'])
+@login_required
 def reset_progress():
     """Reset all user progress, including solved quizzes and attempts."""
     game_manager = create_game_manager()
@@ -723,6 +775,133 @@ def reset_progress():
 
     return redirect(url_for('profile'))
 
+
+# -----------------------------------------------------------------------------
+# Authentication Routes
+# -----------------------------------------------------------------------------
+
+@app.route('/login')
+def login():
+    """
+    Display the login page.
+    
+    Returns:
+        Rendered login page template
+    """
+    # If user is already authenticated, redirect to home page
+    if AuthManager.is_authenticated():
+        return redirect(url_for('index'))
+    
+    # Get Firebase configuration from the environment or config file
+    firebase_config = {
+        'firebase_api_key': os.environ.get('FIREBASE_API_KEY', ''),
+        'firebase_auth_domain': os.environ.get('FIREBASE_AUTH_DOMAIN', ''),
+        'firebase_project_id': os.environ.get('FIREBASE_PROJECT_ID', ''),
+        'firebase_app_id': os.environ.get('FIREBASE_APP_ID', '')
+    }
+    
+    return render_template('login.html', **firebase_config)
+
+@app.route('/guest-login')
+def guest_login():
+    """
+    Log in as a guest user.
+    
+    Returns:
+        Redirect to name input page
+    """
+    # Create a guest user
+    AuthManager.create_guest_user()
+    
+    # Redirect to name input page
+    return redirect(url_for('name_input'))
+
+@app.route('/auth-callback', methods=['POST'])
+def auth_callback():
+    """
+    Handle Google authentication callback.
+    
+    Returns:
+        JSON response with success status and redirect URL
+    """
+    # Get the ID token from the request
+    data = request.json
+    id_token = data.get('id_token')
+    
+    if not id_token:
+        return jsonify({'success': False, 'error': 'No ID token provided'})
+    
+    # Verify the ID token and log in the user
+    if AuthManager.login_with_google(id_token):
+        # Check if user has a name, if so redirect to home page, otherwise to name input
+        if AuthManager.get_user_name():
+            return jsonify({'success': True, 'redirect': url_for('index')})
+        else:
+            return jsonify({'success': True, 'redirect': url_for('name_input')})
+    else:
+        return jsonify({'success': False, 'error': 'Failed to authenticate'})
+
+@app.route('/name')
+@login_required
+def name_input():
+    """
+    Display the name input page.
+    
+    Returns:
+        Rendered name input page template
+    """
+    # Get the current name if it exists
+    current_name = AuthManager.get_user_name()
+    
+    return render_template('name_input.html', current_name=current_name)
+
+@app.route('/save-name', methods=['POST'])
+@login_required
+def save_name():
+    """
+    Save the user's Pokemon-style name.
+    
+    Returns:
+        Redirect to home page or name input page with error
+    """
+    # Get the trainer name from the form
+    trainer_name = request.form.get('trainer_name', '').strip()
+    
+    # Validate the trainer name
+    if not trainer_name:
+        return render_template('name_input.html', error='Please enter a name')
+    
+    if len(trainer_name) > 20:
+        return render_template('name_input.html', error='Name must be 20 characters or less')
+    
+    # Save the trainer name
+    session_manager = create_session_manager()
+    session_manager.set_user_name(trainer_name)
+    
+    # Redirect to home page
+    return redirect(url_for('index'))
+
+@app.route('/logout')
+def logout():
+    """
+    Log out the current user.
+    
+    Returns:
+        Redirect to login page
+    """
+    AuthManager.logout()
+    return redirect(url_for('login'))
+
+# Update context processor to add is_authenticated to templates
+@app.context_processor
+def inject_auth_status():
+    """
+    Add authentication status to all templates.
+    
+    Returns:
+        Dictionary with is_authenticated value
+    """
+    return {'is_authenticated': AuthManager.is_authenticated()}
 
 # -----------------------------------------------------------------------------
 # Error Handlers
