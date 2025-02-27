@@ -3,8 +3,8 @@ from flask import session as flask_session
 import uuid
 from datetime import datetime
 
-from src.app.game.storage.storage_interface import UserStorageInterface
-from src.app.game.storage.flask_session_storage import FlaskSessionStorage
+from src.app.storage.storage_interface import UserStorageInterface
+from src.app.storage.flask_session_storage import FlaskSessionStorage
 
 class SessionState:
     """

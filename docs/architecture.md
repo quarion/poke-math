@@ -12,7 +12,7 @@ poke-math/
 │   ├── app/                 # Main application code
 │   │   ├── equations/       # Equation generation module
 │   │   ├── game/            # Game logic and state management
-│   │   │   └── storage/     # Storage implementations
+│   │   ├── storage/         # Storage implementations
 │   │   └── app.py           # Flask application and routes
 │   ├── data/                # Application data files
 │   ├── static/              # Static assets
@@ -41,7 +41,7 @@ Loads quiz definitions and Pokémon data from JSON files.
 #### Session Manager (`session_manager.py`)
 Manages user session data and progress persistence.
 
-#### Storage (`storage/`)
+### Storage Module (`src/app/storage/`)
 
 - **Storage Interface** (`storage_interface.py`): Abstract base class for storage implementations.
 - **Flask Session Storage** (`flask_session_storage.py`): Stores data in Flask session.
@@ -99,3 +99,4 @@ When updating this documentation:
 8. **Use arrows in workflows** - Use → in data flow descriptions for brevity
 9. **Consider context limits** - Keep content minimal to avoid polluting AI context windows
 10. **Only detail key abstractions** - Focus on core concepts, not implementation details 
+11. **Note on planning documents** - Historical planning documents in the docs/plans/completed directory may contain outdated implementation details and file paths that don't reflect the current architecture 

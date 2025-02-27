@@ -1,7 +1,6 @@
-from typing import Optional
 from src.app.game.session_manager import SessionManager
-from src.app.game.storage.firestore_storage import FirestoreStorage
-from src.app.game.storage.flask_session_storage import FlaskSessionStorage
+from src.app.storage.firestore_storage import FirestoreStorage
+from src.app.storage.flask_session_storage import FlaskSessionStorage
 
 def create_session_manager(use_firestore: bool = True) -> SessionManager:
     """

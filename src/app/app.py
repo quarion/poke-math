@@ -6,10 +6,9 @@ from src.app.equations.equations_generator import MathEquationGenerator
 import os
 import uuid
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Any, Union
-import dataclasses
-from src.app.game.storage.session_factory import create_session_manager
+from src.app.storage import create_session_manager
 
 # Create Flask app with correct template and static folders
 app = Flask(__name__,

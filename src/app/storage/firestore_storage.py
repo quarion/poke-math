@@ -37,7 +37,7 @@ class FirestoreStorage(UserStorageInterface):
             # Path to service account file - preferably use env vars pointing to this
             service_account_path = os.environ.get(
                 'FIREBASE_SERVICE_ACCOUNT',
-                os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'firebase-credentials.json')
+                os.path.join(os.path.dirname(__file__), '../game', '..', '..', '..', 'firebase-credentials.json')
             )
             if os.path.exists(service_account_path):
                 cred = credentials.Certificate(service_account_path)
