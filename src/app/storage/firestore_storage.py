@@ -1,7 +1,7 @@
 from typing import Dict, Any
 import os
-import firebase_admin
-from firebase_admin import credentials, firestore, initialize_app
+from ..firebase.firebase_init import get_firestore_client
+from firebase_admin import firestore
 from .storage_interface import UserStorageInterface
 
 class FirestoreStorage(UserStorageInterface):
@@ -14,44 +14,9 @@ class FirestoreStorage(UserStorageInterface):
         Args:
             collection_name: The name of the collection to store user data in
         """
-        self.db = self._initialize_firebase()
+        self.db = get_firestore_client()
         self.collection_name = collection_name
         
-    def _initialize_firebase(self):
-        """
-        Initialize Firebase app and return Firestore client.
-        
-        Returns:
-            Firestore client instance
-        """
-        # Check if already initialized
-        if len(firebase_admin._apps) > 0:
-            return firestore.client()
-        
-        # Use environment variables for credentials in production
-        # or service account file in development
-        cred = None
-        if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
-            cred = credentials.ApplicationDefault()
-        else:
-            # Path to service account file - preferably use env vars pointing to this
-            service_account_path = os.environ.get(
-                'FIREBASE_SERVICE_ACCOUNT',
-                os.path.join(os.path.dirname(__file__), '../game', '..', '..', '..', 'firebase-credentials.json')
-            )
-            if os.path.exists(service_account_path):
-                cred = credentials.Certificate(service_account_path)
-        
-        # If we couldn't get credentials, raise an error
-        if cred is None:
-            raise RuntimeError(
-                "Firebase credentials not found. Either set GOOGLE_APPLICATION_CREDENTIALS "
-                "environment variable, or provide a firebase-credentials.json file."
-            )
-            
-        initialize_app(cred)
-        return firestore.client()
-    
     def _get_user_ref(self, user_id: str):
         """
         Get Firestore reference for a user.

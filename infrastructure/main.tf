@@ -22,9 +22,12 @@ resource "google_project_service" "apis" {
     "run.googleapis.com",
     "firestore.googleapis.com",
     "cloudbuild.googleapis.com",
-    "secretmanager.googleapis.com"
+    "secretmanager.googleapis.com",
+    "firebase.googleapis.com",
+    "firebaseauth.googleapis.com"
   ])
   service = each.key
+  disable_on_destroy = false
 }
 
 # Artifact Registry for Docker images
@@ -63,6 +66,40 @@ resource "google_project_iam_member" "cloudbuild_sa_user" {
   member  = "serviceAccount:${var.project_number}@cloudbuild.gserviceaccount.com"
 }
 
+# Create a dedicated service account for Cloud Run
+resource "google_service_account" "cloud_run_service_account" {
+  depends_on  = [google_project_service.apis]
+  account_id  = "poke-math-service"
+  display_name = "Service Account for Poke Math Cloud Run Service"
+}
+
+# Grant Firestore permissions to the service account
+resource "google_project_iam_member" "firestore_user" {
+  project = var.project_id
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.cloud_run_service_account.email}"
+}
+
+# Grant Firebase Auth permissions
+resource "google_project_iam_member" "firebase_auth_admin" {
+  project = var.project_id
+  role    = "roles/firebaseauth.admin"
+  member  = "serviceAccount:${google_service_account.cloud_run_service_account.email}"
+}
+
+# Grant Firebase Admin SDK access
+resource "google_project_iam_member" "firebase_admin" {
+  project = var.project_id
+  role    = "roles/firebase.admin"
+  member  = "serviceAccount:${google_service_account.cloud_run_service_account.email}"
+}
+
+# Additional Firestore specific role for more detailed access control
+resource "google_project_iam_member" "firestore_admin" {
+  project = var.project_id
+  role    = "roles/datastore.owner"
+  member  = "serviceAccount:${google_service_account.cloud_run_service_account.email}"
+}
 
 # Cloud Run Service
 # Note, this fails to apply if there is no image in the registry, so before first run the image needs to be pushed manually.
@@ -85,7 +122,8 @@ resource "google_cloud_run_service" "poke-math" {
           }
         }
       }
-      service_account_name = "${var.project_number}-compute@developer.gserviceaccount.com"
+      # Use the dedicated service account instead of the default compute service account
+      service_account_name = google_service_account.cloud_run_service_account.email
     }
   }
 

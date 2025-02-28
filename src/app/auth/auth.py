@@ -11,17 +11,8 @@ from typing import Dict, Any, Optional, Tuple, Callable
 from datetime import datetime
 from flask import session, redirect, url_for, request
 from functools import wraps
-import firebase_admin
-from firebase_admin import credentials, auth
+from ..firebase.firebase_init import get_auth_client
 from flask_wtf.csrf import generate_csrf
-
-# Initialize Firebase Admin SDK if not already initialized
-if not firebase_admin._apps:
-    try:
-        cred = credentials.Certificate('firebase-credentials.json')
-        firebase_admin.initialize_app(cred)
-    except Exception as e:
-        print(f"Firebase initialization error: {e}")
 
 class AuthManager:
     """
@@ -174,7 +165,7 @@ class AuthManager:
         """
         try:
             # Verify the ID token
-            decoded_token = auth.verify_id_token(id_token)
+            decoded_token = get_auth_client().verify_id_token(id_token)
             
             # Extract user information
             user_data = {
