@@ -1,12 +1,11 @@
 # Introduction
 
 Math and Pokemon!
-Side project made with Cursor and Sonnet 3.7, with slight manual editing
+Side project made with Cursor and Sonnet 3.7. Almost 100% of code is AI generated, with very slight manual tweaking
 
 # Infrastructure:
 
-Initial infrastructure needs to be provisioned manually.
-After that, the infrastructure will be managed automatically by CI/CD (eventually).
+Follow those steps to provision new environment
 
 1. Create GCP project
 2. Enable services required by terraform:
@@ -22,8 +21,25 @@ After that, the infrastructure will be managed automatically by CI/CD (eventuall
 4. Create Cloud Build trigger in the portal
 5. Set up firebase:
    - Download the service key to firebase-credentials.json
+   - Download the firebase sdk config to login.html
 
-# Impl plan:
-- Add more pokemon images
-- Add account creation
-- Add uniqe ids to attempts to not use timestamps to identify them
+# TODO
+
+List of ideas to add in the future
+
+Functional:
+- Add custom domain
+- Better progress information. Clear indication of gaining exp after mission, more exp for more difficult options
+- Complete pre-defined missions
+- Sharing missions
+- Allow users to create their own missions
+
+Tech:
+- Remove unnecessary comments from code
+- Switch to full Firebase log-in flow, including guest account and login/password auth.
+- Re-write frontend in React or make it from scratch in Jinja. Understand how to steer Cursor to make nice frontends
+- Move completed missions to separate collection
+- CI for infra
+
+Other:
+- Blog/twitt about experience with Cursor
