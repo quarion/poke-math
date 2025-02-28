@@ -3,18 +3,20 @@ description: Changing and creating UI with HTML, CSS and JS
 globs: *.html, *.css
 alwaysApply: false
 ---
-# General
+# Coding on frontend
+
+## General
 - Make simple layout using modern html and css best practices
 - Make sure the layout is responsive
 
-# Styling
+## Styling
 - Use [style.css](mdc:src/static/css/style.css) for styling
 - Do NOT inline styles in html files
 - Make sure to use consistent styling, re-use as much as possible and not create duplicates
 
- # Examples
+## Examples
 
-## Example 1: Using style.css instead of inline styles
+### Example 1: Using style.css instead of inline styles
 ❌ Incorrect (inline styles):
 ```html
 <div style="color: red; margin: 10px; font-weight: bold;">Error message</div>
@@ -34,7 +36,7 @@ In style.css:
 }
 ```
 
-## Example 2: Consistent styling and avoiding duplicates
+### Example 2: Consistent styling and avoiding duplicates
 ❌ Incorrect (duplicate styles):
 ```css
 .button-primary {
@@ -70,7 +72,7 @@ In style.css:
 }
 ```
 
-## Example 3: Responsive layout
+### Example 3: Responsive layout
 ❌ Incorrect (fixed width):
 ```css
 .main-content {

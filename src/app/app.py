@@ -159,7 +159,7 @@ class QuizViewModel:
     title: str
     equations: List[str]
     variables: List[str]
-    pokemon_vars: Dict[str, str]  # Variable name -> Pokemon image path
+    image_mapping: Dict[str, str]  # Variable name -> Pokemon image path
 
     # Optional fields with default values must come after required fields
     description: str = ""
@@ -170,7 +170,7 @@ class QuizViewModel:
 
     def get_pokemon_image(self, variable: str) -> str:
         """Get the Pokemon image filename for a variable."""
-        return self.pokemon_vars.get(variable, "default.png")
+        return self.image_mapping.get(variable, "default.png")
 
     def has_difficulty(self) -> bool:
         """Check if this quiz has difficulty information."""
@@ -179,7 +179,7 @@ class QuizViewModel:
     def replace_variables_with_images(self, equation: str) -> str:
         """Replace variable placeholders with Pokemon images in an equation."""
         result = equation
-        for var, img_path in self.pokemon_vars.items():
+        for var, img_path in self.image_mapping.items():
             img_tag = f'<img src="/static/images/{img_path}" class="pokemon-var" alt="{var}">'
 
             # Replace direct variable name
@@ -191,37 +191,6 @@ class QuizViewModel:
 
         return result
 
-    @classmethod
-    def from_random_quiz(cls, quiz_data: Dict[str, Any], pokemon_vars: Dict[str, str]) -> 'QuizViewModel':
-        """Create a QuizViewModel from a random quiz dictionary."""
-        return cls(
-            id=quiz_data['quiz_id'],
-            title='Random Mission',
-            equations=quiz_data['equations'],
-            variables=list(quiz_data['solution'].keys()),
-            pokemon_vars=pokemon_vars,
-            description='',
-            is_random=True,
-            difficulty=quiz_data['difficulty'],
-            next_quiz_id=None,
-            has_next=False
-        )
-
-    @classmethod
-    def from_regular_quiz(cls, quiz_data: Any, pokemon_vars: Dict[str, str]) -> 'QuizViewModel':
-        """Create a QuizViewModel from a regular quiz object."""
-        return cls(
-            id=quiz_data.id,
-            title=quiz_data.title,
-            equations=quiz_data.equations,
-            variables=list(quiz_data.answer.values.keys()),
-            pokemon_vars=pokemon_vars,
-            description=quiz_data.description,
-            is_random=False,
-            next_quiz_id=quiz_data.next_quiz_id,
-            has_next=quiz_data.next_quiz_id is not None
-        )
-
     def to_dict(self) -> Dict[str, Any]:
         """Convert the view model to a dictionary for debugging."""
         return {
@@ -230,7 +199,7 @@ class QuizViewModel:
             'description': self.description,
             'equations': self.equations,
             'variables': self.variables,
-            'pokemon_vars': self.pokemon_vars,
+            'image_mapping': self.image_mapping,
             'is_random': self.is_random,
             'difficulty': self.difficulty,
             'next_quiz_id': self.next_quiz_id,
@@ -313,7 +282,7 @@ def process_quiz_answers(user_answers: Dict[str, int],
 
     for var, expected in expected_answers.items():
         if var in user_answers:
-            # For random quizzes, expected might be a string
+            # Convert expected value to int if it's a string
             expected_value = int(float(expected)) if isinstance(expected, str) else expected
             is_correct = user_answers[var] == expected_value
 
@@ -357,8 +326,8 @@ def parse_user_answers(form_data: Dict[str, str], solution_keys: List[str]) -> D
 
 def render_quiz_template(
         is_random: bool,
-        quiz_data: Union[Dict[str, Any], object],
-        pokemon_vars: Dict[str, str],
+        quiz_data: Dict[str, Any],
+        image_mapping: Dict[str, str],
         result: Optional[QuizResultViewModel] = None,
         user_answers: Optional[Dict[str, int]] = None,
         already_solved: bool = False
@@ -368,8 +337,8 @@ def render_quiz_template(
     
     Args:
         is_random: Whether this is a random quiz
-        quiz_data: Quiz data (dictionary for random quizzes, object for regular)
-        pokemon_vars: Dictionary mapping variable names to Pokemon image paths
+        quiz_data: Quiz data in unified dictionary format
+        image_mapping: Dictionary mapping variable names to Pokemon image paths
         result: Optional result object from checking answers
         user_answers: Optional dictionary of user submitted answers
         already_solved: Flag indicating if the quiz is already solved
@@ -380,9 +349,19 @@ def render_quiz_template(
     if user_answers is None:
         user_answers = {}
 
-    # Create a strongly-typed view model based on the quiz type
-    quiz = (QuizViewModel.from_random_quiz(quiz_data, pokemon_vars) if is_random
-            else QuizViewModel.from_regular_quiz(quiz_data, pokemon_vars))
+    # Create a strongly-typed view model
+    quiz = QuizViewModel(
+        id=quiz_data.get('quiz_id', ''),
+        title=quiz_data.get('title', 'Random Mission' if is_random else 'Quiz'),
+        equations=quiz_data.get('equations', []),
+        variables=list(quiz_data.get('solution', {}).keys()),
+        image_mapping=image_mapping,
+        description=quiz_data.get('description', ''),
+        is_random=is_random,
+        difficulty=quiz_data.get('difficulty'),
+        next_quiz_id=quiz_data.get('next_quiz_id'),
+        has_next=quiz_data.get('next_quiz_id') is not None
+    )
 
     template_args = {
         'quiz': quiz,  # Strongly typed view model
@@ -411,13 +390,13 @@ def generate_random_quiz_data(difficulty: Dict[str, Any]) -> Dict[str, Any]:
     random_quiz_id = f"random_{uuid.uuid4().hex[:8]}"
 
     # Create Pokemon variable mappings for the random variables
-    pokemon_vars = {}
+    image_mapping = {}
     available_pokemon_images = {name: pokemon.image_path for name, pokemon in GAME_CONFIG.pokemons.items()}
 
     for var in quiz.solution.human_readable.keys():
         # Select a random Pokemon image from the game configuration
         random_pokemon_name = random.choice(list(available_pokemon_images.keys()))
-        pokemon_vars[var] = available_pokemon_images[random_pokemon_name]
+        image_mapping[var] = available_pokemon_images[random_pokemon_name]
 
     # Format equations to ensure consistent variable format
     formatted_equations = []
@@ -431,7 +410,7 @@ def generate_random_quiz_data(difficulty: Dict[str, Any]) -> Dict[str, Any]:
         'equations': formatted_equations,
         'solution': {var: str(val) for var, val in quiz.solution.human_readable.items()},
         'difficulty': difficulty,
-        'pokemon_vars': pokemon_vars
+        'image_mapping': image_mapping
     }
 
     return random_quiz_id, quiz_data
@@ -509,184 +488,103 @@ def generate_random_exercise(difficulty_id):
     # Generate random quiz data
     random_quiz_id, quiz_data = generate_random_quiz_data(selected_difficulty)
 
-    # Initialize random_quizzes in session if needed
-    if 'random_quizzes' not in session:
-        session['random_quizzes'] = {}
-
-    # Store the quiz data in the session
-    session['random_quizzes'][random_quiz_id] = quiz_data
-    session.modified = True
+    # Store the quiz in the session manager
+    game_manager = create_game_manager()
+    game_manager.session_manager.save_quiz_data(random_quiz_id, quiz_data, is_random=True)
 
     # Redirect to the quiz page
-    return redirect(url_for('random_quiz', quiz_id=random_quiz_id))
-
-
-@app.route('/random-quiz/<quiz_id>', methods=['GET', 'POST'])
-@login_required
-def random_quiz(quiz_id):
-    """Display a randomly generated quiz and process answers."""
-    game_manager = create_game_manager()
-
-    # Get the stored quiz from the session
-    if 'random_quizzes' not in session or quiz_id not in session['random_quizzes']:
-        return render_template('quiz_not_found.html', quiz_id=quiz_id)
-
-    stored_quiz = session['random_quizzes'][quiz_id]
-    # Add quiz_id to the stored_quiz for the template
-    stored_quiz['quiz_id'] = quiz_id
-
-    # Check if this quiz is already solved
-    already_solved = game_manager.session_manager.is_quiz_solved(quiz_id)
-
-    # Pre-populate answers if the quiz is already solved
-    user_answers = {}
-    if already_solved:
-        # Show the correct answers for an already solved quiz
-        user_answers = {var: int(float(val)) for var, val in stored_quiz['solution'].items()}
-
-    if request.method == 'POST':
-        # If the quiz is already solved, don't process the answers again
-        if already_solved:
-            return render_template('already_solved.html', quiz_id=quiz_id)
-
-        # Parse and filter user answers
-        user_answers = parse_user_answers(request.form, stored_quiz['solution'].keys())
-
-        # Process answers
-        result = process_quiz_answers(user_answers, stored_quiz['solution'])
-
-        # Update session data if all answers are correct
-        if result.correct:
-            game_manager.session_manager.mark_quiz_solved(quiz_id)
-
-        # Record the quiz attempt - this will update an existing attempt or create a new one
-        game_manager.session_manager.add_quiz_attempt(
-            quiz_id=quiz_id,
-            quiz_data=stored_quiz,
-            score=result.correct_count,
-            total=result.total_count,
-            completed=result.all_answered
-        )
-
-        # If it's an AJAX request, return JSON
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify(result.to_dict())
-
-        # For regular form submissions (fallback)
-        return render_quiz_template(
-            is_random=True,
-            quiz_data=stored_quiz,
-            pokemon_vars=stored_quiz['pokemon_vars'],
-            result=result,
-            user_answers=user_answers,
-            already_solved=already_solved
-        )
-
-    # GET request - track that the user viewed this quiz (for incomplete tracking)
-    if not already_solved:
-        # Add or update quiz attempt with initial data
-        game_manager.session_manager.add_quiz_attempt(
-            quiz_id=quiz_id,
-            quiz_data=stored_quiz,
-            score=0,
-            total=len(stored_quiz['solution']),
-            completed=False
-        )
-
-    # Display the quiz with a flag indicating if it's already solved
-    return render_quiz_template(
-        is_random=True,
-        quiz_data=stored_quiz,
-        pokemon_vars=stored_quiz['pokemon_vars'],
-        user_answers=user_answers,
-        already_solved=already_solved
-    )
+    return redirect(url_for('quiz', quiz_id=random_quiz_id))
 
 
 @app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
 @login_required
 def quiz(quiz_id):
-    """Display a predefined quiz and process answers."""
+    """Display any quiz (random or regular) and process answers."""
     game_manager = create_game_manager()
-
-    # Check if quiz exists in current GAME_CONFIG
-    quiz_exists = False
+    
+    # Check if this is a random quiz ID format
     is_random = quiz_id.startswith('random_')
-
-    if is_random:
-        # For random quizzes, we need to check the session data
-        for attempt in game_manager.session_manager.get_quiz_attempts():
-            if attempt['quiz_id'] == quiz_id and 'quiz_data' in attempt:
-                quiz_exists = True
-                break
-    else:
-        # For regular quizzes, check the game config
-        quiz_state = game_manager.get_quiz_state(quiz_id)
-        if quiz_state:
-            quiz_exists = True
-
-    if not quiz_exists:
-        # Quiz no longer exists, show an error page
-        return render_template('quiz_not_found.html', quiz_id=quiz_id)
-
+    
+    # Get quiz data from session manager
+    session_manager = game_manager.session_manager
+    quiz_data = session_manager.get_quiz_data(quiz_id)
+    
+    # If not found in session, try to get from game config (for regular quizzes)
+    if not quiz_data:
+        if not is_random:
+            # Regular quiz - get from game config
+            quiz_state = game_manager.get_quiz_state(quiz_id)
+            if quiz_state:
+                # Convert to unified format
+                quiz = quiz_state['quiz']
+                regular_quiz_data = {
+                    'quiz_id': quiz_id,
+                    'title': quiz.title,
+                    'description': quiz.description,
+                    'equations': quiz.equations,
+                    'solution': quiz.answer.values,
+                    'image_mapping': quiz_state['image_mapping'],
+                    'next_quiz_id': quiz.next_quiz_id,
+                    'is_random': False
+                }
+                quiz_data = regular_quiz_data
+                session_manager.save_quiz_data(quiz_id, quiz_data, is_random=False)
+            else:
+                return render_template('quiz_not_found.html', quiz_id=quiz_id)
+        else:
+            # Random quiz not found - simply return not found page
+            return render_template('quiz_not_found.html', quiz_id=quiz_id)
+    
     # Check if this quiz is already solved
     already_solved = game_manager.session_manager.is_quiz_solved(quiz_id)
-
-    # Handle random quiz through the dedicated route
-    if is_random:
-        return redirect(url_for('random_quiz', quiz_id=quiz_id))
-
-    # Process regular quiz
-    quiz_state = game_manager.get_quiz_state(quiz_id)
-    quiz = quiz_state['quiz']
-    pokemon_vars = quiz_state['pokemon_vars']
-
-    # Pre-populate answers if the quiz is already solved
-    user_answers = {}
-    if already_solved:
+    
+    # Get user answers if any
+    user_answers = session_manager.get_quiz_answers(quiz_id)
+    
+    # Pre-populate answers if the quiz is already solved and user hasn't entered anything
+    if already_solved and not user_answers:
         # Show the correct answers for an already solved quiz
-        user_answers = quiz.answer.values
-
+        user_answers = {var: int(float(val)) for var, val in quiz_data['solution'].items()}
+        session_manager.save_quiz_answers(quiz_id, user_answers)
+    
     # Handle form submission
     if request.method == 'POST':
         # If the quiz is already solved, don't process the answers again
         if already_solved:
             return render_template('already_solved.html', quiz_id=quiz_id)
-
+        
         # Parse user answers
-        user_answers = parse_user_answers(request.form, quiz.answer.values.keys())
-
+        user_answers = parse_user_answers(request.form, quiz_data['solution'].keys())
+        
+        # Save the answers
+        session_manager.save_quiz_answers(quiz_id, user_answers)
+        
         # Check answers
-        result_data = game_manager.check_answers(quiz_id, user_answers)
-
-        # Create result view model
-        result = QuizResultViewModel(
-            correct=result_data['correct'],
-            correct_answers=result_data['correct_answers'],
-            all_answered=result_data['all_answered'],
-            correct_count=result_data['correct_count'],
-            total_count=result_data['total_count']
-        )
-
+        result = process_quiz_answers(user_answers, quiz_data['solution'])
+        
+        # Update session data if all answers are correct
+        if result.correct:
+            game_manager.session_manager.mark_quiz_solved(quiz_id)
+        
         # If it's an AJAX request, return JSON
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify(result.to_dict())
-
+        
         # For regular form submissions
         return render_quiz_template(
-            is_random=False,
-            quiz_data=quiz,
-            pokemon_vars=pokemon_vars,
+            is_random=is_random,
+            quiz_data=quiz_data,
+            image_mapping=quiz_data['image_mapping'],
             result=result,
             user_answers=user_answers,
             already_solved=already_solved
         )
-
-    # GET request - display the quiz
+    
+    # GET request - just display the quiz
     return render_quiz_template(
-        is_random=False,
-        quiz_data=quiz,
-        pokemon_vars=pokemon_vars,
+        is_random=is_random,
+        quiz_data=quiz_data,
+        image_mapping=quiz_data['image_mapping'],
         user_answers=user_answers,
         already_solved=already_solved
     )
@@ -705,13 +603,14 @@ def reset_quiz(quiz_id):
         game_manager.session_manager.solved_quizzes.remove(quiz_id)
         game_manager.session_manager.save_session()
 
-        # For random quizzes, also remove any stored quiz attempts
-        for i, attempt in enumerate(game_manager.session_manager.get_quiz_attempts()):
-            if attempt['quiz_id'] == quiz_id:
-                # Remove the specified quiz attempt
-                if 'timestamp' in attempt:
-                    game_manager.session_manager.remove_quiz_attempt(attempt['timestamp'])
-                break
+    # Also clear any stored user answers
+    session_manager = game_manager.session_manager
+    attempt = session_manager.find_quiz_attempt(quiz_id)
+    
+    if attempt:
+        # Clear user answers but keep the quiz data
+        attempt.user_answers = {}
+        session_manager.save_session()
 
     # Redirect to the quiz page
     return redirect(url_for('quiz', quiz_id=quiz_id))
@@ -749,36 +648,20 @@ def my_quizzes():
     # Prepare data for the template
     formatted_attempts = []
     for attempt in attempts:
-        quiz_id = attempt.get('quiz_id', '')
-        is_random = quiz_id.startswith('random_')
+        quiz_id = attempt.quiz_id
+        quiz_data = attempt.quiz_data
+        is_random = quiz_data.is_random
 
-        # Check if the quiz still exists
-        exists = False
-        title = "Unknown Mission"
-
-        if is_random:
-            # For random quizzes, check if we have the quiz data
-            exists = 'quiz_data' in attempt
-            if exists:
-                title = "Random Mission"
-        else:
-            # For regular quizzes, check if it exists in the game config
-            quiz_state = game_manager.get_quiz_state(quiz_id)
-            exists = quiz_state is not None
-            if exists:
-                title = quiz_state['quiz'].title
-
-        # Add to formatted attempts
+        # Format the attempt for display
         formatted_attempts.append({
             'id': quiz_id,
-            'title': title,
-            'timestamp': attempt.get('timestamp', ''),
-            'score': attempt.get('score', 0),
-            'total': attempt.get('total', 0),
-            'completed': attempt.get('completed', False),
+            'title': quiz_data.title,
+            'timestamp': attempt.timestamp,
+            'completed': game_manager.session_manager.is_quiz_solved(quiz_id),
             'solved': game_manager.session_manager.is_quiz_solved(quiz_id),
-            'exists': exists,
-            'quiz_data': attempt.get('quiz_data', {})
+            'exists': True,  # We now store all quiz data, so it always exists
+            'is_random': is_random,
+            'user_answers': attempt.user_answers
         })
 
     # Sort attempts by timestamp (newest first)
@@ -805,9 +688,21 @@ def forget_quiz():
 
     # Get the timestamp from the form
     timestamp = request.form.get('timestamp')
+    quiz_id = request.form.get('quiz_id')
+    
     if timestamp:
-        # Remove the quiz attempt
+        # Remove the quiz attempt by timestamp
         game_manager.session_manager.remove_quiz_attempt(timestamp)
+    elif quiz_id:
+        # Remove by quiz_id if timestamp not provided
+        attempt = game_manager.session_manager.find_quiz_attempt(quiz_id)
+        if attempt:
+            game_manager.session_manager.remove_quiz_attempt(attempt.timestamp)
+    
+    # Also remove from solved quizzes if it was solved
+    if quiz_id and quiz_id in game_manager.session_manager.solved_quizzes:
+        game_manager.session_manager.solved_quizzes.remove(quiz_id)
+        game_manager.session_manager.save_session()
 
     # Redirect back to my quizzes page
     return redirect(url_for('my_quizzes'))

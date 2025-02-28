@@ -3,7 +3,9 @@ description: General rules for all code changes in all languages
 globs: *.html, *.js, *.py
 alwaysApply: false
 ---
-# Comments
+# Coding in any language
+
+## Comments
 - Keep comments focused on explaining "why" rather than "what" the code does.
 - Omit comments for self-explanatory code with descriptive function/variable names
 - Comment non-obvious logic, complex algorithms, or business rules

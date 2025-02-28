@@ -1,0 +1,8 @@
+---
+description: Everything
+globs: 
+alwaysApply: true
+---
+# CLI
+- We are on Windows so use power shell
+- Do not try to run web server, let user do it for you

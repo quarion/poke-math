@@ -3,14 +3,16 @@ description: Python specific rules
 globs: *.py
 alwaysApply: false
 ---
-# Reference architecture
+# Coding in Python
+
+## Reference architecture
 1. Check [architecture.md](mdc:docs/architecture.md) for reference to make sure you are making changes in the right places
 
-# Update architecture
+## Update architecture
 1. If responsibilities of files or modules changes, update the [architecture.md](mdc:docs/architecture.md)
 2. If new python files or modules are introduced, update the [architecture.md](mdc:docs/architecture.md)
 
-# Coding style
+## Coding style
 1. Make sure code has high cohesion and low coupling through:
  - Favor composition (eg. through dependency injection) over inheritance
  - Favor pure functions over state mutation
