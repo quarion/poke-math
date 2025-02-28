@@ -905,6 +905,11 @@ input[disabled] {
     margin-top: var(--spacing-lg);
 }
 
+.quiz-buttons .button-wrapper:only-child,
+.quiz-buttons .button-wrapper:only-child .button-base {
+    width: 100%;
+}
+
 .quiz-buttons .button-base,
 .quiz-buttons .button-wrapper .button-base,
 .quiz-buttons .remove-form .button-base {

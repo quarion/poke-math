@@ -106,20 +106,33 @@
             
             <div class="quiz-buttons">
                 {% if attempt.exists %}
-                <div class="button-wrapper">
-                    <a href="{{ url_for('quiz', quiz_id=attempt.id) }}" class="button-base button-blue">Play Again</a>
-                </div>
+                    {% if attempt.solved %}
+                    <div class="button-wrapper">
+                        <a href="{{ url_for('quiz', quiz_id=attempt.id) }}" class="button-base button-blue">
+                            See Mission
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="button-wrapper">
+                        <a href="{{ url_for('quiz', quiz_id=attempt.id) }}" class="button-base button-blue">
+                            <img src="{{ url_for('static', filename='images/poke-compass.png') }}" alt="Play Again" class="button-icon">
+                            Play Again
+                        </a>
+                    </div>
+                    {% endif %}
                 {% else %}
                 <div class="button-wrapper">
                     <button disabled class="button-base button-dark">Not Available</button>
                 </div>
                 {% endif %}
                 
+                {% if not attempt.solved %}
                 <form action="{{ url_for('forget_quiz') }}" method="post" class="remove-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="timestamp" value="{{ attempt.timestamp }}">
-                    <button type="submit" class="button-base button-red">Remove</button>
+                    <button type="submit" class="button-base button-red">Forget</button>
                 </form>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -129,7 +142,10 @@
         <div class="empty-state">
             <img src="{{ url_for('static', filename='images/psyduck_wonder.gif') }}" alt="No missions yet" width="120" height="120">
             <p class="font-md">You haven't attempted any missions yet.</p>
-            <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try a New Mission</a>
+            <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">
+                <img src="{{ url_for('static', filename='images/poke-compass.png') }}" alt="New Mission" class="button-icon">
+                Try a Mission
+            </a>
         </div>
     </div>
     {% endif %}
