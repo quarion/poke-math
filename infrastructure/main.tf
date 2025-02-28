@@ -23,8 +23,7 @@ resource "google_project_service" "apis" {
     "firestore.googleapis.com",
     "cloudbuild.googleapis.com",
     "secretmanager.googleapis.com",
-    "firebase.googleapis.com",
-    "firebaseauth.googleapis.com"
+    "firebase.googleapis.com"
   ])
   service = each.key
   disable_on_destroy = false
