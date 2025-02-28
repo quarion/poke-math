@@ -23,4 +23,4 @@ def create_session_manager(use_firestore: bool = True) -> SessionManager:
         storage = FlaskSessionStorage()
         
     # Create and return a SessionManager with the specified storage
-    return SessionManager.load_from_flask_session(storage=storage) 
+    return SessionManager.load_from_storage(storage=storage)

@@ -165,7 +165,7 @@ class SessionManager:
         return quiz_id in self.state.variable_mappings
     
     @classmethod
-    def load_from_flask_session(cls, storage: Optional[UserStorageInterface] = None) -> 'SessionManager':
+    def load_from_storage(cls, storage: Optional[UserStorageInterface] = None) -> 'SessionManager':
         """
         Load session manager using user_id from Flask session.
         If no user_id exists, a new one is created.

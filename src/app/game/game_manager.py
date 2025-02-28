@@ -33,7 +33,7 @@ class GameManager:
             A new GameManager instance
         """
         if session_manager is None:
-            session_manager = SessionManager.load_from_flask_session()
+            session_manager = SessionManager.load_from_storage()
             
         return cls(
             game_config=quiz_data,
