@@ -1043,73 +1043,178 @@ input[disabled] {
     justify-content: center;
     align-items: center;
     min-height: 70vh;
-    padding: 2rem;
+    padding: var(--spacing-xl);
+    background-color: var(--background-color);
 }
 
 .name-input-card {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-    max-width: 500px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-xl);
+    max-width: 600px;
     width: 100%;
     text-align: center;
+    border: 3px solid var(--pokemon-blue);
 }
 
-.pokemon-trainer {
-    margin: 1.5rem 0;
+.pixel-title {
+    font-family: var(--font-family-base);
+    color: var(--pokemon-blue);
+    margin-bottom: var(--spacing-lg);
+    text-shadow: var(--text-shadow);
+    font-size: var(--font-size-xl);
 }
 
-.trainer-image {
-    max-width: 150px;
+.name-select-container {
+    margin: var(--spacing-lg) 0;
+    position: relative;
+}
+
+.name-select-screen {
+    position: relative;
+    margin-bottom: var(--spacing-md);
+    border: 4px solid var(--pokemon-dark);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.name-select-image {
+    width: 100%;
     height: auto;
+    display: block;
 }
 
-.name-description {
-    margin-bottom: 1.5rem;
-    color: #555;
+.dialog-box {
+    background-color: var(--card-background);
+    border: 4px solid var(--pokemon-dark);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    position: relative;
+    box-shadow: var(--shadow-md);
+}
+
+.dialog-box:before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 15px solid var(--pokemon-dark);
+}
+
+.dialog-text {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    margin: 0;
+    color: var(--text-color);
 }
 
 .name-form {
-    text-align: left;
+    width: 100%;
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-    color: #333;
-}
-
-.form-group input {
     width: 100%;
-    padding: 0.8rem;
-    border: 2px solid #ddd;
-    border-radius: 5px;
-    font-size: 1rem;
-    transition: border-color 0.3s;
 }
 
-.form-group input:focus {
-    border-color: #3498db;
+.input-wrapper {
+    position: relative;
+    margin-bottom: var(--spacing-lg);
+    width: 100%;
+    max-width: 100%;
+}
+
+.pixel-input {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 3px solid var(--pokemon-blue);
+    border-radius: var(--border-radius-md);
+    font-size: var(--font-size-md);
+    font-family: var(--font-family-base);
+    background-color: var(--background-color);
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+.pixel-input:focus {
     outline: none;
+    border-color: var(--pokemon-red);
+    box-shadow: 0 0 0 3px rgba(255, 31, 31, 0.3);
 }
 
 .form-actions {
-    text-align: center;
-    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.pixel-button {
+    font-family: var(--font-family-base);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    margin: 0 auto;
+}
+
+.pixel-button:hover {
+    transform: scale(1.05) translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.pixel-button:active {
+    transform: scale(0.98) translateY(0);
 }
 
 .error-message {
-    color: #e74c3c;
-    margin: 1rem 0;
-    padding: 0.5rem;
-    background-color: #fadbd8;
-    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--pokemon-red);
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background-color: var(--red-transparent);
+    border-radius: var(--border-radius-md);
+    font-weight: bold;
+}
+
+.error-icon {
+    width: 30px;
+    height: 30px;
+}
+
+@media (max-width: 768px) {
+    .name-input-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .pixel-title {
+        font-size: var(--font-size-lg);
+    }
+    
+    .dialog-text {
+        font-size: var(--font-size-base);
+    }
+}
+
+@media (max-width: 480px) {
+    .name-input-card {
+        padding: var(--spacing-md);
+    }
+    
+    .pixel-title {
+        font-size: var(--font-size-md);
+    }
+    
+    .dialog-text {
+        font-size: var(--font-size-sm);
+    }
 }
 
 /* Login/Logout Link Styles */

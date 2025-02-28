@@ -4,34 +4,49 @@
 {% block content %}
 <div class="name-input-container">
   <div class="name-input-card">
-    <h2>Choose Your Trainer Name!</h2>
+    <h2 class="pixel-title">Choose Your Trainer Name!</h2>
     
-    <div class="pokemon-trainer">
-      <img src="{{ url_for('static', filename='images/pokemon-trainer.png') }}" alt="Pokemon Trainer" class="trainer-image">
+    <div class="name-select-container">
+      <div class="name-select-screen">
+        <img src="{{ url_for('static', filename='images/name_select.jpg') }}" alt="Name Selection Screen" class="name-select-image">
+      </div>
+      
+      <div class="dialog-box">
+        <p class="dialog-text">First, what is your name? Every great Pokémath Trainer needs a cool name!</p>
+      </div>
     </div>
-    
-    <p class="name-description">Every great Pokemon Math Trainer needs a name! What should we call you?</p>
     
     <form action="{{ url_for('save_name') }}" method="post" class="name-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       
       <div class="form-group">
-        <label for="trainer-name">Trainer Name:</label>
-        <input type="text" id="trainer-name" name="trainer_name" required 
-               placeholder="Enter your trainer name" maxlength="20"
-               value="{{ current_name if current_name else '' }}">
+        <div class="input-wrapper">
+          <input type="text" id="trainer-name" name="trainer_name" required 
+                 placeholder="Enter your trainer name" maxlength="20"
+                 value="{{ current_name if current_name else '' }}" class="pixel-input">
+        </div>
       </div>
       
       {% if error %}
       <div class="error-message">
+        <img src="{{ url_for('static', filename='images/psyduck_wonder.gif') }}" alt="Psyduck confused" class="error-icon">
         {{ error }}
       </div>
       {% endif %}
       
       <div class="form-actions">
-        <button type="submit" class="button-base button-blue">Save Name</button>
+        <button type="submit" class="button-base button-blue pixel-button">
+          <img src="{{ url_for('static', filename='images/pokeball.png') }}" alt="Pokeball" class="button-icon">
+          Save Name
+        </button>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+  function fillName(name) {
+    document.getElementById('trainer-name').value = name;
+  }
+</script>
 {% endblock %} 
