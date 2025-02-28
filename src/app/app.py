@@ -26,6 +26,7 @@ from flask_wtf.csrf import CSRFProtect
 from src.app.game.game_config import load_game_config, load_equation_difficulties
 from src.app.game.game_manager import GameManager
 from src.app.equations.equations_generator import MathEquationGenerator
+from src.app.game.quiz_engine import generate_random_quiz_data
 from src.app.storage.session_factory import create_session_manager
 from src.app.auth.auth import AuthManager
 import json
@@ -373,49 +374,6 @@ def render_quiz_template(
     return render_template('quiz.html', **template_args)
 
 
-def generate_random_quiz_data(difficulty: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Generate random quiz data for the given difficulty.
-    
-    Args:
-        difficulty: Difficulty configuration
-        
-    Returns:
-        Dict: Generated quiz data
-    """
-    # Generate a random equation using the MathEquationGenerator
-    quiz = EQUATION_GENERATOR.generate_quiz(**difficulty['params'])
-
-    # Create a unique ID for the random quiz
-    random_quiz_id = f"random_{uuid.uuid4().hex[:8]}"
-
-    # Create Pokemon variable mappings for the random variables
-    image_mapping = {}
-    available_pokemon_images = {name: pokemon.image_path for name, pokemon in GAME_CONFIG.pokemons.items()}
-
-    for var in quiz.solution.human_readable.keys():
-        # Select a random Pokemon image from the game configuration
-        random_pokemon_name = random.choice(list(available_pokemon_images.keys()))
-        image_mapping[var] = available_pokemon_images[random_pokemon_name]
-
-    # Format equations to ensure consistent variable format
-    formatted_equations = []
-    for eq in quiz.equations:
-        formatted_eq = eq.formatted
-        formatted_equations.append(formatted_eq)
-
-    # Create quiz data structure
-    quiz_data = {
-        'quiz_id': random_quiz_id,
-        'equations': formatted_equations,
-        'solution': {var: str(val) for var, val in quiz.solution.human_readable.items()},
-        'difficulty': difficulty,
-        'image_mapping': image_mapping
-    }
-
-    return random_quiz_id, quiz_data
-
-
 # -----------------------------------------------------------------------------
 # Route Handlers
 # -----------------------------------------------------------------------------
@@ -485,14 +443,14 @@ def generate_random_exercise(difficulty_id):
     if not selected_difficulty:
         return "Difficulty not found", 404
 
-    # Generate random quiz data
-    random_quiz_id, quiz_data = generate_random_quiz_data(selected_difficulty)
+    game_manager = create_game_manager()
+    
+    # Fix: Pass the game_config from GAME_CONFIG instead of passing selected_difficulty twice
+    random_quiz_id, quiz_data = generate_random_quiz_data(GAME_CONFIG, selected_difficulty, EQUATION_GENERATOR)
 
     # Store the quiz in the session manager
-    game_manager = create_game_manager()
     game_manager.session_manager.save_quiz_data(random_quiz_id, quiz_data, is_random=True)
 
-    # Redirect to the quiz page
     return redirect(url_for('quiz', quiz_id=random_quiz_id))
 
 
@@ -614,24 +572,6 @@ def reset_quiz(quiz_id):
 
     # Redirect to the quiz page
     return redirect(url_for('quiz', quiz_id=quiz_id))
-
-
-@app.route('/section/<section_id>')
-@login_required
-def section(section_id):
-    """Display quizzes for a specific section."""
-    game_manager = create_game_manager()
-
-    # Find the requested section
-    selected_section = next((s for s in GAME_CONFIG.sections if s.id == section_id), None)
-
-    if not selected_section:
-        return "Section not found", 404
-
-    return render_template('section.html',
-                           section=selected_section,
-                           solved_quizzes=game_manager.session_manager.solved_quizzes)
-
 
 @app.route('/my-quizzes')
 @login_required

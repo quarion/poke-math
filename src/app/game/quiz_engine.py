@@ -1,41 +1,7 @@
 import random
-from typing import Dict, Tuple
+import uuid
+from typing import Dict, Tuple, Any
 from src.app.game.game_config import Quiz, GameConfig
-
-
-def create_variable_mappings(quiz: Quiz, available_pokemons: Dict[str, object]) -> Dict[str, str]:
-    """
-    Create mappings for special variables (x, y, z) to Pokemon names.
-    This is a pure function that can be tested in isolation.
-    
-    Args:
-        quiz: The quiz containing equations with variables
-        available_pokemons: Dictionary of available Pokemon names to Pokemon objects
-        
-    Returns:
-        Dictionary mapping variable names to Pokemon names
-    """
-    # Find all special variables used in the equations
-    special_vars = {'x', 'y', 'z'}
-    used_vars = set()
-
-    for eq in quiz.equations:
-        for var in special_vars:
-            if f'{{{var}}}' in eq:
-                used_vars.add(var)
-
-    # Create new mappings if needed
-    if not used_vars:
-        return {}
-
-    # Create mappings using a shuffled list of Pokemon names
-    pokemon_names = list(available_pokemons.keys())
-    random.shuffle(pokemon_names)
-
-    return {
-        var: pokemon_names[i]
-        for i, var in enumerate(used_vars)
-    }
 
 
 def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool, Dict[str, bool], bool]:
@@ -81,14 +47,13 @@ def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool, 
 
 
 def get_display_variables(game_config: GameConfig,
-                          variable_mappings: Dict[str, str]) -> Dict[str, str]:
+                          image_mapping: Dict[str, str] = None) -> Dict[str, str]:
     """
     Get display variables for a quiz, including Pokemon image paths.
     
     Args:
-        quiz: The quiz to get variables for
-        game_config: The quiz data containing Pokemon information
-        variable_mappings: Dictionary mapping variables to Pokemon names
+        game_config: The game configuration containing Pokemon information
+        image_mapping: Optional dictionary mapping variables to image paths
         
     Returns:
         Dictionary mapping variable names to image paths
@@ -99,8 +64,63 @@ def get_display_variables(game_config: GameConfig,
         for name, pokemon in game_config.pokemons.items()
     }
 
-    # Add any special variable mappings
-    for var, pokemon_name in variable_mappings.items():
-        display_vars[var] = game_config.pokemons[pokemon_name].image_path
+    # Add any image mappings if provided
+    if image_mapping:
+        display_vars.update(image_mapping)
 
     return display_vars
+
+
+def generate_random_quiz_data(game_config, difficulty: Dict[str, Any], equation_generator) -> Tuple[str, Dict[str, Any]]:
+    """
+    Generate random quiz data for the given difficulty.
+
+    Args:
+        game_config: The game configuration containing Pokemon information
+        difficulty: Difficulty configuration
+        equation_generator: The equation generator to use
+
+    Returns:
+        Tuple of (quiz_id, quiz_data)
+    """
+    # Generate a random equation using the MathEquationGenerator
+    quiz = equation_generator.generate_quiz(**difficulty['params'])
+
+    # Create a unique ID for the random quiz
+    random_quiz_id = f"random_{uuid.uuid4().hex[:8]}"
+
+    # Create Pokemon variable mappings for the random variables
+    image_mapping = {}
+    available_pokemon_images = {name: pokemon.image_path for name, pokemon in game_config.pokemons.items()}
+
+    # Get a list of Pokemon names and shuffle it to ensure random selection
+    pokemon_names = list(available_pokemon_images.keys())
+    random.shuffle(pokemon_names)
+
+    # Assign a unique Pokemon to each variable
+    for i, var in enumerate(quiz.solution.human_readable.keys()):
+        # Use modulo to avoid index errors if there are more variables than Pokemon
+        pokemon_name = pokemon_names[i % len(pokemon_names)]
+        image_mapping[var] = available_pokemon_images[pokemon_name]
+        # Remove the used Pokemon to ensure it's not reused
+        pokemon_names.remove(pokemon_name)
+        available_pokemon_images.pop(pokemon_name)
+
+    # Format equations to ensure consistent variable format
+    formatted_equations = []
+    for eq in quiz.equations:
+        formatted_eq = eq.formatted
+        formatted_equations.append(formatted_eq)
+
+    # Create quiz data structure
+    quiz_data = {
+        'quiz_id': random_quiz_id,
+        'title': f"Random {difficulty['name']} Quiz",
+        'equations': formatted_equations,
+        'solution': {var: str(val) for var, val in quiz.solution.human_readable.items()},
+        'difficulty': difficulty,
+        'image_mapping': image_mapping,
+        'description': f"A randomly generated {difficulty['name'].lower()} difficulty quiz."
+    }
+
+    return random_quiz_id, quiz_data

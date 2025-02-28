@@ -1,7 +1,9 @@
-from typing import Dict, Set, Optional
+from typing import Dict, Set, Optional, Any, Tuple
+import uuid
+import random
 from src.app.game.game_config import GameConfig
 from src.app.game.session_manager import SessionManager
-from src.app.game.quiz_engine import check_quiz_answers, create_variable_mappings, get_display_variables
+from src.app.game.quiz_engine import check_quiz_answers, get_display_variables
 
 
 class GameManager:
@@ -46,50 +48,21 @@ class GameManager:
 
     def get_quiz_state(self, quiz_id: str) -> Optional[Dict]:
         """
-        Get the current state of a quiz, including any variable mappings.
+        Get the current state of a quiz.
         Returns None if quiz not found.
         """
         quiz = self.game_config.quizzes_by_id.get(quiz_id)
         if not quiz:
             return None
 
-        # Get or create variable mappings for this quiz
-        mappings = self.get_or_create_variable_mappings(quiz_id)
-        
-        # Get display variables using the quiz_engine module
-        display_vars = get_display_variables(
-            self.game_config,
-            mappings
-        )
+        # Generate display variables using the quiz_engine module
+        display_vars = get_display_variables(self.game_config, {})
 
         return {
             'quiz': quiz,
-            'pokemon_vars': display_vars,
-            'is_solved': self.session_manager.is_quiz_solved(quiz_id),
-            'variable_mappings': mappings
+            'image_mapping': display_vars,
+            'is_solved': self.session_manager.is_quiz_solved(quiz_id)
         }
-
-    def get_or_create_variable_mappings(self, quiz_id: str) -> Dict[str, str]:
-        """
-        Get existing variable mappings for a quiz or create new ones if they don't exist.
-        """
-        # Check if mappings already exist in the session
-        if not self.session_manager.has_variable_mappings(quiz_id):
-            quiz = self.game_config.quizzes_by_id.get(quiz_id)
-            if not quiz:
-                return {}
-                
-            # Use the quiz_engine module to create mappings
-            mappings = create_variable_mappings(
-                quiz, 
-                self.game_config.pokemons
-            )
-            
-            # Store the mappings in the session
-            self.session_manager.set_variable_mappings(quiz_id, mappings)
-            return mappings
-            
-        return self.session_manager.get_variable_mappings(quiz_id)
 
     def check_answers(self, quiz_id: str, user_answers: Dict[str, int]):
         """Check the user's answers for a quiz."""

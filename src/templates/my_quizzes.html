@@ -77,13 +77,14 @@
             <h3 class="font-lg">{{ attempt.title }}</h3>
             
             {% if attempt.exists and 'quiz_data' in attempt %}
-                {% if 'pokemon_vars' in attempt.quiz_data and attempt.quiz_data.pokemon_vars|length > 0 %}
+                {% if 'image_mapping' in attempt.quiz_data and attempt.quiz_data.image_mapping|length > 0 %}
                 <div class="pokemon-to-catch">
                     <p class="pokemon-label">Pokemon to catch:</p>
                     <div class="pokemon-images">
-                        {% for var, img_path in attempt.quiz_data.pokemon_vars.items() %}
+                        {% for var, img_path in attempt.quiz_data.image_mapping.items() %}
                             <div class="pokemon-item">
-                                <img src="{{ url_for('static', filename='images/' + img_path) }}" class="pokemon-var" alt="{{ var }}">
+                                <img src="{{ url_for('static', filename='images/' + img_path) }}" alt="{{ var }}" class="pokemon-thumbnail">
+                                <span class="pokemon-var">{{ var }}</span>
                             </div>
                         {% endfor %}
                     </div>
