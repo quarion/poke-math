@@ -3,6 +3,8 @@
 Math and Pokemon!
 Side project made with Cursor and Sonnet 3.7. Almost 100% of code is AI generated, with very slight manual tweaking
 
+Live version: https://poke-math-991216996410.europe-west1.run.app/
+
 # Infrastructure:
 
 Follow those steps to provision new environment
@@ -28,6 +30,8 @@ Follow those steps to provision new environment
 List of ideas to add in the future
 
 Functional:
+- Make sure the log-in will work on mobile
+- Improve equations generation to make sure there is a solution
 - Add custom domain
 - Better progress information. Clear indication of gaining exp after mission, more exp for more difficult options
 - Complete pre-defined missions
