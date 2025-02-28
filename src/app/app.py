@@ -444,8 +444,6 @@ def generate_random_exercise(difficulty_id):
         return "Difficulty not found", 404
 
     game_manager = create_game_manager()
-    
-    # Fix: Pass the game_config from GAME_CONFIG instead of passing selected_difficulty twice
     random_quiz_id, quiz_data = generate_random_quiz_data(GAME_CONFIG, selected_difficulty, EQUATION_GENERATOR)
 
     # Store the quiz in the session manager
@@ -601,7 +599,9 @@ def my_quizzes():
             'solved': game_manager.session_manager.is_quiz_solved(quiz_id),
             'exists': True,  # We now store all quiz data, so it always exists
             'is_random': is_random,
-            'user_answers': attempt.user_answers
+            'user_answers': attempt.user_answers,
+            'quiz_data': quiz_data.to_dict(),  # Include the full quiz data
+            'image_mapping': quiz_data.image_mapping  # Include the image mapping directly
         })
 
     # Sort attempts by timestamp (newest first)
