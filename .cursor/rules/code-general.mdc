@@ -6,8 +6,8 @@ alwaysApply: false
 # Coding in any language
 
 ## Comments
-- Keep comments focused on explaining "why" rather than "what" the code does.
 - Omit comments for self-explanatory code with descriptive function/variable names
-- Comment non-obvious logic, complex algorithms, or business rules
-- Retain docstrings for modules, classes and selected library-like public functions, but keep them concise
-- Do not leave comments about code you have removed during the edit
+- Comment ONLY non-obvious logic, complex algorithms, or business rules
+- Retain docstrings ONLY for modules, classes and selected library-like public functions, but keep them concise
+- Keep comments focused on explaining "why" rather than "what" the code does.
+- Do not leave comments about code you have removed or updated during the edit. Comment should explain current code, not how it was changed
