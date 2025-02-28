@@ -14,14 +14,12 @@
         <h1>Pokemath!</h1>
         <nav class="main-nav">
             <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/pokeball.png') }}" alt="Home">Home</a></li>
                 <!-- Community Exercises hidden as per requirement -->
-                <li><a href="{{ url_for('my_quizzes') }}">My Missions</a></li>
-                <li><a href="{{ url_for('new_exercise') }}">New Mission</a></li>
-                <li><a href="{{ url_for('profile') }}">Profile</a></li>
-                {% if is_authenticated %}
-                <li><a href="{{ url_for('logout') }}" class="logout-link">Logout</a></li>
-                {% else %}
+                <li><a href="{{ url_for('my_quizzes') }}"><img src="{{ url_for('static', filename='images/rotom-phone.png') }}" alt="My Missions">My Missions</a></li>
+                <li><a href="{{ url_for('new_exercise') }}"><img src="{{ url_for('static', filename='images/poke-compass.png') }}" alt="New Mission">New Mission</a></li>
+                <li><a href="{{ url_for('profile') }}"><img src="{{ url_for('static', filename='images/hat.png') }}" alt="Profile">Profile</a></li>
+                {% if not is_authenticated %}
                 <li><a href="{{ url_for('login') }}" class="login-link">Login</a></li>
                 {% endif %}
             </ul>

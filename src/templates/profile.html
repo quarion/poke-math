@@ -46,6 +46,11 @@
       <button onclick="confirmReset()" class="button-base button-red">
         Reset Progress
       </button>
+      {% if is_authenticated %}
+      <a href="{{ url_for('logout') }}" class="button-base button-dark logout-button">
+        Logout
+      </a>
+      {% endif %}
       <form id="resetForm" action="{{ url_for('reset_progress') }}" method="post" style="display: none;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       </form>

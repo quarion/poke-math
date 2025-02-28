@@ -10,9 +10,10 @@ alwaysApply: false
 - Make sure the layout is responsive
 
 ## Styling
-- Use [style.css](mdc:src/static/css/style.css) for styling
 - Do NOT inline styles in html files
-- Make sure to use consistent styling, re-use as much as possible and not create duplicates
+- Use [style.css](mdc:src/static/css/style.css) for styling global sytling (theme, colors, general buttons style etc.)
+- For component-specific styles place them directly in the .html file
+- Make sure to use consistent styling. Before creating new style consider if existing global or component style should not be used
 
 ## Examples
 

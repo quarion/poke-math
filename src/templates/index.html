@@ -8,8 +8,14 @@
     <p>Train your brain with fun Pokemon-themed math exercises and become a true Math Pokemon Master!</p>
     
     <div class="action-buttons">
-      <a href="{{ url_for('my_quizzes') }}" class="button-base button-blue">See My Missions</a>
-      <a href="{{ url_for('new_exercise') }}" class="button-base button-green">Try a New Mission</a>
+      <a href="{{ url_for('my_quizzes') }}" class="button-base button-blue">
+        <img src="{{ url_for('static', filename='images/rotom-phone.png') }}" alt="My Missions" class="button-icon">
+        See My Missions
+      </a>
+      <a href="{{ url_for('new_exercise') }}" class="button-base button-green">
+        <img src="{{ url_for('static', filename='images/poke-compass.png') }}" alt="New Mission" class="button-icon">
+        Try a New Mission
+      </a>
     </div>
   </div>
 {% endblock %} 
