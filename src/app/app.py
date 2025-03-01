@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, make_response
 from flask_wtf.csrf import CSRFProtect
 
 from src.app.game.game_config import load_game_config, load_equation_difficulties
@@ -29,6 +29,7 @@ from src.app.equations.equations_generator import MathEquationGenerator
 from src.app.game.quiz_engine import generate_random_quiz_data
 from src.app.storage.session_factory import create_session_manager
 from src.app.auth.auth import AuthManager
+from src.app.firebase.firebase_init import get_auth_client
 import json
 
 
@@ -669,47 +670,58 @@ def login():
     """
     Display the login page.
     
+    If the user is already authenticated, redirect to the home page.
+    
     Returns:
-        Rendered login page template
+        Rendered login template or redirect to home page
     """
-    # If user is already authenticated, redirect to home page
+    # If user is already authenticated in session, redirect to home page
     if AuthManager.is_authenticated():
+        app.logger.info("User already authenticated in session, redirecting to index")
         return redirect(url_for('index'))
     
-    # Get Firebase configuration from the environment or config file
-    firebase_config = {
-        'firebase_api_key': os.environ.get('FIREBASE_API_KEY', ''),
-        'firebase_auth_domain': os.environ.get('FIREBASE_AUTH_DOMAIN', ''),
-        'firebase_project_id': os.environ.get('FIREBASE_PROJECT_ID', ''),
-        'firebase_app_id': os.environ.get('FIREBASE_APP_ID', '')
-    }
+    # Add Firebase check and debug info to help identify issues
+    try:
+        # Check if request has Firebase ID token in header (sometimes Firebase Auth redirects with this)
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            app.logger.info("Found Firebase ID token in Authorization header")
+            token = auth_header.split('Bearer ')[1]
+            
+            # Try to verify the token
+            try:
+                decoded_token = get_auth_client().verify_id_token(token)
+                uid = decoded_token['uid']
+                app.logger.info(f"Auto-login via token - UID: {uid}")
+                
+                # Set up session
+                session['user_id'] = uid
+                session['auth_type'] = 'google'
+                session['authenticated'] = True
+                session['is_guest'] = False
+                
+                # Check if user exists
+                session_manager = create_session_manager()
+                if session_manager.get_user_name():
+                    return redirect(url_for('index'))
+                else:
+                    return redirect(url_for('name_input'))
+            except Exception as e:
+                app.logger.error(f"Error verifying token from header: {str(e)}")
+    except Exception as e:
+        app.logger.error(f"Error in login route: {str(e)}")
     
-    return render_template('login.html', **firebase_config)
+    # Otherwise, show the login page
+    app.logger.info("Showing login page")
+    return render_template('login.html')
 
-@app.route('/guest-login')
-@csrf.exempt  # Exempt this route from CSRF protection since it's a GET request
-def guest_login():
-    """
-    Log in as a guest user.
-    
-    This will either:
-    1. Create a new guest account with a unique ID, or
-    2. Reuse an existing guest account ID from cookies
-    
-    Returns:
-        Redirect to name input page
-    """
-    # Create or reuse a guest user
-    AuthManager.create_guest_user()
-    
-    # Redirect to name input page
-    return redirect(url_for('name_input'))
-
-@app.route('/auth-callback', methods=['POST'])
+@app.route('/auth_callback', methods=['POST'])
 @csrf.exempt  # Exempt this route from CSRF protection
 def auth_callback():
     """
-    Handle Google authentication callback.
+    Handle Firebase authentication callback.
+    
+    Processes both regular Firebase authentication and anonymous (guest) logins.
     
     Returns:
         JSON response with success status and redirect URL
@@ -718,6 +730,7 @@ def auth_callback():
         # Log the request for debugging
         app.logger.info("Auth callback received")
         app.logger.info(f"Request content type: {request.content_type}")
+        app.logger.info(f"Request headers: {request.headers}")
         
         # Get the ID token from the request
         data = request.json
@@ -725,26 +738,65 @@ def auth_callback():
             app.logger.error("No JSON data received in auth_callback")
             return jsonify({'success': False, 'error': 'No data provided'}), 400
             
+        app.logger.info(f"Request data keys: {data.keys()}")
         id_token = data.get('id_token')
+        is_guest = data.get('is_guest', False)
+        
+        app.logger.info(f"Is guest login: {is_guest}")
         
         if not id_token:
             app.logger.error("No ID token provided in auth_callback")
             return jsonify({'success': False, 'error': 'No ID token provided'}), 400
         
-        # Verify the ID token and log in the user
-        if AuthManager.login_with_google(id_token):
-            # Get session manager to check if user already has a name
-            session_manager = create_session_manager()
-            user_name = session_manager.get_user_name()
+        try:
+            # Verify the ID token with Firebase Admin SDK
+            app.logger.info("Verifying ID token...")
+            decoded_token = get_auth_client().verify_id_token(id_token)
+            uid = decoded_token['uid']
+            app.logger.info(f"Token verified successfully for UID: {uid}")
             
-            # If user already has a name, redirect to home page, otherwise to name input
-            if user_name:
-                return jsonify({'success': True, 'redirect': url_for('index')})
+            # Create a session for the user
+            session['user_id'] = uid
+            app.logger.info(f"Session user_id set to: {uid}")
+            
+            if is_guest:
+                # Handle guest login
+                app.logger.info("Processing guest login")
+                session['auth_type'] = 'guest'
+                session['authenticated'] = True
+                session['is_guest'] = True
+                # Redirect to name input page for guests
+                redirect_url = url_for('name_input')
+                app.logger.info(f"Guest redirect URL: {redirect_url}")
+                return jsonify({'success': True, 'redirect': redirect_url})
             else:
-                return jsonify({'success': True, 'redirect': url_for('name_input')})
-        else:
-            app.logger.error("Failed to authenticate with Google token")
-            return jsonify({'success': False, 'error': 'Failed to authenticate'}), 401
+                # Regular user login
+                app.logger.info("Processing regular user login")
+                session['auth_type'] = 'google'
+                session['authenticated'] = True
+                session['is_guest'] = False
+                
+                # Check if user exists in the database
+                app.logger.info("Checking for existing user name...")
+                session_manager = create_session_manager()
+                user_name = session_manager.get_user_name()
+                app.logger.info(f"User name from session: {user_name}")
+                
+                if user_name:
+                    # Existing user, redirect to home page
+                    redirect_url = url_for('index')
+                    app.logger.info(f"Existing user redirect URL: {redirect_url}")
+                    return jsonify({'success': True, 'redirect': redirect_url})
+                else:
+                    # New user, redirect to profile setup
+                    redirect_url = url_for('name_input')
+                    app.logger.info(f"New user redirect URL: {redirect_url}")
+                    return jsonify({'success': True, 'redirect': redirect_url})
+        
+        except Exception as e:
+            app.logger.error(f"Token verification error: {str(e)}")
+            return jsonify({'success': False, 'error': f'Token verification failed: {str(e)}'}), 401
+            
     except Exception as e:
         app.logger.error(f"Error in auth_callback: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
@@ -799,10 +851,14 @@ def logout():
     Log out the current user.
     
     Returns:
-        Redirect to login page
+        Redirect to login page with a script to sign out from Firebase
     """
     AuthManager.logout()
-    return redirect(url_for('login'))
+    
+    # Create a response that includes a script to sign out from Firebase
+    response = make_response(render_template('logout.html'))
+    
+    return response
 
 # Update context processor to add is_authenticated and csrf_token to templates
 @app.context_processor

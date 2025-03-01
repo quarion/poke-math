@@ -7,50 +7,20 @@
     <h2>Welcome to Pokemath!</h2>
     <p class="login-description">Train your brain with fun Pokemon-themed math exercises and become a true Math Pokemon Master!</p>
     
-    <!-- Error message container -->
-    <div id="error-message" class="error-message" style="display: none;"></div>
-    
-    <div class="login-options">
-      <div class="login-option">
-        <h3>Sign in with Google</h3>
-        <p>Save your progress and access it from any device.</p>
-        <button id="google-signin" class="button-base button-blue">
-          <img src="{{ url_for('static', filename='images/google-icon.svg') }}" alt="Google" class="google-icon">
-          Sign in with Google
-        </button>
-      </div>
-      
-      <div class="login-divider">
-        <span>or</span>
-      </div>
-      
-      <div class="login-option">
-        <h3>Continue as Guest</h3>
-        <p class="guest-warning">Your progress will only be saved on this device and may be lost if you clear your browser data.</p>
-        <a href="{{ url_for('guest_login') }}" class="button-base button-green">Continue as Guest</a>
-      </div>
-    </div>
+    <!-- Firebase UI container -->
+    <div id="firebaseui-auth-container"></div>
   </div>
 </div>
 
-<!-- Firebase Authentication UI -->
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<!-- Add Firebase Auth -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<!-- Firebase UI -->
+<script src="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.js"></script>
+<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.css" />
 
 <script>
-  // Function to display error messages
-  function showError(message) {
-    const errorElement = document.getElementById('error-message');
-    errorElement.textContent = message;
-    errorElement.style.display = 'block';
-    console.error(message);
-  }
-
-  // Function to detect mobile devices
-  function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
-
   // Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyClyfiMLAAF2VJ4Zm0SXLy5vGmJT7vG4Uc",
@@ -62,95 +32,206 @@
   };
 
   // Initialize Firebase
-  try {
-    firebase.initializeApp(firebaseConfig);
-    console.log("Firebase initialized successfully");
-    
-    // Check for redirect result on page load (for mobile redirect flow)
-    firebase.auth().getRedirectResult().then((result) => {
-      if (result.user) {
-        console.log("Redirect sign-in successful");
-        handleSuccessfulSignIn(result.user);
-      }
-    }).catch((error) => {
-      console.error("Redirect sign-in error:", error);
-      if (error.code !== 'auth/credential-already-in-use') {
-        showError('Authentication error: ' + error.message);
-      }
-    });
-  } catch (error) {
-    showError("Firebase initialization error: " + error.message);
-  }
-  
-  // Function to handle successful sign-in
-  function handleSuccessfulSignIn(user) {
-    console.log("Sign-in successful for user:", user.email);
-    
-    // Get the ID token
-    return user.getIdToken(true)
-      .then((idToken) => {
-        console.log("ID token obtained");
+  firebase.initializeApp(firebaseConfig);
+
+  // Initialize the FirebaseUI Widget using Firebase
+  const ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+  // Configure FirebaseUI
+  const uiConfig = {
+    // Enable single sign-on
+    signInFlow: 'popup', // Change to popup for better debugging
+    signInSuccessUrl: null, // Disable automatic redirect
+    signInOptions: [
+      // Enable providers you want to offer to users
+      {
+        provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        // Force account selection each time
+        customParameters: {
+          prompt: 'select_account'
+        }
+      },
+      // firebase.auth.EmailAuthProvider.PROVIDER_ID, email provider is now defunct
+      // Include Anonymous Auth Provider for "Guest" login
+      firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+    ],
+    callbacks: {
+      // This function will be called when the user successfully signs in
+      signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+        // User successfully signed in.
+        console.log("Firebase UI Sign-in successful", authResult);
         
-        // Send the token to the server
-        console.log("Sending token to server...");
-        return fetch('{{ url_for("auth_callback") }}', {
+        try {
+          const user = authResult.user;
+          
+          // Set flag to indicate Firebase UI is handling authentication
+          sessionStorage.setItem('firebaseUiHandled', 'true');
+          
+          // Check if this is an anonymous (guest) sign-in
+          const isAnonymous = user.isAnonymous;
+          console.log("Is anonymous user:", isAnonymous);
+          
+          // Clear any previous error states
+          sessionStorage.removeItem('authCallbackInitiated');
+          
+          // Get the user's ID token
+          user.getIdToken(true)
+            .then((idToken) => {
+              // Send the token to your backend via HTTPS
+              console.log("Got ID token, sending to backend");
+              const authCallbackUrl = '{{ url_for("auth_callback") }}';
+              console.log("Auth callback URL:", authCallbackUrl);
+              
+              return fetch(authCallbackUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ 
+                  id_token: idToken,
+                  is_guest: isAnonymous
+                })
+              });
+            })
+            .then(response => {
+              console.log("Server response status:", response.status);
+              if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+              }
+              return response.json();
+            })
+            .then(data => {
+              console.log("Server response data:", data);
+              if (data.success) {
+                // Redirect to the URL returned by the server
+                console.log("Authentication successful, redirecting to:", data.redirect);
+                window.location.href = data.redirect;
+              } else {
+                console.error('Authentication failed:', data.error);
+                alert('Authentication failed: ' + data.error);
+              }
+            })
+            .catch(error => {
+              console.error('Error during authentication process:', error);
+              
+              // Log the current authentication state to console to help debugging
+              console.log("Current auth state:", firebase.auth().currentUser);
+              
+              // Display error to user
+              alert('Error during authentication: ' + error.message);
+            });
+          
+          // Return false to prevent the default redirect
+          return false;
+        } catch (error) {
+          console.error("Error in signInSuccessWithAuthResult callback:", error);
+          alert('Authentication error: ' + error.message);
+          return false;
+        }
+      },
+      // Add uiShown callback to know when the widget is rendered
+      uiShown: function() {
+        console.log("Firebase UI shown");
+      }
+    },
+    // Don't redirect automatically, let our callback handle it
+    autoUpgradeAnonymousUsers: false
+  };
+
+  // Start the FirebaseUI Widget once the page is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    ui.start('#firebaseui-auth-container', uiConfig);
+    
+    // Add auth state listener to catch cases where user is logged in with Firebase
+    // but the session isn't established
+    firebase.auth().onAuthStateChanged(function(user) {
+      console.log("Auth state changed:", user);
+      
+      // Handle manual sign out
+      const justLoggedOut = sessionStorage.getItem('justLoggedOut');
+      if (justLoggedOut) {
+        console.log("User was recently logged out, signing out from Firebase");
+        sessionStorage.removeItem('justLoggedOut');
+        firebase.auth().signOut().then(() => {
+          console.log("Successfully signed out from Firebase");
+          window.location.reload(); // Reload the page to show login UI
+        }).catch((error) => {
+          console.error("Error signing out from Firebase:", error);
+        });
+        return;
+      }
+      
+      // If no user or we're already handling authentication, do nothing
+      if (!user || sessionStorage.getItem('handlingAuth') === 'true') {
+        return;
+      }
+      
+      // Set flag to indicate we're handling auth to prevent duplicate processing
+      sessionStorage.setItem('handlingAuth', 'true');
+      
+      // Check if the user came through FirebaseUI
+      const firebaseUiHandled = sessionStorage.getItem('firebaseUiHandled');
+      
+      // If FirebaseUI already handled this auth state change, don't do anything
+      if (firebaseUiHandled === 'true') {
+        console.log("Firebase UI already handled this auth state change");
+        sessionStorage.removeItem('handlingAuth');
+        return;
+      }
+      
+      console.log("No FirebaseUI auth detected, handling manually");
+      
+      // Get the ID token
+      user.getIdToken(true).then(function(idToken) {
+        console.log("Got ID token from auth state listener");
+        
+        // Call your backend to establish session
+        const authCallbackUrl = '{{ url_for("auth_callback") }}';
+        console.log("Initiating auth callback from auth state listener to:", authCallbackUrl);
+        
+        fetch(authCallbackUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': '{{ csrf_token() }}'
           },
-          body: JSON.stringify({ id_token: idToken })
-        });
-      })
-      .then(response => {
-        console.log("Server response received:", response.status);
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log("Response data:", data);
-        if (data.success) {
-          // Redirect to name input or home page
-          console.log("Authentication successful, redirecting to:", data.redirect);
-          window.location.href = data.redirect;
-        } else {
-          showError('Authentication failed: ' + (data.error || 'Unknown error'));
-        }
-      })
-      .catch(error => {
-        console.error('Error during authentication process:', error);
-        showError('Authentication failed: ' + error.message);
-      });
-  }
-  
-  // Set up Google sign-in
-  document.getElementById('google-signin').addEventListener('click', function() {
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      console.log("Starting Google sign-in process");
-      
-      if (isMobileDevice()) {
-        // Use redirect method for mobile devices
-        console.log("Using redirect method for mobile device");
-        firebase.auth().signInWithRedirect(provider);
-      } else {
-        // Use popup for desktop
-        console.log("Using popup method for desktop");
-        firebase.auth().signInWithPopup(provider)
-          .then((result) => {
-            handleSuccessfulSignIn(result.user);
+          body: JSON.stringify({ 
+            id_token: idToken,
+            is_guest: user.isAnonymous
           })
-          .catch(error => {
-            console.error('Error during popup authentication:', error);
-            showError('Authentication failed: ' + error.message);
-          });
-      }
-    } catch (error) {
-      console.error('Error initiating Google sign-in:', error);
-      showError('Failed to start Google sign-in: ' + error.message);
-    }
+        })
+        .then(response => {
+          console.log("Auth state listener - Server response status:", response.status);
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Auth state listener - Server response:", data);
+          if (data.success) {
+            // Redirect to the URL returned by the server
+            console.log("Auth state listener - Redirecting to:", data.redirect);
+            window.location.href = data.redirect;
+          } else {
+            console.error('Auth state listener - Authentication failed:', data.error);
+            alert('Authentication failed: ' + data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Auth state listener - Error during authentication process:', error);
+          alert('Error during authentication: ' + error.message);
+        })
+        .finally(() => {
+          // Clear the handling flag regardless of outcome
+          sessionStorage.removeItem('handlingAuth');
+        });
+      }).catch(function(error) {
+        console.error("Error getting ID token:", error);
+        sessionStorage.removeItem('handlingAuth');
+      });
+    });
   });
 </script>
 
@@ -167,20 +248,25 @@
       padding: 20px 15px;
     }
     
-    .button-base {
-      width: 100%;
-      padding: 12px 15px;
-      font-size: 16px;
+    /* Custom styling for FirebaseUI - OPTIONAL */
+    .firebaseui-container {
+      max-width: 100%;
     }
     
-    .login-options {
-      flex-direction: column;
+    .firebaseui-card-content {
+      padding: 0;
     }
-    
-    .login-option {
-      width: 100%;
-      margin-bottom: 20px;
-    }
+  }
+  
+  /* Custom styling for the Anonymous provider button */
+  .firebaseui-idp-anonymous,
+  .firebaseui-idp-anonymous:hover {
+    background-color: #4caf50 !important; /* Green color for guest login */
+  }
+  
+  /* Make the FirebaseUI container full width */
+  .firebaseui-container {
+    max-width: 100%;
   }
 </style>
 {% endblock %} 
