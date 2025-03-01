@@ -1,8 +1,14 @@
 ---
-description: Everything
+description: General rules for every request
 globs: 
 alwaysApply: true
 ---
+# Reference architecture
+1. Check [architecture.md](mdc:docs/architecture.md) for reference to make sure you are making changes in the right places.
+
 # CLI
-- We are on Windows so use power shell
-- Do not try to run web server, let user do it for you
+1. We are on Windows so use powershell commands.
+
+# End-to-end testing
+1. Use following command to start web server before executing tests `$env:FLASK_ENV="development"; python -m src.app`
+

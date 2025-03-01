@@ -5,9 +5,6 @@ alwaysApply: false
 ---
 # Coding in Python
 
-## Reference architecture
-1. Check [architecture.md](mdc:docs/architecture.md) for reference to make sure you are making changes in the right places
-
 ## Update architecture
 1. If responsibilities of files or modules changes, update the [architecture.md](mdc:docs/architecture.md)
 2. If new python files or modules are introduced, update the [architecture.md](mdc:docs/architecture.md)
