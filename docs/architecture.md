@@ -10,7 +10,9 @@ PokeMath is an educational web application that gamifies math equation solving u
 poke-math/
 ├── src/                     # Source code for the application
 │   ├── app/                 # Main application code
+│   │   ├── auth/            # Authentication module
 │   │   ├── equations/       # Equation generation module
+│   │   ├── firebase/        # Firebase configuration and utilities
 │   │   ├── game/            # Game logic and state management
 │   │   ├── storage/         # Storage implementations
 │   │   └── app.py           # Flask application and routes
@@ -27,6 +29,16 @@ poke-math/
 ### Flask Web Application (`src/app/app.py`)
 Entry point for the web application that handles HTTP requests, routes, and coordinates between modules.
 
+### Authentication Module (`src/app/auth/`)
+
+#### Authentication Manager (`auth.py`)
+Handles user authentication, registration, and session management.
+
+### Firebase Module (`src/app/firebase/`)
+
+#### Firebase Initialization (`firebase_init.py`)
+Initializes and configures Firebase services for the application.
+
 ### Game Module (`src/app/game/`)
 
 #### Game Manager (`game_manager.py`)
@@ -40,6 +52,9 @@ Loads quiz definitions and Pokémon data from JSON files.
 
 #### Session Manager (`session_manager.py`)
 Manages user session data and progress persistence.
+
+#### Models (`models.py`)
+Data models and structures used throughout the game module.
 
 ### Storage Module (`src/app/storage/`)
 
@@ -77,6 +92,7 @@ Unit tests and test fixtures for application components.
 - **Equation**: Mathematical expression with Pokémon variables
 - **Session**: User progress and history
 - **Storage**: Session data persistence mechanism
+- **Authentication**: User registration and login functionality
 
 ## Extension Points
 
@@ -84,6 +100,7 @@ Unit tests and test fixtures for application components.
 2. **Additional Storage Backends**: Implement new storage interfaces
 3. **New Quiz Types**: Extend quiz engine
 4. **Difficulty Adjustments**: Modify JSON configurations 
+5. **Authentication Methods**: Extend auth module with additional providers
 
 ## Documentation Maintenance Guidelines
 
