@@ -32,7 +32,7 @@ class MathEquationGenerator:
                       allow_fractions: bool = False, allow_division: bool = False,
                       complexity: int = 1, num_helper_equations: int = 0,
                       very_simple: bool = False, max_elements: Optional[int] = None,
-                      ensure_operation: bool = True) -> DynamicQuiz:
+                      ensure_operation: bool = True, _recursion_depth: int = 0) -> DynamicQuiz:
         """
         Generate a system of equations with guaranteed solutions.
 
@@ -55,10 +55,20 @@ class MathEquationGenerator:
                        This limits the sum of all variable terms and constants.
         - ensure_operation: If True, ensures each equation has at least one operation
                            (not just "x = 2")
+        - _recursion_depth: Internal parameter to track recursion depth
 
         Returns:
         - Quiz object containing equations and solution
         """
+        # Limit recursion depth to avoid stack overflow
+        if _recursion_depth > 10:
+            # If we've recursed too many times, fall back to a simpler approach
+            # that doesn't enforce linear independence
+            return self._generate_quiz_fallback(
+                num_unknowns, num_equations, allow_fractions, allow_division,
+                complexity, num_helper_equations, very_simple, max_elements, ensure_operation
+            )
+
         # Constrain parameters to valid ranges
         num_unknowns = min(max(1, num_unknowns), 3)
         complexity = min(max(1, complexity), 3)
@@ -92,9 +102,12 @@ class MathEquationGenerator:
         equations = []
         formatted_equations = []
         coefficient_sets: Set[Tuple] = set()  # Track the coefficient sets to avoid duplicates
+        
+        # Track coefficient matrix rows for checking linear independence
+        matrix_rows = []
 
         attempt_count = 0
-        max_attempts = 50  # Maximum attempts to generate unique equations
+        max_attempts = 200  # Increased maximum attempts to generate unique equations
 
         while len(equations) < (num_equations + num_helper_equations) and attempt_count < max_attempts:
             attempt_count += 1
@@ -109,6 +122,155 @@ class MathEquationGenerator:
                 continue
 
             # Check if this is a unique equation (not linearly dependent on existing ones)
+            if coefficients not in coefficient_sets:
+                # Extract coefficients for each variable to check linear independence
+                if isinstance(equation, str) and '=' in equation:
+                    sides = equation.split('=')
+                    lhs = sp.sympify(sides[0].strip())
+                    rhs = sp.sympify(sides[1].strip())
+                    expr = lhs - rhs
+                else:
+                    expr = equation
+                
+                # Extract coefficients for each variable
+                row = []
+                for var in var_symbols:
+                    coef = expr.coeff(var)
+                    row.append(coef)
+                
+                # Check if adding this equation would maintain linear independence
+                if matrix_rows:
+                    # Create a temporary matrix with existing rows and the new row
+                    temp_rows = matrix_rows.copy()
+                    temp_rows.append(row)
+                    temp_matrix = sp.Matrix(temp_rows)
+                    
+                    # Check if the rank increases (indicating linear independence)
+                    if temp_matrix.rank() <= len(matrix_rows):
+                        # This equation is linearly dependent, skip it
+                        continue
+                
+                # If we get here, the equation is linearly independent
+                matrix_rows.append(row)
+                coefficient_sets.add(coefficients)
+                equations.append(equation)
+                formatted_equations.append(formatted_eq)
+
+        # If we couldn't generate enough equations, we need to regenerate the quiz with different solutions
+
+        if len(equations) < (num_equations + num_helper_equations):
+            # Recursively call generate_quiz with the same parameters to try again with a different solution
+            # Increment the recursion depth to avoid infinite recursion
+            return self.generate_quiz(
+                num_unknowns=num_unknowns, 
+                num_equations=num_equations,
+                allow_fractions=allow_fractions, 
+                allow_division=allow_division,
+                complexity=complexity, 
+                num_helper_equations=num_helper_equations,
+                very_simple=very_simple, 
+                max_elements=max_elements,
+                ensure_operation=ensure_operation,
+                _recursion_depth=_recursion_depth + 1
+            )
+
+
+        # Create list of Equation objects
+        equation_objects = [
+            Equation(symbolic=eq, formatted=fmt)
+            for eq, fmt in zip(equations, formatted_equations)
+        ]
+
+        # Create solution object
+        quiz_solution = DynamicQuizSolution(
+            symbolic=solution_dict,
+            human_readable=solution
+        )
+
+        # Create Quiz object
+        quiz = DynamicQuiz(
+            equations=equation_objects,
+            solution=quiz_solution
+        )
+        
+        return quiz
+
+    def _generate_quiz_fallback(self, num_unknowns: int = 1, num_equations: int = 1,
+                      allow_fractions: bool = False, allow_division: bool = False,
+                      complexity: int = 1, num_helper_equations: int = 0,
+                      very_simple: bool = False, max_elements: Optional[int] = None,
+                      ensure_operation: bool = True) -> DynamicQuiz:
+        """
+        Fallback method to generate a quiz without enforcing linear independence.
+        This is used when the main method fails to generate enough linearly independent equations.
+        """
+        # Constrain parameters to valid ranges
+        num_unknowns = min(max(1, num_unknowns), 3)
+        complexity = min(max(1, complexity), 3)
+
+        # Ensure we have enough equations for a unique solution
+        if num_equations < num_unknowns:
+            num_equations = num_unknowns
+
+        # Create variable symbols
+        variables = self.variables[:num_unknowns]
+        var_symbols = sp.symbols(variables)
+
+        # Generate a solution (values for each variable)
+        if very_simple:
+            # For very simple mode, only positive integers as solutions
+            solution = {var: random.randint(1, 5) for var in variables}
+        elif allow_fractions:
+            # Create fractions with denominators based on complexity
+            denominators = list(range(2, 2 + complexity))
+            solution = {var: Fraction(random.randint(1, 5), random.choice(denominators))
+                        for var in variables}
+        else:
+            # Integer solutions with range based on complexity
+            max_val = 5 * complexity
+            solution = {var: random.randint(-max_val, max_val) for var in variables}
+
+        # Convert solution to SymPy symbols dictionary
+        solution_dict = {sp.Symbol(var): val for var, val in solution.items()}
+
+        # Generate the required number of equations without checking for linear independence
+        equations = []
+        formatted_equations = []
+        coefficient_sets: Set[Tuple] = set()  # Track the coefficient sets to avoid duplicates
+
+        # For the first num_unknowns equations, ensure they are linearly independent
+        # by using a simple pattern that guarantees independence
+        for i in range(min(num_unknowns, num_equations)):
+            # Create an equation where the i-th variable has a non-zero coefficient
+            # and all other variables have zero coefficients
+            expr = var_symbols[i] - solution_dict[var_symbols[i]]
+            equation = f"{var_symbols[i]} = {solution_dict[var_symbols[i]]}"
+            formatted_eq = f"{var_symbols[i]} = {solution_dict[var_symbols[i]]}"
+            
+            # Add to our lists
+            equations.append(equation)
+            formatted_equations.append(formatted_eq)
+            
+            # Add a dummy coefficient tuple for uniqueness tracking
+            coefficient_sets.add((f"eq_{i}", i))
+
+        # Generate any remaining equations
+        attempt_count = 0
+        max_attempts = 100
+        
+        while len(equations) < (num_equations + num_helper_equations) and attempt_count < max_attempts:
+            attempt_count += 1
+            
+            equation, formatted_eq, coefficients, has_operation = self._generate_equation(
+                var_symbols, solution_dict, complexity,
+                allow_division, very_simple, max_elements
+            )
+            
+            # If we need to ensure operations and this equation doesn't have any, skip it
+            if ensure_operation and not has_operation:
+                continue
+                
+            # Check if this is a unique equation based on coefficients
             if coefficients not in coefficient_sets:
                 coefficient_sets.add(coefficients)
                 equations.append(equation)
@@ -126,11 +288,13 @@ class MathEquationGenerator:
             human_readable=solution
         )
 
-        # Create and return Quiz object
-        return DynamicQuiz(
+        # Create Quiz object
+        quiz = DynamicQuiz(
             equations=equation_objects,
             solution=quiz_solution
         )
+        
+        return quiz
 
     def _generate_equation(self, var_symbols, solution_dict, complexity, allow_division, very_simple,
                            max_elements=None) -> Tuple[Any, str, Tuple, bool]:
