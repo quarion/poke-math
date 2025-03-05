@@ -38,11 +38,17 @@ class MathEquationGenerator:
 
         Parameters:
         - num_unknowns: Number of variables (1-3)
-        - num_equations: Number of primary equations
+        - num_equations: Number of primary equations needed to solve the system
         - allow_fractions: Whether to include fractional coefficients
         - allow_division: Whether to include division operations
-        - complexity: Level of complexity (1-3)
-        - num_helper_equations: Number of redundant helper equations
+        - complexity: Level of complexity (1-3):
+            1: Uses smaller coefficients (-2 to 2), simpler expressions
+            2: Uses medium-range coefficients (-5 to 5), may include term movement
+            3: Uses larger coefficients (-10 to 10), includes more complex expressions
+        - num_helper_equations: Number of redundant equations to add to the system.
+                               These are linearly independent but provide additional
+                               practice without changing the solution. The total number
+                               of equations will be num_equations + num_helper_equations.
         - very_simple: If True, uses repeated addition instead of multiplication
                       and avoids negative numbers and negative variable terms
         - max_elements: Maximum number of total elements (terms) in an equation.
@@ -390,9 +396,7 @@ class MathEquationGenerator:
 if __name__ == "__main__":
     generator = MathEquationGenerator()
 
-    # TODO: review the num_helper_equations parameter - how it affects the generation and do we need it
-    # TODO: review the "complexity" parameter as above
-
+    # Configuration examples for different difficulty levels
     configurations_simple = [
         {
             "name": "Very Simple (Grade 1-2)",
