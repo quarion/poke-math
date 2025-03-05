@@ -6,14 +6,7 @@ def create_session_manager(use_firestore: bool = True) -> SessionManager:
     """
     Factory function to create a SessionManager with the appropriate storage.
     
-    Args:
-        use_firestore: Whether to use Firestore storage (True) or Flask session storage (False)
-        
-    Returns:
-        SessionManager instance with the specified storage
-        
-    Raises:
-        Exception: If use_firestore is True and Firestore initialization fails
+    Handles creation of either Firestore or Flask session storage based on the parameter.
     """
     if use_firestore:
         # Create Firestore storage - will raise an exception if it fails

@@ -4,7 +4,7 @@ globs:
 alwaysApply: true
 ---
 # Reference architecture
-1. Check [architecture.md](mdc:docs/architecture.md) for reference to make sure you are making changes in the right places.
+1. Check [architecture.md](mdc:docs/architecture.md) for reference about project structure, standards and used technologies.
 
 # CLI
 1. We are on Windows so use powershell commands.

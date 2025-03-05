@@ -6,19 +6,19 @@ import sympy as sp
 
 
 class Equation(NamedTuple):
-    """Strongly typed representation of a generated equation."""
+    """Representation of a generated equation."""
     symbolic: Any  # SymPy equation
     formatted: str  # Human-readable format
 
 
 class DynamicQuizSolution(NamedTuple):
-    """Strongly typed representation of variable solutions."""
+    """Representation of variable solutions."""
     symbolic: Dict[Any, Union[int, Fraction]]  # SymPy symbols to values
     human_readable: Dict[str, Union[int, Fraction]]  # Variable names to values
 
 
 class DynamicQuiz(NamedTuple):
-    """Strongly typed representation of a complete quiz with equations and solutions."""
+    """Complete quiz with equations and solutions."""
     equations: List[Equation]
     solution: DynamicQuizSolution
 

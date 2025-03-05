@@ -155,7 +155,7 @@ POKEMON_IMAGES = [pokemon.image_path for pokemon in GAME_CONFIG.pokemons.values(
 
 @dataclass
 class QuizViewModel:
-    """Strongly typed view model for quiz templates."""
+    """View model for quiz templates."""
     # Basic quiz information
     id: str
     title: str
@@ -171,15 +171,12 @@ class QuizViewModel:
     has_next: bool = False
 
     def get_pokemon_image(self, variable: str) -> str:
-        """Get the Pokemon image filename for a variable."""
         return self.image_mapping.get(variable, "default.png")
 
     def has_difficulty(self) -> bool:
-        """Check if this quiz has difficulty information."""
         return self.difficulty is not None
 
     def replace_variables_with_images(self, equation: str) -> str:
-        """Replace variable placeholders with Pokemon images in an equation."""
         result = equation
         for var, img_path in self.image_mapping.items():
             img_tag = f'<img src="/static/images/{img_path}" class="pokemon-var" alt="{var}">'
@@ -215,7 +212,7 @@ class QuizViewModel:
 
 @dataclass
 class QuizResultViewModel:
-    """Strongly typed view model for quiz results."""
+    """View model for quiz results."""
     correct: bool
     correct_answers: Dict[str, bool]  # Variable name -> bool indicating if correct
     all_answered: bool
@@ -223,7 +220,6 @@ class QuizResultViewModel:
     total_count: int
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert the view model to a dictionary for debugging and API responses."""
         return {
             'correct': self.correct,
             'correct_answers': self.correct_answers,
@@ -233,7 +229,6 @@ class QuizResultViewModel:
         }
 
     def __str__(self) -> str:
-        """String representation for debugging."""
         return f"QuizResultViewModel(correct={self.correct}, score={self.correct_count}/{self.total_count})"
 
 
