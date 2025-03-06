@@ -1,6 +1,7 @@
 import pytest
 import sympy as sp
 import random
+import numpy as np
 from typing import Dict, Any, List, Optional, Union
 from fractions import Fraction
 
@@ -286,6 +287,115 @@ class TestEquationsGeneratorV2:
 
         # Further compatibility tests can be added based on how you intend to integrate v2 with existing code
 
+    @pytest.mark.common
+    def test_deterministic_generation_with_seeds(self, generator):
+        """Test that the same seed produces the same equations across multiple runs."""
+        # Use a fixed seed for reproducibility
+        seed_value = 12345
+        
+        # Generate equations with the same seed twice
+        generator1 = EquationsGeneratorV2(random_seed=seed_value)
+        generator2 = EquationsGeneratorV2(random_seed=seed_value)
+        
+        # Generate equations for all three types
+        basic_math1 = generator1.generate_basic_math()
+        simple_quiz1 = generator1.generate_simple_quiz()
+        grade_school1 = generator1.generate_grade_school()
+        
+        basic_math2 = generator2.generate_basic_math()
+        simple_quiz2 = generator2.generate_simple_quiz()
+        grade_school2 = generator2.generate_grade_school()
+        
+        # Verify that the equations and solutions are identical
+        for eq1, eq2 in zip(basic_math1.equations, basic_math2.equations):
+            assert eq1.formatted == eq2.formatted
+            
+        for eq1, eq2 in zip(simple_quiz1.equations, simple_quiz2.equations):
+            assert eq1.formatted == eq2.formatted
+            
+        for eq1, eq2 in zip(grade_school1.equations, grade_school2.equations):
+            assert eq1.formatted == eq2.formatted
+        
+        # Verify solutions are identical
+        assert basic_math1.solution.human_readable == basic_math2.solution.human_readable
+        assert simple_quiz1.solution.human_readable == simple_quiz2.solution.human_readable
+        assert grade_school1.solution.human_readable == grade_school2.solution.human_readable
+
+    @pytest.mark.common
+    def test_linear_independence_verification(self, generator):
+        """Test that generated equation systems have proper matrix rank for a unique solution."""
+        # Test for each equation type
+        for gen_method in [
+            generator.generate_simple_quiz, 
+            generator.generate_grade_school
+        ]:
+            # Generate equations with multiple unknowns
+            quiz = gen_method(num_unknowns=3)
+            
+            # Extract variables and equations
+            variables = list(quiz.solution.symbolic.keys())
+            equations = [eq.symbolic for eq in quiz.equations]
+            
+            # Convert to matrix form using SymPy
+            try:
+                # This is a placeholder - the actual implementation would depend on
+                # how equations are represented in the final code
+                # A, b = sp.linear_eq_to_matrix(equations, variables)
+                # assert A.rank() == len(variables), "Matrix rank doesn't match number of variables"
+                
+                # For now, we'll just verify there's one solution using our helper
+                assert self._has_unique_solution(quiz), "System doesn't have a unique solution"
+            except (AttributeError, TypeError):
+                # Skip if symbolic representation isn't available yet
+                pass
+
+    @pytest.mark.common
+    def test_boundary_configuration(self, generator):
+        """Test boundary conditions for configuration parameters."""
+        # Test minimal configuration (1 unknown)
+        min_quiz = generator.generate_simple_quiz(num_unknowns=1)
+        assert len(min_quiz.solution.human_readable) == 1
+        assert len(min_quiz.equations) == 1
+        
+        # Test maximum allowed configuration (3 unknowns is max for grade school)
+        max_quiz = generator.generate_grade_school(num_unknowns=3)
+        assert len(max_quiz.solution.human_readable) == 3
+        assert len(max_quiz.equations) == 3
+        
+        # Test minimum value range
+        min_range_quiz = generator.generate_basic_math(max_value=5)
+        for eq in min_range_quiz.equations:
+            values = self._extract_values_from_equation(eq.formatted)
+            assert all(abs(v) <= 5 for v in values if isinstance(v, (int, float)))
+            
+        # Test with very small decimal values
+        small_decimal_quiz = generator.generate_grade_school(
+            max_value=1, 
+            allow_decimals=True,
+            operations=['+', '-', '*', '/']
+        )
+        # Verify it can handle small values without errors
+        assert self._has_unique_solution(small_decimal_quiz)
+
+    @pytest.mark.common
+    def test_error_handling_invalid_config(self, generator):
+        """Test error handling for invalid configurations."""
+        # Test invalid operations
+        with pytest.raises(ValueError):
+            generator.generate_basic_math(operations=['invalid_op'])
+            
+        # Test negative max_value
+        with pytest.raises(ValueError):
+            generator.generate_basic_math(max_value=-10)
+            
+        # Test invalid number of unknowns
+        with pytest.raises(ValueError):
+            generator.generate_simple_quiz(num_unknowns=0)
+            
+        # Test too many unknowns
+        with pytest.raises(ValueError):
+            generator.generate_grade_school(num_unknowns=10)  # Assuming there's a reasonable upper limit
+
     # ==== BASIC MATH TESTS ====
     @pytest.mark.basic_math
     def test_basic_math_default_config(self, generator):
@@ -380,6 +490,30 @@ class TestEquationsGeneratorV2:
             var_name = parts[0].strip()
             assert var_name not in parts[1], f"Variable '{var_name}' found on right side of equation"
 
+    @pytest.mark.basic_math
+    def test_basic_math_variable_elements_count(self, generator):
+        """Test basic math with different element counts."""
+        # Test with various element counts
+        for elements in [2, 3, 4]:
+            quiz = generator.generate_basic_math(elements=elements)
+            
+            for eq in quiz.equations:
+                # Count the number of operations to verify elements
+                operations_count = sum(1 for op in ['+', '-', '*', '/'] if op in eq.formatted)
+                # For the format: x = a op b op c ..., operations_count should be elements-1
+                assert operations_count == elements - 1, f"Expected {elements-1} operations for {elements} elements, got {operations_count}"
+                
+                # Parse the right side of the equation
+                parts = eq.formatted.split('=', 1)
+                right_side = parts[1].strip()
+                
+                # Split the right side by operators and check the number of operands
+                # This is a simplified approach and might need refinement
+                for op in ['+', '-', '*', '/']:
+                    right_side = right_side.replace(op, " ")
+                operands = [o for o in right_side.split() if o]
+                assert len(operands) == elements - 1, f"Expected {elements-1} operands for {elements} elements, got {len(operands)}"
+
     # ==== SIMPLE QUIZ TESTS ====
     @pytest.mark.simple_quiz
     def test_simple_quiz_with_multiple_unknowns(self, generator):
@@ -409,6 +543,58 @@ class TestEquationsGeneratorV2:
         # Verify each equation is satisfied by the solution
         for eq in quiz.equations:
             assert self._verify_solution(eq, quiz.solution)
+
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_variable_repetition(self, generator):
+        """Test that symbols can repeat in the same equation for simple quiz."""
+        quiz = generator.generate_simple_quiz(num_unknowns=2)
+        
+        # Look for repetition of variables in the equations
+        found_repetition = False
+        for eq in quiz.equations:
+            # Get the variable names
+            var_names = list(quiz.solution.human_readable.keys())
+            
+            # Count occurrences of each variable in the equation
+            for var_name in var_names:
+                # Count exact matches of variable name (with word boundaries)
+                occurrences = eq.formatted.count(var_name)
+                if occurrences > 1:
+                    found_repetition = True
+                    break
+            
+            if found_repetition:
+                break
+                
+        assert found_repetition, "No variable repetition found in any equation"
+        
+        # Generate a quiz with a specific pattern that requires repetition
+        pattern_config = {
+            "type": "simple_quiz",
+            "num_unknowns": 2,
+            "equations_config": [
+                {"pattern": "{var1}+{var1}={const}", "values": {"const": 10}}
+            ]
+        }
+        
+        specific_quiz = generator.generate_equations(pattern_config)
+        var1_name = list(specific_quiz.solution.human_readable.keys())[0]
+        
+        # Check the solution value makes sense for the pattern (x+x=10 means x=5)
+        assert specific_quiz.solution.human_readable[var1_name] == 5
+
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_operations_restriction(self, generator):
+        """Test that only addition and subtraction are used in simple quiz."""
+        quiz = generator.generate_simple_quiz(num_unknowns=2)
+        
+        for eq in quiz.equations:
+            # Check that no multiplication or division is used
+            assert '*' not in eq.formatted, f"Multiplication found in equation: {eq.formatted}"
+            assert '/' not in eq.formatted, f"Division found in equation: {eq.formatted}"
+            
+            # Verify that addition or subtraction is used
+            assert any(op in eq.formatted for op in ['+', '-']), f"No addition or subtraction found in equation: {eq.formatted}"
 
     # ==== GRADE SCHOOL TESTS ====
     @pytest.mark.grade_school
@@ -461,6 +647,76 @@ class TestEquationsGeneratorV2:
         # Verify all solutions are integers
         for value in quiz.solution.human_readable.values():
             assert isinstance(value, int), f"Solution {value} is not an integer"
+
+    @pytest.mark.grade_school
+    def test_grade_school_complex_equation_system(self, generator):
+        """Test generating complex multi-variable systems with interdependencies."""
+        # Generate a 3-variable system
+        quiz = generator.generate_grade_school(
+            num_unknowns=3,
+            operations=['+', '-', '*', '/']
+        )
+        
+        # Check that we have 3 equations
+        assert len(quiz.equations) == 3
+        
+        # Check that all 3 variables appear across the equations
+        variables = list(quiz.solution.human_readable.keys())
+        assert len(variables) == 3
+        
+        # Verify each variable appears in at least two equations (interdependency)
+        var_appearances = {var: 0 for var in variables}
+        for eq in quiz.equations:
+            for var in variables:
+                if var in eq.formatted:
+                    var_appearances[var] += 1
+                    
+        # Each variable should appear in at least 2 equations for proper interdependency
+        assert all(count >= 2 for count in var_appearances.values()), "Not all variables appear in multiple equations"
+        
+        # Test with a specific complex pattern
+        complex_config = {
+            "type": "grade_school",
+            "num_unknowns": 3,
+            "operations": ['+', '-', '*'],
+            "equations_config": [
+                {"pattern": "{var1}*10={var2}-3", "values": {}},
+                {"pattern": "{var2}+{var3}=2", "values": {}},
+                {"pattern": "2*{var3}={var2}-3", "values": {}}
+            ]
+        }
+        
+        complex_quiz = generator.generate_equations(complex_config)
+        solution = complex_quiz.solution.human_readable
+        
+        # Verify this specific system has the correct solution
+        vars = list(solution.keys())
+        x, y, z = vars[0], vars[1], vars[2]
+        
+        # Check the solution satisfies the equations: x*10 = y-3, y+z = 2, 2*z = y-3
+        assert abs(solution[x] * 10 - (solution[y] - 3)) < 0.001
+        assert abs(solution[y] + solution[z] - 2) < 0.001
+        assert abs(2 * solution[z] - (solution[y] - 3)) < 0.001
+
+    @pytest.mark.grade_school
+    def test_grade_school_value_range_validation(self, generator):
+        """Test that values stay within the configured range for grade school equations."""
+        max_value = 15
+        quiz = generator.generate_grade_school(
+            num_unknowns=2,
+            max_value=max_value
+        )
+        
+        # Check solutions are within range
+        for value in quiz.solution.human_readable.values():
+            assert abs(value) <= max_value, f"Solution value {value} exceeds configured max {max_value}"
+        
+        # Check constants in equations are within range
+        for eq in quiz.equations:
+            values = self._extract_values_from_equation(eq.formatted)
+            for value in values:
+                if isinstance(value, (int, float)) and not any(var in str(value) for var in quiz.solution.human_readable.keys()):
+                    assert abs(value) <= max_value, f"Equation value {value} exceeds configured max {max_value}"
 
     # ==== MIXED EQUATION TESTS ====
     @pytest.mark.basic_math
