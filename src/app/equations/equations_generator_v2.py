@@ -311,7 +311,8 @@ class EquationsGeneratorV2:
                              num_unknowns: int = 2, 
                              operations: Optional[List[str]] = None, 
                              max_value: int = 30, 
-                             allow_decimals: bool = False) -> DynamicQuizV2:
+                             allow_decimals: bool = False,
+                             random_seed: Optional[int] = None) -> DynamicQuizV2:
         """
         Generate grade school equations with multiple unknowns.
         
@@ -323,20 +324,254 @@ class EquationsGeneratorV2:
             operations: List of allowed operations, defaults to ['+', '-']
             max_value: Maximum value for constants, defaults to 30
             allow_decimals: Whether to allow decimal values, defaults to False
+            random_seed: Optional random seed for reproducibility
             
         Returns:
             DynamicQuizV2: The generated quiz with equations and solution
         """
-        # Placeholder for actual implementation
-        # This will be replaced with the real implementation later
+        # Set default operations if not provided
+        if operations is None:
+            operations = ['+', '-']
+        
+        # Set random seed if provided
+        if random_seed is not None:
+            random.seed(random_seed)
+        
+        # Create the variable symbols
+        var_symbols = [sp.Symbol(var) for var in self.variables[:num_unknowns]]
+        
+        # Generate random solutions for each variable
+        solution_values = {}
+        for i, var in enumerate(var_symbols):
+            if allow_decimals:
+                # Generate a decimal value with one decimal place
+                solution_values[var] = round(random.uniform(1, max_value // 3), 1)
+            else:
+                # Generate an integer value
+                solution_values[var] = random.randint(1, max_value // 3)
+        
+        # Create human-readable solution dictionary
+        human_readable_solution = {str(var): value for var, value in solution_values.items()}
+        
+        # Generate equations
+        equations = []
+        formatted_equations = []
+        
+        # Maximum number of attempts to generate linearly independent equations
+        max_attempts = 10
+        attempts = 0
+        
+        while attempts < max_attempts:
+            equations = []
+            formatted_equations = []
+            
+            for i in range(num_unknowns):
+                # Decide which variables to include in this equation
+                # Always include at least one variable
+                num_vars_to_use = random.randint(1, min(num_unknowns, 3))
+                vars_to_use = random.sample(var_symbols, num_vars_to_use)
+                
+                # Build the left side of the equation
+                left_side = 0
+                formatted_left = ""
+                
+                # Add terms with variables
+                for j, var in enumerate(vars_to_use):
+                    # Decide on a coefficient (1-3)
+                    coef = random.randint(1, min(3, max_value // 3))
+                    
+                    # For the first term, just add it
+                    if j == 0:
+                        if coef == 1:
+                            left_side += var
+                            formatted_left += str(var)
+                        else:
+                            left_side += coef * var
+                            # Format based on allowed operations
+                            if '*' in operations:
+                                formatted_left += f"{coef}*{var}"
+                            else:
+                                # If multiplication is not allowed, use addition instead
+                                formatted_left += f"{var}"
+                                for _ in range(coef - 1):
+                                    formatted_left += f" + {var}"
+                    else:
+                        # For subsequent terms, choose an operation
+                        operation = random.choice(operations)
+                        
+                        if operation == '+':
+                            if coef == 1:
+                                left_side += var
+                                formatted_left += f" + {var}"
+                            else:
+                                left_side += coef * var
+                                # Format based on allowed operations
+                                if '*' in operations:
+                                    formatted_left += f" + {coef}*{var}"
+                                else:
+                                    # If multiplication is not allowed, use addition instead
+                                    for _ in range(coef):
+                                        formatted_left += f" + {var}"
+                        elif operation == '-':
+                            if coef == 1:
+                                left_side -= var
+                                formatted_left += f" - {var}"
+                            else:
+                                left_side -= coef * var
+                                # Format based on allowed operations
+                                if '*' in operations:
+                                    formatted_left += f" - {coef}*{var}"
+                                else:
+                                    # If multiplication is not allowed, use subtraction instead
+                                    for _ in range(coef):
+                                        formatted_left += f" - {var}"
+                        elif operation == '*' and '*' in operations:
+                            # Multiplication is only applied to the previous term
+                            # This is a simplification to avoid complex expressions
+                            if j > 0:
+                                left_side *= coef
+                                formatted_left = f"({formatted_left}) * {coef}"
+                        elif operation == '/' and '/' in operations:
+                            # Division is only applied to the previous term
+                            # This is a simplification to avoid complex expressions
+                            if j > 0 and coef != 0:
+                                left_side /= coef
+                                formatted_left = f"({formatted_left}) / {coef}"
+                
+                # Sometimes add a constant term
+                if random.random() > 0.5:
+                    const = random.randint(1, max_value // 3)
+                    operation = random.choice(['+', '-'])
+                    
+                    if operation == '+':
+                        left_side += const
+                        formatted_left += f" + {const}"
+                    else:
+                        left_side -= const
+                        formatted_left += f" - {const}"
+                
+                # Calculate the right side value based on the solution
+                right_side_value = left_side.subs(solution_values)
+                
+                # Ensure the right side value is within max_value if it's a constant
+                if isinstance(right_side_value, (int, float)) and abs(right_side_value) > max_value:
+                    # Create a new equation with a smaller right side
+                    if right_side_value > 0:
+                        new_right_side = random.randint(1, max_value)
+                        # Calculate how much we need to subtract from the left side
+                        adjustment = right_side_value - new_right_side
+                        left_side -= adjustment
+                        formatted_left += f" - {adjustment}"
+                        right_side_value = new_right_side
+                    else:
+                        # Create a new equation with a smaller right side
+                        new_right_side = -random.randint(1, max_value)
+                        # Calculate how much we need to add to the left side
+                        adjustment = abs(right_side_value) - abs(new_right_side)
+                        left_side += adjustment
+                        formatted_left += f" + {adjustment}"
+                        right_side_value = new_right_side
+                
+                # Create the equation
+                equation = sp.Eq(left_side, right_side_value)
+                equations.append(equation)
+                
+                # Format the equation for human readability
+                formatted_equation = f"{formatted_left} = {right_side_value}"
+                formatted_equations.append(formatted_equation)
+            
+            # Verify that the system has exactly one solution
+            if num_unknowns > 1:
+                # Convert equations to a matrix form to check linear independence
+                A, b = sp.linear_eq_to_matrix(equations, var_symbols)
+                
+                # Check if the matrix has full rank (linearly independent equations)
+                if A.rank() == len(var_symbols):
+                    # Double-check by solving the system
+                    solutions = sp.solve(equations, var_symbols, dict=True)
+                    if len(solutions) == 1:
+                        # We have a valid system with exactly one solution
+                        break
+            else:
+                # For a single unknown, we just need to check that the equation is solvable
+                solutions = sp.solve(equations, var_symbols, dict=True)
+                if len(solutions) == 1:
+                    break
+            
+            attempts += 1
+        
+        # If we couldn't generate a valid system after max attempts, use a simpler approach
+        if attempts == max_attempts:
+            # Create simple equations that are guaranteed to be linearly independent
+            equations = []
+            formatted_equations = []
+            
+            for i, var in enumerate(var_symbols):
+                # Create a simple equation like x + 5 = 10 or 2*y - 3 = 7
+                coef = random.randint(1, min(3, max_value // 3))
+                const = random.randint(1, max_value // 3)
+                
+                left_side = coef * var
+                
+                # Format based on allowed operations
+                if '*' in operations:
+                    if coef == 1:
+                        formatted_left = f"{var}"
+                    else:
+                        formatted_left = f"{coef}*{var}"
+                else:
+                    # If multiplication is not allowed, use addition instead
+                    if coef == 1:
+                        formatted_left = f"{var}"
+                    else:
+                        formatted_left = f"{var}"
+                        for _ in range(coef - 1):
+                            formatted_left += f" + {var}"
+                
+                if random.random() > 0.5:
+                    left_side += const
+                    formatted_left += f" + {const}"
+                else:
+                    left_side -= const
+                    formatted_left += f" - {const}"
+                
+                # Calculate the right side value based on the solution
+                right_side_value = left_side.subs(solution_values)
+                
+                # Ensure the right side value is within max_value
+                if isinstance(right_side_value, (int, float)) and abs(right_side_value) > max_value:
+                    # Create a new equation with a smaller right side
+                    if right_side_value > 0:
+                        new_right_side = random.randint(1, max_value)
+                        # Calculate how much we need to subtract from the left side
+                        adjustment = right_side_value - new_right_side
+                        left_side -= adjustment
+                        formatted_left += f" - {adjustment}"
+                        right_side_value = new_right_side
+                    else:
+                        # Create a new equation with a smaller right side
+                        new_right_side = -random.randint(1, max_value)
+                        # Calculate how much we need to add to the left side
+                        adjustment = abs(right_side_value) - abs(new_right_side)
+                        left_side += adjustment
+                        formatted_left += f" + {adjustment}"
+                        right_side_value = new_right_side
+                
+                equation = sp.Eq(left_side, right_side_value)
+                equations.append(equation)
+                
+                formatted_equation = f"{formatted_left} = {right_side_value}"
+                formatted_equations.append(formatted_equation)
+        
+        # Create equation objects
+        equation_objects = [EquationV2(eq, fmt) for eq, fmt in zip(equations, formatted_equations)]
+        
+        # Create the quiz
         return DynamicQuizV2(
-            equations=[
-                EquationV2(None, "2*x = y + 3"),
-                EquationV2(None, "y - x = 5"),
-            ],
+            equations=equation_objects,
             solution=DynamicQuizSolutionV2(
-                symbolic={},
-                human_readable={"x": 2, "y": 7}
+                symbolic=solution_values,
+                human_readable=human_readable_solution
             )
         )
     
@@ -414,7 +649,8 @@ class EquationsGeneratorV2:
                 num_unknowns=config.get("num_unknowns", 2),
                 operations=config.get("operations", ["+", "-"]),
                 max_value=config.get("max_value", 30),
-                allow_decimals=config.get("allow_decimals", False)
+                allow_decimals=config.get("allow_decimals", False),
+                random_seed=random_seed
             )
         else:
             raise ValueError(f"Unknown equation type: {equation_type}") 
