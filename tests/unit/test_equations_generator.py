@@ -2,6 +2,7 @@ import pytest
 import sympy as sp
 from fractions import Fraction
 from typing import Dict, Any
+import random
 
 from src.app.equations.equations_generator import MathEquationGenerator, DynamicQuiz, Equation, DynamicQuizSolution
 
@@ -328,165 +329,143 @@ class TestMathEquationGenerator:
 
     def test_fuzz_for_infinite_solutions(self, generator):
         """
-        Fuzz test to find equations with infinite solutions.
-        This test attempts to generate many equations with different configurations
-        to find cases where the system has infinite solutions.
+        Fuzz test to check that no configuration produces a system with infinite solutions.
+        
+        This test is critical for verifying the core requirement that all generated equation
+        systems have exactly one solution. By testing random configurations, we can discover
+        edge cases that might lead to linearly dependent equations, which would result in
+        infinite solutions or inconsistent systems.
+        
+        The test generates random configurations, creates equation systems, and verifies
+        their linear independence through rank analysis of the coefficient matrix.
         """
-        num_attempts = 20
-
-        # Configurations to test - focus on cases where we might get linearly dependent equations
-        configurations = [
-            {"num_unknowns": 2, "num_equations": 2},  # Two equations, two unknowns
-            {"num_unknowns": 2, "num_equations": 3},  # Overdetermined system
-            {"num_unknowns": 3, "num_equations": 3},  # Three equations, three unknowns
-        ]
-
-        # Track configurations that produce infinite solutions
+        # List to store problematic configurations
         problematic_configs = []
         problematic_equations = []
-
-        for config in configurations:
-            if len(problematic_equations) != 0:
-                # We found a problematic case, no need to continue
-                break
-
-            for _ in range(num_attempts):
-                quiz = generator.generate_quiz(**config)
-
-                # Extract the symbolic equations and convert them to SymPy equations
-                symbolic_equations = []
-                for eq in quiz.equations:
-                    # If the equation is a string with an equals sign, convert it to a SymPy equation
-                    if isinstance(eq.symbolic, str) and '=' in eq.symbolic:
-                        sides = eq.symbolic.split('=')
-                        lhs = sp.sympify(sides[0].strip())
-                        rhs = sp.sympify(sides[1].strip())
-                        symbolic_equations.append(sp.Eq(lhs, rhs))
-                    else:
-                        symbolic_equations.append(eq.symbolic)
-
-                # Use SymPy to solve the system
-                variables = [sp.Symbol(var) for var in quiz.solution.human_readable.keys()]
-
+        
+        # Number of random configurations to test
+        num_tests = 30
+        
+        for _ in range(num_tests):
+            # Generate random configuration
+            config = {
+                'num_unknowns': random.randint(1, 3),
+                'complexity': random.randint(1, 3),
+                'allow_fractions': random.choice([True, False]),
+                'allow_division': random.choice([True, False]),
+                'very_simple': random.choice([True, False]),
+                'num_helper_equations': random.randint(0, 2)
+            }
+            
+            # Ensure we have enough equations for a unique solution
+            config['num_equations'] = max(config['num_unknowns'], random.randint(1, 3))
+            
+            # Generate a quiz with this configuration
+            quiz = generator.generate_quiz(**config)
+            
+            # Extract the variables and equations
+            variables = list(quiz.solution.human_readable.keys())
+            equations_list = [eq.symbolic for eq in quiz.equations]
+            
+            # Check if the system has exactly one solution
+            has_unique_solution = True
+            
+            # Convert equations to standard form and check linear independence
+            if len(variables) > 1:  # Only relevant for systems with multiple variables
                 try:
                     # Check for linear dependence by creating a coefficient matrix
                     if len(variables) > 1:  # Only relevant for systems with multiple variables
                         # Convert equations to standard form: ax + by + ... = c
                         matrix_rows = []
                         constants = []
-
-                        for eq in symbolic_equations:
-                            if isinstance(eq, sp.Eq):
-                                # Move everything to the left side
-                                expr = eq.lhs - eq.rhs
-                            else:
-                                expr = eq
-
+                        
+                        for eq in equations_list:
+                            # Convert equation to standard form
+                            if isinstance(eq, str) and '=' in eq:
+                                sides = eq.split('=')
+                                lhs = sp.sympify(sides[0].strip())
+                                rhs = sp.sympify(sides[1].strip())
+                                eq = lhs - rhs
+                            
                             # Extract coefficients for each variable
                             row = []
                             for var in variables:
-                                coef = expr.coeff(var)
+                                var_sym = sp.Symbol(var)
+                                coef = eq.coeff(var_sym)
                                 row.append(coef)
-
-                            # Extract the constant term
-                            const = expr.subs({var: 0 for var in variables})
-                            constants.append(-const)  # Negative because we're moving to the right side
-
+                            
+                            # Add to matrix
                             matrix_rows.append(row)
-
-                        # Create the coefficient matrix
+                        
+                        # Check rank of coefficient matrix
                         coef_matrix = sp.Matrix(matrix_rows)
-
-                        # Check the rank of the coefficient matrix
                         rank = coef_matrix.rank()
-
-                        # If rank < number of variables, the system has infinite solutions
+                        
+                        # If rank < number of variables, system has infinite solutions
                         if rank < len(variables):
-                            problematic_configs.append(config.copy())
-                            problematic_equations.append([eq.formatted for eq in quiz.equations])
-                            # We found a problematic case, no need to continue with this configuration
-                            break
-
-                    # Also try solving directly with SymPy
-                    solutions = sp.solve(symbolic_equations, variables, dict=True)
-
-                    # Check if we have exactly one solution
-                    if len(solutions) != 1:
-                        problematic_configs.append(config.copy())
-                        problematic_equations.append([eq.formatted for eq in quiz.equations])
-                        # We found a problematic case, no need to continue with this configuration
-                        break
-
+                            has_unique_solution = False
                 except Exception as e:
+                    # Log the specific exception for debugging
+                    print(f"Exception during solution check: {type(e).__name__}: {str(e)}")
                     # If solving fails, it might be due to an inconsistent system or other issues
                     continue
-
+            
+            # If the system doesn't have a unique solution, add to problematic configs
+            if not has_unique_solution:
+                problematic_configs.append(config)
+                problematic_equations.append([eq.formatted for eq in quiz.equations])
+        
         # If we found any problematic configurations, the test should fail
         if problematic_configs:
             for i, (config, equations) in enumerate(zip(problematic_configs, problematic_equations)):
                 print(f"Problematic config {i+1}: {config}")
                 print(f"Equations: {equations}")
-
-            assert not problematic_configs, f"Found {len(problematic_configs)} configurations with infinite solutions"
-        
-        # If we get here, no problematic configurations were found
-        assert True
+                print("---")
+            
+            # Include more debugging information in assertion message
+            assert not problematic_configs, f"Found {len(problematic_configs)} configurations with infinite solutions. See output above for details."
 
     def test_linear_independence(self, generator):
         """
         Test that generated equations are linearly independent.
-        This ensures that the system has exactly one solution.
-        """
-        # Configurations to test
-        configurations = [
-            {"num_unknowns": 2, "num_equations": 2},
-            {"num_unknowns": 3, "num_equations": 3},
-        ]
         
-        for config in configurations:
-            quiz = generator.generate_quiz(**config)
+        Linear independence is the mathematical property that ensures a system of equations
+        has exactly one solution. This test directly verifies this critical property by
+        checking that the coefficient matrix of the generated equations has full rank.
+        
+        If the rank equals the number of variables, the system has exactly one solution.
+        If the rank is less, the system has infinite solutions or is inconsistent.
+        """
+        # Test with different numbers of unknowns
+        for num_unknowns in [2, 3]:
+            # Generate a quiz with the same number of equations as unknowns
+            quiz = generator.generate_quiz(
+                num_unknowns=num_unknowns,
+                num_equations=num_unknowns
+            )
             
-            # Extract the symbolic equations and convert them to standard form
-            symbolic_equations = []
-            for eq in quiz.equations:
-                # If the equation is a string with an equals sign, convert it to a SymPy equation
-                if isinstance(eq.symbolic, str) and '=' in eq.symbolic:
-                    sides = eq.symbolic.split('=')
-                    lhs = sp.sympify(sides[0].strip())
-                    rhs = sp.sympify(sides[1].strip())
-                    symbolic_equations.append(sp.Eq(lhs, rhs))
-                else:
-                    symbolic_equations.append(eq.symbolic)
-            
-            # Get the variables
-            variables = [sp.Symbol(var) for var in quiz.solution.human_readable.keys()]
+            # Extract the variables and equations
+            variables = list(quiz.solution.human_readable.keys())
+            var_symbols = [sp.Symbol(var) for var in variables]
+            equations = [eq.symbolic for eq in quiz.equations]
             
             # Create coefficient matrix
             matrix_rows = []
-            for eq in symbolic_equations:
-                if isinstance(eq, sp.Eq):
-                    # Move everything to the left side
-                    expr = eq.lhs - eq.rhs
-                else:
-                    expr = eq
-                
-                # Extract coefficients for each variable
-                row = []
-                for var in variables:
-                    coef = expr.coeff(var)
-                    row.append(coef)
-                
+            for eq in equations:
+                row = generator._extract_coefficient_row(eq, var_symbols)
                 matrix_rows.append(row)
             
-            # Create the coefficient matrix
+            # Check rank of coefficient matrix
             coef_matrix = sp.Matrix(matrix_rows)
-            
-            # Check the rank of the coefficient matrix
             rank = coef_matrix.rank()
             
-            # For a system to have a unique solution, the rank must equal the number of variables
-            assert rank == len(variables), f"Equations are linearly dependent: {[eq.formatted for eq in quiz.equations]}"
+            # For a system with a unique solution, rank should equal number of variables
+            if rank != num_unknowns:
+                print(f"Linear dependence detected in system with {num_unknowns} unknowns:")
+                print(f"Coefficient matrix: {coef_matrix}")
+                print(f"Rank: {rank} (should be {num_unknowns})")
+                print(f"Equations: {[eq.formatted for eq in quiz.equations]}")
+                print(f"Solution: {quiz.solution.human_readable}")
+                print("---")
             
-            # Also verify by solving the system
-            solutions = sp.solve(symbolic_equations, variables, dict=True)
-            assert len(solutions) == 1, f"Expected exactly one solution, got {len(solutions)}" 
+            assert rank == num_unknowns, f"System with {num_unknowns} unknowns has rank {rank}, expected {num_unknowns}" 

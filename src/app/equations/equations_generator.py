@@ -24,9 +24,76 @@ class DynamicQuiz(NamedTuple):
 
 
 class MathEquationGenerator:
+    MAX_RECURSION_DEPTH = 10  # Maximum recursion depth before falling back to simpler method
+    MAX_GENERATION_ATTEMPTS = 20  # Maximum attempts to generate unique equations
+    
     def __init__(self):
         self.variables = list('xyzwvu')
         self.operations = ['+', '-', '*']
+
+    def _is_linearly_independent(self, matrix_rows, new_row):
+        """
+        Check if adding new_row to matrix_rows maintains linear independence.
+        
+        Linear independence is critical for ensuring the system of equations has
+        exactly one solution. If equations are linearly dependent, the system may
+        have infinite solutions or be inconsistent.
+
+        Args:
+            matrix_rows: List of existing coefficient rows
+            new_row: New coefficient row to check
+
+        Returns:
+            bool: True if adding the row maintains linear independence, False otherwise
+        """
+        if not matrix_rows:
+            # First row is always linearly independent
+            return True
+            
+        # Create a temporary matrix with existing rows and the new row
+        temp_rows = matrix_rows.copy()
+        temp_rows.append(new_row)
+        temp_matrix = sp.Matrix(temp_rows)
+        
+        # Check if the rank increases - this is the mathematical definition of linear independence
+        return temp_matrix.rank() > len(matrix_rows)
+        
+    def _extract_coefficient_row(self, equation, var_symbols):
+        """
+        Extract coefficients for each variable from an equation.
+        
+        This method standardizes equations into a consistent format for linear independence
+        checking, regardless of how the equation was originally represented. Converting to
+        a coefficient row allows us to build the coefficient matrix needed for rank analysis.
+        
+        Args:
+            equation: The equation to extract coefficients from (can be a string, SymPy equation, or expression)
+            var_symbols: The variable symbols to extract coefficients for
+            
+        Returns:
+            list: A list of coefficients for each variable
+        """
+        # Convert the equation to a standard form expression (LHS - RHS = 0)
+        if isinstance(equation, str) and '=' in equation:
+            # Handle string equations like "x + 2y = 3"
+            sides = equation.split('=')
+            lhs = sp.sympify(sides[0].strip())
+            rhs = sp.sympify(sides[1].strip())
+            expr = lhs - rhs
+        elif hasattr(equation, 'lhs') and hasattr(equation, 'rhs'):
+            # Handle SymPy Eq objects
+            expr = equation.lhs - equation.rhs
+        else:
+            # Already an expression or other format
+            expr = equation
+        
+        # Extract coefficients for each variable
+        row = []
+        for var in var_symbols:
+            coef = expr.coeff(var)
+            row.append(coef)
+        
+        return row
 
     def generate_quiz(self, num_unknowns: int = 1, num_equations: int = 1,
                       allow_fractions: bool = False, allow_division: bool = False,
@@ -55,25 +122,29 @@ class MathEquationGenerator:
                        This limits the sum of all variable terms and constants.
         - ensure_operation: If True, ensures each equation has at least one operation
                            (not just "x = 2")
-        - _recursion_depth: Internal parameter to track recursion depth
+        - _recursion_depth: Internal parameter to track recursion depth to prevent
+                           infinite recursion. When depth exceeds MAX_RECURSION_DEPTH,
+                           the method falls back to a simpler approach that guarantees
+                           linear independence without complex checks.
 
         Returns:
         - Quiz object containing equations and solution
         """
         # Limit recursion depth to avoid stack overflow
-        if _recursion_depth > 10:
-            # If we've recursed too many times, fall back to a simpler approach
-            # that doesn't enforce linear independence
+        if _recursion_depth > self.MAX_RECURSION_DEPTH:
+            # Fallback to a simpler approach when we've tried too many times
+            # This prevents infinite recursion while still ensuring a valid quiz
             return self._generate_quiz_fallback(
                 num_unknowns, num_equations, allow_fractions, allow_division,
                 complexity, num_helper_equations, very_simple, max_elements, ensure_operation
             )
 
-        # Constrain parameters to valid ranges
+        # Constrain parameters to valid ranges for safety and predictability
         num_unknowns = min(max(1, num_unknowns), 3)
         complexity = min(max(1, complexity), 3)
 
         # Ensure we have enough equations for a unique solution
+        # A system needs at least as many equations as unknowns to be solvable
         if num_equations < num_unknowns:
             num_equations = num_unknowns
 
@@ -81,7 +152,8 @@ class MathEquationGenerator:
         variables = self.variables[:num_unknowns]
         var_symbols = sp.symbols(variables)
 
-        # Generate a solution (values for each variable)
+        # Generate a solution - we create the solution first, then build equations
+        # that satisfy it to ensure the system is consistent
         if very_simple:
             # For very simple mode, only positive integers as solutions
             solution = {var: random.randint(1, 5) for var in variables}
@@ -95,7 +167,7 @@ class MathEquationGenerator:
             max_val = 5 * complexity
             solution = {var: random.randint(-max_val, max_val) for var in variables}
 
-        # Convert solution to SymPy symbols dictionary
+        # Convert solution to SymPy symbols dictionary for equation generation
         solution_dict = {sp.Symbol(var): val for var, val in solution.items()}
 
         # Generate the required number of equations
@@ -107,7 +179,7 @@ class MathEquationGenerator:
         matrix_rows = []
 
         attempt_count = 0
-        max_attempts = 200  # Increased maximum attempts to generate unique equations
+        max_attempts = self.MAX_GENERATION_ATTEMPTS
 
         while len(equations) < (num_equations + num_helper_equations) and attempt_count < max_attempts:
             attempt_count += 1
@@ -124,31 +196,12 @@ class MathEquationGenerator:
             # Check if this is a unique equation (not linearly dependent on existing ones)
             if coefficients not in coefficient_sets:
                 # Extract coefficients for each variable to check linear independence
-                if isinstance(equation, str) and '=' in equation:
-                    sides = equation.split('=')
-                    lhs = sp.sympify(sides[0].strip())
-                    rhs = sp.sympify(sides[1].strip())
-                    expr = lhs - rhs
-                else:
-                    expr = equation
-                
-                # Extract coefficients for each variable
-                row = []
-                for var in var_symbols:
-                    coef = expr.coeff(var)
-                    row.append(coef)
+                row = self._extract_coefficient_row(equation, var_symbols)
                 
                 # Check if adding this equation would maintain linear independence
-                if matrix_rows:
-                    # Create a temporary matrix with existing rows and the new row
-                    temp_rows = matrix_rows.copy()
-                    temp_rows.append(row)
-                    temp_matrix = sp.Matrix(temp_rows)
-                    
-                    # Check if the rank increases (indicating linear independence)
-                    if temp_matrix.rank() <= len(matrix_rows):
-                        # This equation is linearly dependent, skip it
-                        continue
+                if not self._is_linearly_independent(matrix_rows, row):
+                    # This equation is linearly dependent, skip it
+                    continue
                 
                 # If we get here, the equation is linearly independent
                 matrix_rows.append(row)
@@ -201,8 +254,20 @@ class MathEquationGenerator:
                       very_simple: bool = False, max_elements: Optional[int] = None,
                       ensure_operation: bool = True) -> DynamicQuiz:
         """
-        Fallback method to generate a quiz without enforcing linear independence.
-        This is used when the main method fails to generate enough linearly independent equations.
+        Fallback method to generate a quiz when the main method fails to generate enough linearly independent equations.
+        
+        This method uses a deterministic approach to guarantee linear independence by constructing
+        a system where each equation focuses primarily on one variable. This approach is more
+        reliable but produces less varied equations than the primary method.
+        
+        The diagonal-dominant coefficient matrix created here ensures a unique solution without
+        requiring complex rank calculations, making it suitable as a fallback when the more
+        sophisticated approach fails.
+        
+        Parameters are the same as generate_quiz() except for _recursion_depth which is not needed here.
+        
+        Returns:
+            DynamicQuiz: A quiz object with guaranteed unique solution
         """
         # Constrain parameters to valid ranges
         num_unknowns = min(max(1, num_unknowns), 3)
@@ -239,10 +304,12 @@ class MathEquationGenerator:
         coefficient_sets: Set[Tuple] = set()  # Track the coefficient sets to avoid duplicates
 
         # For the first num_unknowns equations, ensure they are linearly independent
-        # by using a simple pattern that guarantees independence
+        # by using a simple pattern that guarantees independence:
+        # We create a diagonal-dominant coefficient matrix where each equation focuses on one variable
+        # This guarantees a unique solution without needing complex rank calculations
         for i in range(min(num_unknowns, num_equations)):
             # Create an equation where the i-th variable has a non-zero coefficient
-            # and all other variables have zero coefficients
+            # and all other variables have zero coefficients - this ensures linear independence
             expr = var_symbols[i] - solution_dict[var_symbols[i]]
             equation = f"{var_symbols[i]} = {solution_dict[var_symbols[i]]}"
             formatted_eq = f"{var_symbols[i]} = {solution_dict[var_symbols[i]]}"

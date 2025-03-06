@@ -1,7 +1,7 @@
 ---
 description: General rules for all code changes in all languages
 globs: *.html, *.js, *.py
-alwaysApply: false
+alwaysApply: true
 ---
 # Coding in any language
 
