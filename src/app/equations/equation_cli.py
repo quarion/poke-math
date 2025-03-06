@@ -4,6 +4,7 @@ import json
 import os
 import sys
 from typing import List, Dict, Any
+import re
 
 from src.app.equations.equations_generator_v2 import EquationsGeneratorV2, DynamicQuizV2, EquationConfig
 
@@ -29,13 +30,14 @@ def load_difficulty_configs(json_path: str) -> List[Dict[str, Any]]:
         sys.exit(1)
 
 
-def print_equation(quiz: DynamicQuizV2, index: int = 1) -> None:
+def print_equation(quiz: DynamicQuizV2, index: int = 1, config_type: str = None) -> None:
     """
     Print a formatted equation and its solution.
     
     Args:
         quiz: The generated quiz containing equations and solutions
         index: The equation number (for display purposes)
+        config_type: The type of configuration used to generate the equations
     """
     print(f"\nEquation {index}:")
     for i, eq in enumerate(quiz.equations):
@@ -76,10 +78,13 @@ def generate_equations(difficulty_configs: List[Dict[str, Any]],
     for config in configs:
         print(f"\n=== {config['name']} (Difficulty Level: {config['difficulty']}) ===")
         
+        # Get the configuration type
+        config_type = config["params"].get("type", "")
+        
         for i in range(count):
             # Use the v2 generator's generate_equations method with the params
             quiz = generator.generate_equations(config["params"])
-            print_equation(quiz, i + 1)
+            print_equation(quiz, i + 1, config_type)
         
         print("-" * 60)
 

@@ -22,5 +22,25 @@
       "allow_decimals": false,
       "elements": 2
     }
+  },
+  {
+    "id": "simple_quiz_2var",
+    "name": "Simple Quiz (2 Variables)",
+    "difficulty": 3,
+    "params": {
+      "type": "simple_quiz",
+      "num_unknowns": 2,
+      "max_value": 15
+    }
+  },
+  {
+    "id": "simple_quiz_3var",
+    "name": "Simple Quiz (3 Variables)",
+    "difficulty": 4,
+    "params": {
+      "type": "simple_quiz",
+      "num_unknowns": 3,
+      "max_value": 10
+    }
   }
 ] 
