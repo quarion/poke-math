@@ -270,3 +270,202 @@ class TestEquationsGeneratorV2:
         # Note: There's a small chance they could be the same by coincidence
         assert quiz1.equations[0].formatted != quiz3.equations[0].formatted or \
                quiz1.solution.human_readable != quiz3.solution.human_readable
+    
+    # Simple Quiz tests
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_default_params(self, generator):
+        """Test simple quiz generation with default parameters."""
+        quiz = generator.generate_simple_quiz()
+        
+        # Check that we have the correct number of equations (default is 2)
+        assert len(quiz.equations) == 2
+        
+        # Check that the solution exists and has the correct number of variables
+        assert len(quiz.solution.human_readable) == 2
+        
+        # Check that all variables in the solution are integers
+        for var, value in quiz.solution.human_readable.items():
+            assert isinstance(value, int), f"Variable {var} has non-integer value {value}"
+    
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_num_unknowns(self, generator):
+        """Test simple quiz generation with different numbers of unknowns."""
+        for num_unknowns in range(1, 4):  # Test with 1, 2, and 3 unknowns
+            quiz = generator.generate_simple_quiz(num_unknowns=num_unknowns)
+            
+            # Check that we have the correct number of equations
+            assert len(quiz.equations) == num_unknowns
+            
+            # Check that the solution has the correct number of variables
+            assert len(quiz.solution.human_readable) == num_unknowns
+            
+            # Check that all variables in the solution are integers
+            for var, value in quiz.solution.human_readable.items():
+                assert isinstance(value, int), f"Variable {var} has non-integer value {value}"
+    
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_max_value(self, generator):
+        """Test simple quiz generation with different max values."""
+        max_value = 10
+        quiz = generator.generate_simple_quiz(max_value=max_value)
+        
+        # Check that all values in the solution are within the max value
+        for var, value in quiz.solution.human_readable.items():
+            assert abs(value) <= max_value, f"Value {value} for variable {var} exceeds max value {max_value}"
+    
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_variable_repetition(self, generator):
+        """Test that simple quiz equations include variable repetition."""
+        quiz = generator.generate_simple_quiz()
+        
+        # Check that at least one equation has a repeated variable
+        has_repetition = False
+        for eq in quiz.equations:
+            eq_str = eq.formatted
+            
+            # Count occurrences of each variable in the equation
+            for var in quiz.solution.human_readable.keys():
+                # Count how many times the variable appears in the equation
+                count = eq_str.count(var)
+                if count > 1:
+                    has_repetition = True
+                    break
+            
+            if has_repetition:
+                break
+        
+        assert has_repetition, "No equation has repeated variables"
+    
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_operations(self, generator):
+        """Test that simple quiz equations only use + and - operations."""
+        quiz = generator.generate_simple_quiz()
+        
+        # Check that only + and - operations are used
+        for eq in quiz.equations:
+            eq_str = eq.formatted
+            
+            # Check that * and / are not in the equation
+            assert "*" not in eq_str, f"Equation {eq_str} contains multiplication"
+            assert "/" not in eq_str, f"Equation {eq_str} contains division"
+    
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_solution_correctness(self, generator):
+        """Test that the solutions provided are correct for simple quiz equations."""
+        # Test with various configurations
+        configurations = [
+            {"num_unknowns": 1, "max_value": 20},
+            {"num_unknowns": 2, "max_value": 10},
+            {"num_unknowns": 3, "max_value": 30},
+        ]
+        
+        for config in configurations:
+            quiz = generator.generate_simple_quiz(**config)
+            
+            # Check each equation
+            for eq in quiz.equations:
+                # If the equation is a string with an equals sign, convert it to a SymPy equation
+                if isinstance(eq.symbolic, str) and '=' in eq.symbolic:
+                    sides = eq.symbolic.split('=')
+                    lhs = sp.sympify(sides[0].strip())
+                    rhs = sp.sympify(sides[1].strip())
+                    # Substitute the solution values into both sides
+                    lhs_val = lhs.subs(quiz.solution.symbolic)
+                    rhs_val = rhs.subs(quiz.solution.symbolic)
+                    # Verify that the equation is satisfied
+                    assert abs(float(lhs_val) - float(rhs_val)) < 1e-10, f"Equation {eq.formatted} not satisfied by solution {quiz.solution.human_readable}"
+                else:
+                    # If the equation is a SymPy equation, substitute the solution values
+                    if eq.symbolic is not None:
+                        result = eq.symbolic.subs(quiz.solution.symbolic)
+                        # Verify that the equation is satisfied
+                        assert result == True, f"Equation {eq.formatted} not satisfied by solution {quiz.solution.human_readable}"
+    
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_unique_solution(self, generator):
+        """Test that simple quiz equations have exactly one solution."""
+        quiz = generator.generate_simple_quiz()
+        
+        # Extract the symbolic equations
+        symbolic_equations = []
+        for eq in quiz.equations:
+            # If the equation is a string with an equals sign, convert it to a SymPy equation
+            if isinstance(eq.symbolic, str) and '=' in eq.symbolic:
+                sides = eq.symbolic.split('=')
+                lhs = sp.sympify(sides[0].strip())
+                rhs = sp.sympify(sides[1].strip())
+                symbolic_equations.append(sp.Eq(lhs, rhs))
+            else:
+                symbolic_equations.append(eq.symbolic)
+        
+        # Use SymPy to solve the system
+        variables = [sp.Symbol(var) for var in quiz.solution.human_readable.keys()]
+        solutions = sp.solve(symbolic_equations, variables, dict=True)
+        
+        # Check that there is exactly one solution
+        assert len(solutions) == 1, f"Expected exactly one solution, got {len(solutions)}"
+        
+        # Verify the solution matches the one provided by the generator
+        for var, value in quiz.solution.symbolic.items():
+            assert abs(float(solutions[0][var]) - float(value)) < 1e-10, f"Solution mismatch for {var}: expected {value}, got {solutions[0][var]}"
+    
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_via_generate_equations(self, generator):
+        """Test simple quiz generation via the generate_equations method."""
+        config = {
+            "type": "simple_quiz",
+            "num_unknowns": 2,
+            "max_value": 20
+        }
+        
+        quiz = generator.generate_equations(config)
+        
+        # Check that we have the correct number of equations
+        assert len(quiz.equations) == 2
+        
+        # Check that the solution exists and has the correct number of variables
+        assert len(quiz.solution.human_readable) == 2
+        
+        # Check that all variables in the solution are integers
+        for var, value in quiz.solution.human_readable.items():
+            assert isinstance(value, int), f"Variable {var} has non-integer value {value}"
+    
+    @pytest.mark.simple_quiz
+    def test_simple_quiz_random_seed(self, generator):
+        """Test that using the same random seed produces the same equations."""
+        # This test is for the generate_equations method which accepts a random_seed parameter
+        config1 = {
+            "type": "simple_quiz",
+            "num_unknowns": 2,
+            "max_value": 20,
+            "random_seed": 12345
+        }
+        
+        config2 = config1.copy()  # Same config with same seed
+        
+        quiz1 = generator.generate_equations(config1)
+        quiz2 = generator.generate_equations(config2)
+        
+        # Check that the equations and solutions are identical
+        for i in range(len(quiz1.equations)):
+            assert quiz1.equations[i].formatted == quiz2.equations[i].formatted
+        
+        assert quiz1.solution.human_readable == quiz2.solution.human_readable
+        
+        # Now change the seed and verify we get different equations
+        config3 = config1.copy()
+        config3["random_seed"] = 54321
+        
+        quiz3 = generator.generate_equations(config3)
+        
+        # The equations should be different with a different seed
+        # Note: There's a small chance they could be the same by coincidence
+        different_equations = False
+        for i in range(len(quiz1.equations)):
+            if quiz1.equations[i].formatted != quiz3.equations[i].formatted:
+                different_equations = True
+                break
+        
+        different_solutions = quiz1.solution.human_readable != quiz3.solution.human_readable
+        
+        assert different_equations or different_solutions

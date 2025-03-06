@@ -198,7 +198,8 @@ class EquationsGeneratorV2:
     
     def generate_simple_quiz(self, 
                             num_unknowns: int = 2, 
-                            max_value: int = 20) -> DynamicQuizV2:
+                            max_value: int = 20,
+                            random_seed: Optional[int] = None) -> DynamicQuizV2:
         """
         Generate a simple quiz with multiple unknowns and integer solutions.
         
@@ -210,20 +211,99 @@ class EquationsGeneratorV2:
         Args:
             num_unknowns: Number of unknown variables, defaults to 2
             max_value: Maximum value for constants, defaults to 20
+            random_seed: Optional random seed for reproducibility
             
         Returns:
             DynamicQuizV2: The generated quiz with equations and solution
         """
-        # Placeholder for actual implementation
-        # This will be replaced with the real implementation later
+        # Set random seed if provided
+        if random_seed is not None:
+            random.seed(random_seed)
+        
+        # Create the variable symbols
+        var_symbols = [sp.Symbol(var) for var in self.variables[:num_unknowns]]
+        
+        # Generate random integer solutions for each variable
+        solution_values = {}
+        for i, var in enumerate(var_symbols):
+            solution_values[var] = random.randint(1, max_value)
+        
+        # Create human-readable solution dictionary
+        human_readable_solution = {str(var): value for var, value in solution_values.items()}
+        
+        # Generate equations with variable repetition
+        equations = []
+        formatted_equations = []
+        
+        for i in range(num_unknowns):
+            # Choose a variable to repeat in this equation
+            var_to_repeat = random.choice(var_symbols)
+            var_name = str(var_to_repeat)
+            
+            # Decide how many times to repeat the variable (2-3 times)
+            repetitions = random.randint(2, 3)
+            
+            # Create the left side of the equation with repeated variable
+            left_side = repetitions * var_to_repeat
+            
+            # Create a formatted left side with explicit repetition
+            formatted_left = " + ".join([var_name] * repetitions)
+            
+            # Calculate the right side value based on the solution
+            right_side_value = repetitions * solution_values[var_to_repeat]
+            
+            # Sometimes mix in other variables (for equations after the first one)
+            if i > 0 and random.random() > 0.3 and num_unknowns > 1:
+                # Choose another variable different from the repeated one
+                other_vars = [v for v in var_symbols if v != var_to_repeat]
+                other_var = random.choice(other_vars)
+                other_var_name = str(other_var)
+                
+                # Choose an operation (+ or -)
+                operation = random.choice(['+', '-'])
+                
+                if operation == '+':
+                    left_side += other_var
+                    formatted_left += f" + {other_var_name}"
+                    right_side_value += solution_values[other_var]
+                else:
+                    left_side -= other_var
+                    formatted_left += f" - {other_var_name}"
+                    right_side_value -= solution_values[other_var]
+            
+            # Create the equation
+            equation = sp.Eq(left_side, right_side_value)
+            equations.append(equation)
+            
+            # Format the equation for human readability
+            formatted_equation = f"{formatted_left} = {right_side_value}"
+            formatted_equations.append(formatted_equation)
+        
+        # Verify that the system has exactly one solution
+        if num_unknowns > 1:
+            # Convert equations to a matrix form to check linear independence
+            A, b = sp.linear_eq_to_matrix(equations, var_symbols)
+            
+            # Check if the matrix has full rank (linearly independent equations)
+            if A.rank() < len(var_symbols):
+                # If not linearly independent, try again with a different set of equations
+                return self.generate_simple_quiz(num_unknowns, max_value, random_seed)
+            
+            # Double-check by solving the system
+            solutions = sp.solve(equations, var_symbols, dict=True)
+            if len(solutions) != 1:
+                # If not exactly one solution, try again
+                return self.generate_simple_quiz(num_unknowns, max_value, random_seed)
+        
+        # Create equation objects
+        equation_objects = [EquationV2(eq, fmt) for eq, fmt in zip(equations, formatted_equations)]
+        
+        # Create the quiz
         return DynamicQuizV2(
-            equations=[
-                EquationV2(None, "x + x = 10"),
-                EquationV2(None, "y - x = 10"),
-            ],
+            equations=equation_objects,
             solution=DynamicQuizSolutionV2(
-                symbolic={},
-                human_readable={"x": 5, "y": 15}
+                symbolic=solution_values,
+                human_readable=human_readable_solution
             )
         )
     
@@ -326,7 +406,8 @@ class EquationsGeneratorV2:
         elif equation_type == "simple_quiz":
             return self.generate_simple_quiz(
                 num_unknowns=config.get("num_unknowns", 2),
-                max_value=config.get("max_value", 20)
+                max_value=config.get("max_value", 20),
+                random_seed=random_seed
             )
         elif equation_type == "grade_school":
             return self.generate_grade_school(

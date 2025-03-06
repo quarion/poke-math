@@ -14,7 +14,7 @@ A. Basic math ✅ (COMPLETED)
  - It is configurable if decimals are allowed or only integers
  - It is configurable how many elements we can have in equation (eg for 2 x = 10 + 5, for 3 x = 10 + 5 - 2)
 
-B. Simple quiz
+B. Simple quiz ✅ (COMPLETED)
  - More than 1 unknown - configurable
  - Only use "+" and "-" operation.
  - Can repeat the same symbol in the same equation.
@@ -103,7 +103,7 @@ The `EquationsGeneratorV2` class will be the main entry point with three special
    # Build equation: x = right_side
    ```
 
-#### B. Simple Quiz Generator
+#### B. Simple Quiz Generator ✅ (IMPLEMENTED)
 
 1. **Start with variable repetition patterns**:
    - Begin with patterns like `x+x=10` or `y+y+y=12`
@@ -257,6 +257,17 @@ Ensure compatibility with the original format:
   - Random seed for reproducibility
   - Solution correctness verification
 
+## Simple Quiz (Type B) ✅
+- Implemented and tested the simple quiz equation generator
+- All tests are passing
+- Features implemented:
+  - Configurable number of unknowns
+  - Variable repetition in equations
+  - Only addition and subtraction operations
+  - Integer solutions only
+  - Linear independence verification
+  - Random seed for reproducibility
+  - Solution correctness verification
+
 ## Next Steps
-- Implement Simple Quiz (Type B) equations
 - Implement Grade School (Type C) equations
