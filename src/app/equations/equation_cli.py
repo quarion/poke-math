@@ -30,6 +30,16 @@ def load_difficulty_configs(json_path: str) -> List[Dict[str, Any]]:
         sys.exit(1)
 
 
+def format_value(value: Any) -> str:
+    if isinstance(value, float):
+        # Format float to 2 decimal places if it has decimal part
+        if value.is_integer():
+            return str(int(value))
+        else:
+            return f"{value:.2f}"
+    return str(value)
+
+
 def print_equation(quiz: DynamicQuizV2, index: int = 1, config_type: str = None) -> None:
     """
     Print a formatted equation and its solution.
@@ -41,11 +51,20 @@ def print_equation(quiz: DynamicQuizV2, index: int = 1, config_type: str = None)
     """
     print(f"\nEquation {index}:")
     for i, eq in enumerate(quiz.equations):
-        print(f"  {eq.formatted}")
+        # Clean up the equation formatting for better display
+        formatted_eq = eq.formatted
+        
+        # Replace decimal values with cleaner format
+        if '.' in formatted_eq:
+            # Find all decimal numbers and format them
+            decimal_pattern = r'(\d+\.\d+)'
+            formatted_eq = re.sub(decimal_pattern, lambda m: format_value(float(m.group(1))), formatted_eq)
+        
+        print(f"  {formatted_eq}")
     
     print("\nSolution:")
     for var, value in quiz.solution.human_readable.items():
-        print(f"  {var} = {value}")
+        print(f"  {var} = {format_value(value)}")
     print()
 
 

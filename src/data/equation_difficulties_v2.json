@@ -42,5 +42,41 @@
       "num_unknowns": 3,
       "max_value": 10
     }
+  },
+  {
+    "id": "grade_school_basic",
+    "name": "Grade School (Basic)",
+    "difficulty": 5,
+    "params": {
+      "type": "grade_school",
+      "num_unknowns": 2,
+      "operations": ["+", "-"],
+      "max_value": 20,
+      "allow_decimals": false
+    }
+  },
+  {
+    "id": "grade_school_intermediate",
+    "name": "Grade School (Intermediate)",
+    "difficulty": 6,
+    "params": {
+      "type": "grade_school",
+      "num_unknowns": 2,
+      "operations": ["+", "-", "*"],
+      "max_value": 15,
+      "allow_decimals": false
+    }
+  },
+  {
+    "id": "grade_school_advanced",
+    "name": "Grade School (Advanced)",
+    "difficulty": 7,
+    "params": {
+      "type": "grade_school",
+      "num_unknowns": 3,
+      "operations": ["+", "-", "*", "/"],
+      "max_value": 10,
+      "allow_decimals": true
+    }
   }
 ] 
