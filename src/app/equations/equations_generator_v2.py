@@ -39,10 +39,7 @@ class SimpleQuizConfig(TypedDict, total=False):
     """Configuration for simple quiz equations."""
     type: Literal["simple_quiz"]  # Must be "simple_quiz"
     num_unknowns: int  # Number of unknown variables
-    allow_repeated_symbols: bool  # Whether to allow repeating the same symbol in equations
     max_value: int  # Maximum value for constants
-    num_equations: Optional[int]  # Number of equations to generate (defaults to num_unknowns)
-    equations_config: Optional[List[EquationPatternConfig]]  # Optional specific equation patterns
     random_seed: Optional[int]  # Optional random seed for reproducibility
 
 
@@ -53,8 +50,6 @@ class GradeSchoolConfig(TypedDict, total=False):
     operations: List[str]  # Allowed operations ["+", "-", "*", "/"] 
     max_value: int  # Maximum value for constants
     allow_decimals: bool  # Whether to allow decimal values
-    num_equations: Optional[int]  # Number of equations to generate (defaults to num_unknowns)
-    equations_config: Optional[List[EquationPatternConfig]]  # Optional specific equation patterns
     random_seed: Optional[int]  # Optional random seed for reproducibility
 
 
@@ -125,32 +120,32 @@ class EquationsGeneratorV2:
     
     def generate_simple_quiz(self, 
                             num_unknowns: int = 2, 
-                            allow_repeated_symbols: bool = False, 
-                            max_value: int = 20, 
-                            num_equations: Optional[int] = None, 
-                            equations_config: Optional[List[EquationPatternConfig]] = None) -> DynamicQuizV2:
+                            max_value: int = 20) -> DynamicQuizV2:
         """
-        Generate a simple quiz with multiple unknowns, using only addition and subtraction.
+        Generate a simple quiz with multiple unknowns and integer solutions.
+        
+        Simple quiz equations always use + and - operations only.
+        Same symbol can be repeated in the same equation.
+        Solution is always an integer.
+        Number of equations equals number of unknowns.
         
         Args:
             num_unknowns: Number of unknown variables, defaults to 2
-            allow_repeated_symbols: Whether to allow the same symbol multiple times in an equation
             max_value: Maximum value for constants, defaults to 20
-            num_equations: Number of equations to generate, defaults to num_unknowns
-            equations_config: Optional specific equation patterns to use
             
         Returns:
             DynamicQuizV2: The generated quiz with equations and solution
         """
         # Placeholder for actual implementation
+        # This will be replaced with the real implementation later
         return DynamicQuizV2(
             equations=[
-                EquationV2(None, "x + y = 5"),
-                EquationV2(None, "x - y = 1")
+                EquationV2(None, "x + x = 10"),
+                EquationV2(None, "y - x = 10"),
             ],
             solution=DynamicQuizSolutionV2(
                 symbolic={},
-                human_readable={"x": 3, "y": 2}
+                human_readable={"x": 5, "y": 15}
             )
         )
     
@@ -158,32 +153,32 @@ class EquationsGeneratorV2:
                              num_unknowns: int = 2, 
                              operations: Optional[List[str]] = None, 
                              max_value: int = 30, 
-                             allow_decimals: bool = False, 
-                             num_equations: Optional[int] = None, 
-                             equations_config: Optional[List[EquationPatternConfig]] = None) -> DynamicQuizV2:
+                             allow_decimals: bool = False) -> DynamicQuizV2:
         """
-        Generate grade school equations with configurable parameters.
+        Generate grade school equations with multiple unknowns.
+        
+        Grade school equations can use multiple unknowns and various operations.
+        Number of equations equals number of unknowns.
         
         Args:
             num_unknowns: Number of unknown variables, defaults to 2
             operations: List of allowed operations, defaults to ['+', '-']
             max_value: Maximum value for constants, defaults to 30
             allow_decimals: Whether to allow decimal values, defaults to False
-            num_equations: Number of equations to generate, defaults to num_unknowns
-            equations_config: Optional specific equation patterns to use
             
         Returns:
             DynamicQuizV2: The generated quiz with equations and solution
         """
         # Placeholder for actual implementation
+        # This will be replaced with the real implementation later
         return DynamicQuizV2(
             equations=[
-                EquationV2(None, "x + 5 = 10"),
-                EquationV2(None, "y - x = 3")
+                EquationV2(None, "2*x = y + 3"),
+                EquationV2(None, "y - x = 5"),
             ],
             solution=DynamicQuizSolutionV2(
                 symbolic={},
-                human_readable={"x": 5, "y": 8}
+                human_readable={"x": 2, "y": 7}
             )
         )
     
@@ -210,16 +205,7 @@ class EquationsGeneratorV2:
                 {
                     "type": "simple_quiz",
                     "num_unknowns": 2,  # Optional
-                    "allow_repeated_symbols": False,  # Optional
                     "max_value": 20,  # Optional
-                    "num_equations": 2,  # Optional
-                    "equations_config": [  # Optional
-                        {
-                            "pattern": "{var1}+{var1}={const}",
-                            "values": {"const": 10}
-                        },
-                        ...
-                    ],
                     "random_seed": 12345  # Optional
                 }
                 
@@ -230,14 +216,6 @@ class EquationsGeneratorV2:
                     "operations": ["+", "-", ...],  # Optional
                     "max_value": 30,  # Optional
                     "allow_decimals": False,  # Optional
-                    "num_equations": 2,  # Optional
-                    "equations_config": [  # Optional
-                        {
-                            "pattern": "{var1}+10=12",
-                            "values": {}
-                        },
-                        ...
-                    ],
                     "random_seed": 12345  # Optional
                 }
                 
@@ -263,19 +241,14 @@ class EquationsGeneratorV2:
         elif equation_type == "simple_quiz":
             return self.generate_simple_quiz(
                 num_unknowns=config.get("num_unknowns", 2),
-                allow_repeated_symbols=config.get("allow_repeated_symbols", False),
-                max_value=config.get("max_value", 20),
-                num_equations=config.get("num_equations"),
-                equations_config=config.get("equations_config")
+                max_value=config.get("max_value", 20)
             )
         elif equation_type == "grade_school":
             return self.generate_grade_school(
                 num_unknowns=config.get("num_unknowns", 2),
                 operations=config.get("operations", ["+", "-"]),
                 max_value=config.get("max_value", 30),
-                allow_decimals=config.get("allow_decimals", False),
-                num_equations=config.get("num_equations"),
-                equations_config=config.get("equations_config")
+                allow_decimals=config.get("allow_decimals", False)
             )
         else:
             raise ValueError(f"Unknown equation type: {equation_type}") 

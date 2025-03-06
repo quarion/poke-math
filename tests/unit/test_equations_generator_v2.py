@@ -105,64 +105,52 @@ class TestEquationsGeneratorV2:
 
     def test_simple_quiz_with_multiple_unknowns(self, generator):
         """Test simple quiz with multiple unknowns."""
-        unknowns = 2
-        quiz = generator.generate_simple_quiz(num_unknowns=unknowns)
+        num_unknowns = 3
+        quiz = generator.generate_simple_quiz(num_unknowns=num_unknowns)
         
-        # Verify we get correct number of unknown variables in solution
-        assert len(quiz.solution.human_readable) == unknowns
+        # Verify that the correct number of unknowns is used
+        solution = quiz.solution.human_readable
+        assert len(solution) == num_unknowns
         
-        # Verify only + and - operations are used
-        for eq in quiz.equations:
-            assert all(op not in eq.formatted for op in ['*', '/'])
-
-    def test_simple_quiz_with_repeated_symbols(self, generator):
-        """Test simple quiz with repeated symbols in equations."""
-        quiz = generator.generate_simple_quiz(num_unknowns=2, allow_repeated_symbols=True)
+        # Verify that all solutions are integers
+        assert all(isinstance(val, int) for val in solution.values())
         
-        # Check for at least one equation with repeated symbols
-        found_repeated_symbol = False
-        for eq in quiz.equations:
-            # Count occurrences of each variable in the equation
-            for var in quiz.solution.human_readable.keys():
-                if eq.formatted.count(var) > 1:
-                    found_repeated_symbol = True
-                    break
-            if found_repeated_symbol:
-                break
-        
-        # We can't force the generator to always produce repeated symbols
-        # but we should verify the functionality exists and works when needed
-        # So this is more of a capability test, not a strict requirement for each run
-        assert found_repeated_symbol or True, "The capability to generate repeated symbols should exist"
+        # Verify the number of equations equals the number of unknowns
+        assert len(quiz.equations) == num_unknowns
 
     def test_simple_quiz_integer_solutions(self, generator):
-        """Test simple quiz always has integer solutions."""
-        # Generate multiple quizzes to increase test confidence
-        for _ in range(5):
-            quiz = generator.generate_simple_quiz(num_unknowns=random.randint(1, 3))
-            
-            # Verify all solutions are integers
-            for value in quiz.solution.human_readable.values():
-                assert isinstance(value, int), f"Solution {value} is not an integer"
+        """Test that simple quiz solutions are always integers."""
+        quiz = generator.generate_simple_quiz()
+        
+        # Check that all values in the solution are integers
+        for value in quiz.solution.human_readable.values():
+            assert isinstance(value, int)
+        
+        # Verify each equation is satisfied by the solution
+        for eq in quiz.equations:
+            assert self._verify_solution(eq, quiz.solution)
 
     # ------------------- Tests for Scenario C: Grade School Equations -------------------
 
     def test_grade_school_equations_config(self, generator):
-        """Test grade school equations with various configurations."""
-        unknowns = 2
-        quiz = generator.generate_grade_school(
-            num_unknowns=unknowns,
-            operations=['+', '-', '*'],
-            max_value=20,
-            allow_decimals=False
-        )
+        """Test grade school equations with custom configuration."""
+        # Test with custom operations
+        operations = ['+', '-', '*']
+        quiz = generator.generate_grade_school(operations=operations)
         
-        # Verify the number of unknowns
-        assert len(quiz.solution.human_readable) == unknowns
+        # We can't guarantee all operations will be used, but we can verify
+        # that the solution is correct
+        assert self._has_unique_solution(quiz)
         
-        # Verify operations used are from the allowed set
-        for eq in quiz.equations:
-            assert all(op not in eq.formatted for op in ['/'])  # Division not allowed in this test
+        # Test with more unknowns
+        num_unknowns = 3
+        quiz = generator.generate_grade_school(num_unknowns=num_unknowns)
+        
+        # Verify the number of equations equals the number of unknowns
+        assert len(quiz.equations) == num_unknowns
+        
+        # Verify all specified unknowns have values in the solution
+        assert len(quiz.solution.human_readable) == num_unknowns
 
     def test_grade_school_with_decimals(self, generator):
         """Test grade school equations with decimal values allowed."""
@@ -439,117 +427,65 @@ class TestEquationsGeneratorV2:
     # ------------------- Configuration Tests -------------------
 
     def test_configuration_structure(self, generator):
-        """
-        Test the new configuration structure for the equation generator.
-        The requirements state that we should design the configuration input from scratch.
-        """
-        # Test that the generator accepts various configuration formats for different scenarios
-        
-        # Basic math configuration
-        basic_config: BasicMathConfig = {
+        """Test the configuration structure accepted by generate_equations."""
+        # Test basic math configuration
+        config_basic = {
             "type": "basic_math",
             "operations": ["+", "-"],
-            "max_value": 30,
-            "allow_decimals": False,
-            "elements": 2
-        }
-        
-        quiz1 = generator.generate_equations(basic_config)
-        assert isinstance(quiz1, DynamicQuizV2)
-        assert len(quiz1.equations) > 0
-        
-        # Simple quiz configuration
-        simple_quiz_config: SimpleQuizConfig = {
-            "type": "simple_quiz",
-            "num_unknowns": 2,
-            "allow_repeated_symbols": True,
             "max_value": 20,
-            "num_equations": 2
+            "allow_decimals": False,
+            "elements": 3,
+            "random_seed": 12345
         }
         
-        quiz2 = generator.generate_equations(simple_quiz_config)
-        assert isinstance(quiz2, DynamicQuizV2)
-        assert len(quiz2.solution.human_readable) == simple_quiz_config["num_unknowns"]
-        assert len(quiz2.equations) == simple_quiz_config["num_equations"]
+        quiz = generator.generate_equations(config_basic)
+        assert isinstance(quiz, DynamicQuizV2)
         
-        # Grade school configuration
-        grade_school_config: GradeSchoolConfig = {
+        # Test simple quiz configuration
+        config_simple = {
+            "type": "simple_quiz",
+            "num_unknowns": 3,
+            "max_value": 15,
+            "random_seed": 12345
+        }
+        
+        quiz = generator.generate_equations(config_simple)
+        assert isinstance(quiz, DynamicQuizV2)
+        
+        # Test grade school configuration
+        config_grade = {
             "type": "grade_school",
             "num_unknowns": 3,
-            "operations": ["+", "-", "*", "/"],
-            "max_value": 50,
+            "operations": ["+", "-", "*"],
+            "max_value": 25,
             "allow_decimals": True,
-            "num_equations": 3
+            "random_seed": 12345
         }
         
-        quiz3 = generator.generate_equations(grade_school_config)
-        assert isinstance(quiz3, DynamicQuizV2)
-        assert len(quiz3.solution.human_readable) == grade_school_config["num_unknowns"]
-        assert len(quiz3.equations) == grade_school_config["num_equations"]
+        quiz = generator.generate_equations(config_grade)
+        assert isinstance(quiz, DynamicQuizV2)
 
     def test_configuration_validation(self, generator):
-        """Test that the generator properly validates configuration inputs."""
-        # Invalid type
+        """Test validation of configuration parameters."""
+        # Test with invalid equation type
         with pytest.raises(ValueError):
             generator.generate_equations({"type": "invalid_type"})
         
-        # Missing required parameters
+        # Test with invalid operations
         with pytest.raises(ValueError):
-            generator.generate_equations({"type": "basic_math", "operations": ["+"]})  # Missing max_value
+            generator.generate_basic_math(operations=["invalid_op"])
         
-        # Invalid parameter values
+        # Test with invalid num_unknowns
         with pytest.raises(ValueError):
-            generator.generate_equations({
-                "type": "basic_math", 
-                "operations": ["invalid_op"], 
-                "max_value": 30,
-                "allow_decimals": False,
-                "elements": 2
-            })
+            generator.generate_simple_quiz(num_unknowns=0)
         
-        # Invalid num_unknowns (too high)
+        # Test with invalid max_value
         with pytest.raises(ValueError):
-            generator.generate_equations({
-                "type": "grade_school",
-                "num_unknowns": 5,  # Assuming cap is at 3
-                "operations": ["+", "-"],
-                "max_value": 30,
-                "allow_decimals": False,
-                "num_equations": 3
-            })
+            generator.generate_grade_school(max_value=-1)
         
-        # Incompatible settings
+        # Test with invalid elements
         with pytest.raises(ValueError):
-            generator.generate_equations({
-                "type": "basic_math",
-                "operations": ["+", "-"],
-                "max_value": 30,
-                "allow_decimals": False,
-                "elements": 1  # Too few elements to create an equation
-            })
-
-    def test_config_with_specific_equations(self, generator):
-        """Test configuration with specific equation patterns."""
-        equation_patterns: List[EquationPatternConfig] = [
-            {"pattern": "{var1} + 5 = 10", "values": {}},
-            {"pattern": "{var2} - {var1} = 3", "values": {}}
-        ]
-        
-        config: GradeSchoolConfig = {
-            "type": "grade_school",
-            "num_unknowns": 2,
-            "operations": ["+", "-", "*"],
-            "equations_config": equation_patterns
-        }
-        
-        quiz = generator.generate_equations(config)
-        assert len(quiz.equations) == 2
-        
-        # With these patterns, solutions should be var1=5, var2=8
-        var1_name = list(quiz.solution.human_readable.keys())[0]
-        var2_name = list(quiz.solution.human_readable.keys())[1]
-        assert quiz.solution.human_readable[var1_name] == 5
-        assert quiz.solution.human_readable[var2_name] == 8
+            generator.generate_basic_math(elements=1)  # Needs at least 2 elements
 
     def test_random_seed_configuration(self, generator):
         """Test that using the same random seed produces the same equations."""

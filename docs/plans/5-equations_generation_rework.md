@@ -105,138 +105,141 @@ The `EquationsGeneratorV2` class will be the main entry point with three special
 
 #### B. Simple Quiz Generator
 
-1. **Start with a pattern-based first equation**:
-   - Begin with a simple repetition pattern like `x+x=10` or `y+y+y=12`
-   - Ensure this equation has an integer solution
-   - This first equation provides a clear, structured entry point for learners
+1. **Start with variable repetition patterns**:
+   - Begin with patterns like `x+x=10` or `y+y+y=12`
+   - Ensure each equation has an integer solution
+   - Always include variable repetition as it's a defining characteristic
 
-2. **Add subsequent equations with controlled complexity**:
-   - Each additional equation will relate unknown variables in simple ways
-   - Maintain only addition and subtraction operations
-   - Ensure the system remains solvable with integer solutions
+2. **Build a complete system with integer solutions**:
+   - Generate exactly as many equations as unknowns
+   - Ensure the system has exactly one solution
+   - Use only addition and subtraction operations
+   - Always produce integer solutions
 
 3. **Pseudocode**:
    ```
-   # Step 1: Create first equation with variable repetition
-   var1 = random_choice(variables)
-   repetitions = random_int(2, 4)  # 2 to 4 repetitions of the same variable
-   total = random_int(repetitions, max_value)
-   # Ensure the total is divisible by repetitions to get integer value
-   total = (total // repetitions) * repetitions
+   # Step 1: Create solution set with integer values
+   solution = {var: random_int(1, max_value) for var in variables[:num_unknowns]}
    
-   first_equation = {left: [var1] * repetitions, right: total}
-   
-   # Step 2: Extract the solution for var1
-   solution[var1] = total // repetitions
-   
-   # Step 3: Generate additional equations
-   for i in range(1, num_equations):
-       # Create equations with defined integer solutions
-       equation = generate_equation_with_known_solution(solution, available_vars)
-       equations.append(equation)
+   # Step 2: Generate equations with variable repetition
+   equations = []
+   for i in range(num_unknowns):
+     # Decide on a pattern with repeated variables
+     var_to_repeat = random_choice(variables[:num_unknowns])
+     repetitions = random_int(2, 3)  # Use 2-3 repetitions of the same variable
+     
+     # Create equation using this pattern
+     left_side = var_to_repeat * repetitions  # symbolic multiplication = repetition
+     right_side = solution[var_to_repeat] * repetitions
+     
+     # Sometimes mix in other variables
+     if random.random() > 0.5 and i > 0:
+       other_var = random_choice([v for v in variables[:num_unknowns] if v != var_to_repeat])
+       operation = random_choice(['+', '-'])
        
-       # If needed, define a new variable in terms of known ones
-       if i < num_unknowns - 1:
-           new_var = get_unused_variable(variables, solution)
-           solution[new_var] = random_int(1, max_value)
+       if operation == '+':
+         left_side += other_var
+         right_side += solution[other_var]
+       else:
+         left_side -= other_var
+         right_side -= solution[other_var]
+         
+     equations.append(sympy.Eq(left_side, right_side))
+   
+   # Step 3: Verify system has exactly one solution
+   matrix = system_to_matrix(equations, variables[:num_unknowns])
+   if matrix.rank() < num_unknowns:
+     # Try again with different equation patterns
+     return generate_equations()
    ```
 
-#### C. Grade School Generator (Deterministic Approach)
+#### C. Grade School Generator
 
 1. **Pre-determine all variable solutions**:
    - Assign random values to all variables within constraints
-   - Ensure these values satisfy all configuration requirements (integers vs. decimals)
+   - Ensure these values meet requirements (integers vs. decimals)
 
-2. **Build a system guarantee matrix**:
-   - Create an equation coefficient matrix with proper rank
-   - Use elementary row operations to ensure linear independence
+2. **Generate linearly independent equations**:
+   - Create exactly as many equations as unknowns
+   - Build a system with proper rank for unique solution
+   - Use configured operations to create diverse equation types
 
-3. **Generate equations from this matrix**:
-   - Convert matrix rows to equations with appropriate operations
-   - Ensure operation diversity according to configuration
-
-4. **Pseudocode for deterministic approach**:
+3. **Pseudocode**:
    ```
    # Step 1: Assign solution values to all variables
-   solutions = {var: generate_value(max_value, allow_decimals) for var in variables}
+   solutions = {}
+   for var in variables[:num_unknowns]:
+     if allow_decimals:
+       solutions[var] = round(random.uniform(1, max_value), 1)  # One decimal place
+     else:
+       solutions[var] = random.randint(1, max_value)
    
-   # Step 2: Create coefficient matrix with guaranteed full rank
-   # For n variables, start with identity matrix (guarantees full rank)
-   coefficient_matrix = identity_matrix(num_unknowns)
-   
-   # Step 3: Apply random transformations while preserving rank
-   for i in range(desired_complexity):
-       transform_type = random_choice(["scale", "add_row", "swap"])
-       apply_transformation(coefficient_matrix, transform_type)
-   
-   # Step 4: Generate right-hand sides based on solutions
-   right_sides = []
-   for row in coefficient_matrix:
-       right_side = sum(coef * solutions[var] for coef, var in zip(row, variables))
-       right_sides.append(right_side)
-   
-   # Step 5: Convert matrix rows to equations with diverse operations
+   # Step 2: Generate equations with the allowed operations
    equations = []
-   for i, row in enumerate(coefficient_matrix):
-       if random.random() < 0.3 and "*" in operations:  # Probability for multiplicative equation
-           # Create equation with multiplication, e.g., 2*x = y + 3
-           equations.append(create_multiplicative_equation(row, right_sides[i], solutions))
-       else:
-           # Create standard linear equation, e.g., x + 2y = 5
-           equations.append(create_linear_equation(row, right_sides[i]))
+   for i in range(num_unknowns):
+     # Select variables to include in this equation
+     used_vars = random.sample(variables[:num_unknowns], random.randint(1, min(3, num_unknowns)))
+     
+     # Build equation terms
+     left_side = 0
+     for var in used_vars:
+       coef = random.randint(1, 5) if var != variables[0] else 1  # First var often has coef=1
+       op = random.choice(operations) if left_side != 0 else '+'
+       
+       if op == '+':
+         left_side += coef * var
+       elif op == '-':
+         left_side -= coef * var
+       elif op == '*' and var != variables[0]:  # Only multiply secondary variables
+         left_side *= coef
+     
+     # Calculate right side based on solution values
+     right_side = left_side.subs(solutions)
+     
+     equations.append(sympy.Eq(left_side, right_side))
+   
+   # Step A3: Verify system has exactly one solution and is linearly independent
+   if not verify_system_independence(equations, variables[:num_unknowns]):
+     # Try again with different equations
+     return generate_equations()
    ```
 
 ## 3. Linear Independence Verification
 
-To prevent infinite solutions, we'll implement:
+The core of ensuring all equation sets have exactly one solution:
 
-1. **Rank check**: Ensure the coefficient matrix has full rank
-2. **Symbolic dependency check**: Use SymPy's linear dependency checking
-3. **Solution uniqueness verification**: Verify that solve() returns exactly one solution per variable
-
-Pseudocode:
 ```
-def verify_system(equations, variables, solutions):
-    # Verify each equation evaluates correctly with our solutions
-    for eq in equations:
-        if not equation_is_satisfied(eq, solutions):
-            return False
+def verify_system_independence(equations, variables):
+    # Convert to matrix form
+    A, b = sympy.linear_eq_to_matrix(equations, variables)
     
-    # Verify the system has exactly one solution
-    matrix, vector = system_to_matrix_form(equations, variables)
-    if matrix.rank() < len(variables):
+    # Check rank matches number of variables
+    if A.rank() < len(variables):
         return False
-        
-    # Additional check: solve the system symbolically
-    symbolic_solution = sympy.solve(equations, variables)
-    if len(symbolic_solution) != 1:
+    
+    # Verify solution uniqueness
+    solution = sympy.solve(equations, variables)
+    if len(solution) != 1:
         return False
         
     return True
 ```
 
-## 4. Configuration and Pattern Support
-
-For custom equation patterns:
-1. Parse pattern strings with variable placeholders
-2. Generate specific values that satisfy pattern constraints
-3. Convert patterns to SymPy expressions
-
-## 5. Output Formatting
+## 4. Output Formatting
 
 Ensure compatibility with the original format:
 1. Convert SymPy expressions to formatted strings
 2. Create solution objects with both symbolic and human-readable forms
 3. Structure DynamicQuizV2 objects consistent with the original format
 
-## 6. Error Handling and Constraints
+## 5. Error Handling and Constraints
 
 - Implement robust validation for all configuration options
 - Add retry mechanisms when constraints can't be satisfied
 - Cap the number of generation attempts to prevent infinite loops
 
-## 7. Performance Considerations
+## 6. Performance Considerations
 
 - Use efficient algorithms for system generation
-- Implement early detection of unsolvable or infinitely solvable systems
-- Cache intermediate results when appropriate
+- Implement early detection of unsolvable systems
+- Ensure all equations are solvable by construction using the solution-first approach
