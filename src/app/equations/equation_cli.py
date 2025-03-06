@@ -5,7 +5,7 @@ import os
 import sys
 from typing import List, Dict, Any
 
-from src.app.equations.equations_generator import MathEquationGenerator, DynamicQuiz
+from src.app.equations.equations_generator_v2 import EquationsGeneratorV2, DynamicQuizV2, EquationConfig
 
 
 def load_difficulty_configs(json_path: str) -> List[Dict[str, Any]]:
@@ -29,7 +29,7 @@ def load_difficulty_configs(json_path: str) -> List[Dict[str, Any]]:
         sys.exit(1)
 
 
-def print_equation(quiz: DynamicQuiz, index: int = 1) -> None:
+def print_equation(quiz: DynamicQuizV2, index: int = 1) -> None:
     """
     Print a formatted equation and its solution.
     
@@ -58,7 +58,7 @@ def generate_equations(difficulty_configs: List[Dict[str, Any]],
         difficulty_id: ID of the specific difficulty to generate (None for all)
         count: Number of equations to generate for each difficulty
     """
-    generator = MathEquationGenerator()
+    generator = EquationsGeneratorV2()
     
     # Filter configurations based on difficulty_id if provided
     if difficulty_id:
@@ -77,7 +77,8 @@ def generate_equations(difficulty_configs: List[Dict[str, Any]],
         print(f"\n=== {config['name']} (Difficulty Level: {config['difficulty']}) ===")
         
         for i in range(count):
-            quiz = generator.generate_quiz(**config["params"])
+            # Use the v2 generator's generate_equations method with the params
+            quiz = generator.generate_equations(config["params"])
             print_equation(quiz, i + 1)
         
         print("-" * 60)
@@ -87,7 +88,7 @@ def main():
     """Main entry point for the CLI application."""
     # Define the path to the difficulty configurations
     json_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-                            "data", "equation_difficulties.json")
+                            "data", "equation_difficulties_v2.json")
     
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Generate math equations based on difficulty levels")

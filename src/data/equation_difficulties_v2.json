@@ -1,0 +1,26 @@
+[
+  {
+    "id": "addition",
+    "name": "Addition",
+    "difficulty": 1,
+    "params": {
+      "type": "basic_math",
+      "operations": ["+"],
+      "max_value": 20,
+      "allow_decimals": false,
+      "elements": 2
+    }
+  },
+  {
+    "id": "div_mult",
+    "name": "Division and multiplication",
+    "difficulty": 2,
+    "params": {
+      "type": "basic_math",
+      "operations": ["*", "/"],
+      "max_value": 10,
+      "allow_decimals": false,
+      "elements": 2
+    }
+  }
+] 

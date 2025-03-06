@@ -16,6 +16,7 @@ Design goals:
 import random
 from fractions import Fraction
 from typing import List, Dict, Tuple, Set, Union, Optional, Any, NamedTuple, TypedDict, Literal
+import sympy as sp
 
 
 # TypedDict definitions for configuration parameters
@@ -95,7 +96,8 @@ class EquationsGeneratorV2:
     def generate_basic_math(self, operations: Optional[List[str]] = None, 
                            max_value: int = 30, 
                            allow_decimals: bool = False, 
-                           elements: int = 2) -> DynamicQuizV2:
+                           elements: int = 2,
+                           random_seed: Optional[int] = None) -> DynamicQuizV2:
         """
         Generate a basic math equation with one unknown on the left side.
         
@@ -104,17 +106,93 @@ class EquationsGeneratorV2:
             max_value: Maximum value for constants, defaults to 30
             allow_decimals: Whether to allow decimal values, defaults to False
             elements: Number of elements in the equation, defaults to 2 (x = a + b)
+            random_seed: Optional random seed for reproducibility
             
         Returns:
             DynamicQuizV2: The generated quiz with equations and solution
         """
-        # Placeholder for actual implementation
-        # This will be replaced with the real implementation later
+        # Set default operations if not provided
+        if operations is None:
+            operations = ['+', '-']
+        
+        # Set random seed if provided
+        if random_seed is not None:
+            random.seed(random_seed)
+        
+        # Create the variable symbol
+        x = sp.Symbol('x')
+        
+        # Build the right side of the equation
+        right_side_expr = None
+        right_side_formatted = ""
+        
+        # Start with a random value for the first element
+        if allow_decimals:
+            first_value = round(random.uniform(1, max_value), 1)
+        else:
+            first_value = random.randint(1, max_value)
+        
+        right_side_expr = first_value
+        right_side_formatted = str(first_value)
+        
+        # Add additional elements based on the specified number
+        for i in range(elements - 1):
+            # Choose a random operation from the allowed operations
+            operation = random.choice(operations)
+            
+            # Generate a random value for the operand
+            if allow_decimals:
+                operand_value = round(random.uniform(1, max_value), 1)
+            else:
+                operand_value = random.randint(1, max_value)
+            
+            # Apply the operation to the right side expression
+            if operation == '+':
+                right_side_expr += operand_value
+                right_side_formatted += f" + {operand_value}"
+            elif operation == '-':
+                right_side_expr -= operand_value
+                right_side_formatted += f" - {operand_value}"
+            elif operation == '*':
+                right_side_expr *= operand_value
+                right_side_formatted += f" * {operand_value}"
+            elif operation == '/':
+                # Ensure we don't divide by zero and result is clean
+                if operand_value == 0:
+                    operand_value = 1
+                
+                # If decimals are not allowed, ensure division results in an integer
+                if not allow_decimals:
+                    # Find a divisor that divides the current expression evenly
+                    divisors = [i for i in range(1, min(11, max_value + 1)) if right_side_expr % i == 0]
+                    if not divisors:
+                        # If no clean divisors, switch to multiplication
+                        right_side_expr *= operand_value
+                        right_side_formatted += f" * {operand_value}"
+                        continue
+                    
+                    operand_value = random.choice(divisors)
+                
+                right_side_expr /= operand_value
+                right_side_formatted += f" / {operand_value}"
+        
+        # The solution for x is the value of the right side expression
+        x_value = right_side_expr
+        
+        # Create the equation
+        equation = sp.Eq(x, right_side_expr)
+        formatted_equation = f"x = {right_side_formatted}"
+        
+        # Create the solution
+        symbolic_solution = {x: x_value}
+        human_readable_solution = {"x": x_value}
+        
+        # Create the quiz
         return DynamicQuizV2(
-            equations=[EquationV2(None, "x = 1 + 2")],
+            equations=[EquationV2(equation, formatted_equation)],
             solution=DynamicQuizSolutionV2(
-                symbolic={},
-                human_readable={"x": 3}
+                symbolic=symbolic_solution,
+                human_readable=human_readable_solution
             )
         )
     
@@ -231,12 +309,19 @@ class EquationsGeneratorV2:
             
         equation_type = config.get("type")
         
+        # Set random seed if provided
+        if "random_seed" in config and config["random_seed"] is not None:
+            random_seed = config["random_seed"]
+        else:
+            random_seed = None
+        
         if equation_type == "basic_math":
             return self.generate_basic_math(
                 operations=config.get("operations", ["+", "-"]),
                 max_value=config.get("max_value", 30),
                 allow_decimals=config.get("allow_decimals", False),
-                elements=config.get("elements", 2)
+                elements=config.get("elements", 2),
+                random_seed=random_seed
             )
         elif equation_type == "simple_quiz":
             return self.generate_simple_quiz(
