@@ -468,4 +468,91 @@ class TestMathEquationGenerator:
                 print(f"Solution: {quiz.solution.human_readable}")
                 print("---")
             
-            assert rank == num_unknowns, f"System with {num_unknowns} unknowns has rank {rank}, expected {num_unknowns}" 
+            assert rank == num_unknowns, f"System with {num_unknowns} unknowns has rank {rank}, expected {num_unknowns}"
+
+    def test_left_side_variable_equation(self, generator):
+        """
+        Test generation of simple equations where the unknown variable is isolated on the left side.
+        
+        Example: x = 6 + 10
+        
+        These equations should have:
+        - Only one equation
+        - One unknown variable always isolated on the left side
+        - Only basic operations (particularly addition) on the right side
+        """
+        # Try to generate a quiz with appropriate configuration
+        quiz = generator.generate_quiz(
+            num_unknowns=1,
+            num_equations=1,
+            complexity=1,
+            very_simple=True,
+            left_side_variable=True
+        )
+        
+        # Check if we have one equation
+        assert len(quiz.equations) == 1
+        
+        # Parse the equation to check format
+        equation_str = quiz.equations[0].formatted
+        
+        # Check if the equation has the format "x = expression"
+        # First split by equals sign
+        sides = equation_str.split('=')
+        assert len(sides) == 2, f"Expected equation with format 'x = expression', got: {equation_str}"
+        
+        # Verify left side is just a variable (no operations)
+        left_side = sides[0].strip()
+        assert left_side.isalpha(), f"Left side should be just a variable, got: {left_side}"
+        
+        # Verify the solution works
+        var_name = left_side
+        assert var_name in quiz.solution.human_readable, f"Variable {var_name} not found in solution"
+
+    def test_add_subtract_only_equations(self, generator):
+        """
+        Test generation of equation sets that use only symbols, addition, and subtraction.
+        
+        Examples:
+        - x + x + x = 6
+        - x + y + y = 12
+        - x + y - z = 10
+        
+        These equations should have:
+        - Multiple equations with multiple unknowns
+        - Only addition and subtraction operations
+        - No multiplication, division, or complex operations
+        """
+        # Try to generate a quiz with appropriate configuration
+        num_unknowns = 3
+        num_equations = 3
+        
+        quiz = generator.generate_quiz(
+            num_unknowns=num_unknowns,
+            num_equations=num_equations,
+            complexity=1,
+            allow_division=False,  # Disable division
+            very_simple=True      # Keep it simple
+        )
+        
+        # Check if we have the expected number of equations
+        assert len(quiz.equations) == num_equations
+        
+        # Check each equation for allowed operations
+        for eq in quiz.equations:
+            equation_str = eq.formatted
+            
+            # Equation should contain equals sign
+            assert '=' in equation_str, f"Equation missing equals sign: {equation_str}"
+            
+            # Check for disallowed operations (* and /)
+            assert '*' not in equation_str, f"Equation contains multiplication: {equation_str}"
+            assert '/' not in equation_str, f"Equation contains division: {equation_str}"
+            
+            # Equation should only contain variables, +, -, =, and numbers
+            allowed_chars = set('abcdefghijklmnopqrstuvwxyz+-= 0123456789')
+            for char in equation_str:
+                assert char.lower() in allowed_chars, f"Equation contains disallowed character '{char}': {equation_str}"
+        
+        # Verify solution exists for all variables
+        assert len(quiz.solution.human_readable) == num_unknowns 

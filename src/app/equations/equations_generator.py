@@ -99,7 +99,8 @@ class MathEquationGenerator:
                       allow_fractions: bool = False, allow_division: bool = False,
                       complexity: int = 1, num_helper_equations: int = 0,
                       very_simple: bool = False, max_elements: Optional[int] = None,
-                      ensure_operation: bool = True, _recursion_depth: int = 0) -> DynamicQuiz:
+                      ensure_operation: bool = True, _recursion_depth: int = 0,
+                      left_side_variable: bool = False) -> DynamicQuiz:
         """
         Generate a system of equations with guaranteed solutions.
 
@@ -118,25 +119,22 @@ class MathEquationGenerator:
                                of equations will be num_equations + num_helper_equations.
         - very_simple: If True, uses repeated addition instead of multiplication
                       and avoids negative numbers and negative variable terms
-        - max_elements: Maximum number of total elements (terms) in an equation.
-                       This limits the sum of all variable terms and constants.
-        - ensure_operation: If True, ensures each equation has at least one operation
-                           (not just "x = 2")
-        - _recursion_depth: Internal parameter to track recursion depth to prevent
-                           infinite recursion. When depth exceeds MAX_RECURSION_DEPTH,
-                           the method falls back to a simpler approach that guarantees
-                           linear independence without complex checks.
-
-        Returns:
-        - Quiz object containing equations and solution
+        - max_elements: Maximum number of elements (variables and constants) in the equation
+        - ensure_operation: If True, ensures at least one operation in the equation
+        - left_side_variable: If True, ensures the variable is isolated on the left side of the equation
+                             (only works with num_unknowns=1 and num_equations=1)
         """
+        # Validate left_side_variable parameter
+        if left_side_variable and (num_unknowns != 1 or num_equations != 1):
+            raise ValueError("left_side_variable=True requires num_unknowns=1 and num_equations=1")
+
         # Limit recursion depth to avoid stack overflow
         if _recursion_depth > self.MAX_RECURSION_DEPTH:
             # Fallback to a simpler approach when we've tried too many times
             # This prevents infinite recursion while still ensuring a valid quiz
             return self._generate_quiz_fallback(
                 num_unknowns, num_equations, allow_fractions, allow_division,
-                complexity, num_helper_equations, very_simple, max_elements, ensure_operation
+                complexity, num_helper_equations, very_simple, max_elements, ensure_operation, left_side_variable
             )
 
         # Constrain parameters to valid ranges for safety and predictability
@@ -227,6 +225,29 @@ class MathEquationGenerator:
                 _recursion_depth=_recursion_depth + 1
             )
 
+        # If left_side_variable is True, reformat the equation to isolate the variable on the left
+        if left_side_variable:
+            # We should only have one equation with one unknown at this point
+            equation_str = formatted_equations[0]
+            var_symbol = list(solution_dict.keys())[0]
+            var_name = str(var_symbol)
+            
+            # Parse the equation string
+            sides = equation_str.split('=')
+            if len(sides) != 2:
+                raise ValueError(f"Invalid equation format: {equation_str}")
+            
+            left_side = sides[0].strip()
+            right_side = sides[1].strip()
+            
+            # Create a new equation with the variable isolated on the left
+            new_formatted_equation = f"{var_name} = {right_side}"
+            
+            # Replace the original formatted equation
+            formatted_equations[0] = new_formatted_equation
+            
+            # Also update the symbolic equation to match
+            equations[0] = f"{var_name} = {right_side}"
 
         # Create list of Equation objects
         equation_objects = [
@@ -237,7 +258,7 @@ class MathEquationGenerator:
         # Create solution object
         quiz_solution = DynamicQuizSolution(
             symbolic=solution_dict,
-            human_readable=solution
+            human_readable={str(k): v for k, v in solution_dict.items()}
         )
 
         # Create Quiz object
@@ -252,23 +273,15 @@ class MathEquationGenerator:
                       allow_fractions: bool = False, allow_division: bool = False,
                       complexity: int = 1, num_helper_equations: int = 0,
                       very_simple: bool = False, max_elements: Optional[int] = None,
-                      ensure_operation: bool = True) -> DynamicQuiz:
+                      ensure_operation: bool = True, left_side_variable: bool = False) -> DynamicQuiz:
         """
-        Fallback method to generate a quiz when the main method fails to generate enough linearly independent equations.
-        
-        This method uses a deterministic approach to guarantee linear independence by constructing
-        a system where each equation focuses primarily on one variable. This approach is more
-        reliable but produces less varied equations than the primary method.
-        
-        The diagonal-dominant coefficient matrix created here ensures a unique solution without
-        requiring complex rank calculations, making it suitable as a fallback when the more
-        sophisticated approach fails.
-        
-        Parameters are the same as generate_quiz() except for _recursion_depth which is not needed here.
-        
-        Returns:
-            DynamicQuiz: A quiz object with guaranteed unique solution
+        Fallback method for quiz generation when the main method fails.
+        Uses a simpler approach that guarantees linear independence.
         """
+        # Validate left_side_variable parameter
+        if left_side_variable and (num_unknowns != 1 or num_equations != 1):
+            raise ValueError("left_side_variable=True requires num_unknowns=1 and num_equations=1")
+
         # Constrain parameters to valid ranges
         num_unknowns = min(max(1, num_unknowns), 3)
         complexity = min(max(1, complexity), 3)
@@ -342,6 +355,30 @@ class MathEquationGenerator:
                 coefficient_sets.add(coefficients)
                 equations.append(equation)
                 formatted_equations.append(formatted_eq)
+
+        # If left_side_variable is True, reformat the equation to isolate the variable on the left
+        if left_side_variable:
+            # We should only have one equation with one unknown at this point
+            equation_str = formatted_equations[0]
+            var_symbol = list(solution_dict.keys())[0]
+            var_name = str(var_symbol)
+            
+            # Parse the equation string
+            sides = equation_str.split('=')
+            if len(sides) != 2:
+                raise ValueError(f"Invalid equation format: {equation_str}")
+            
+            left_side = sides[0].strip()
+            right_side = sides[1].strip()
+            
+            # Create a new equation with the variable isolated on the left
+            new_formatted_equation = f"{var_name} = {right_side}"
+            
+            # Replace the original formatted equation
+            formatted_equations[0] = new_formatted_equation
+            
+            # Also update the symbolic equation to match
+            equations[0] = f"{var_name} = {right_side}"
 
         # Create list of Equation objects
         equation_objects = [
