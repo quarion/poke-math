@@ -1,31 +1,31 @@
 [
   {
     "id": "addition",
-    "name": "Addition",
+    "name": "Beginner",
     "difficulty": 1,
     "params": {
       "type": "basic_math",
       "operations": ["+"],
-      "max_value": 20,
-      "allow_decimals": false,
-      "elements": 2
-    }
-  },
-  {
-    "id": "div_mult",
-    "name": "Division and multiplication",
-    "difficulty": 2,
-    "params": {
-      "type": "basic_math",
-      "operations": ["*", "/"],
       "max_value": 10,
       "allow_decimals": false,
       "elements": 2
     }
   },
   {
+    "id": "addition-substraction",
+    "name": "Trainee",
+    "difficulty": 2,
+    "params": {
+      "type": "basic_math",
+      "operations": ["+", "-"],
+      "max_value": 20,
+      "allow_decimals": false,
+      "elements": 2
+    }
+  },
+  {
     "id": "simple_quiz_2var",
-    "name": "Simple Quiz (2 Variables)",
+    "name": "Explorer",
     "difficulty": 3,
     "params": {
       "type": "simple_quiz",
@@ -35,7 +35,7 @@
   },
   {
     "id": "simple_quiz_3var",
-    "name": "Simple Quiz (3 Variables)",
+    "name": "Challenger",
     "difficulty": 4,
     "params": {
       "type": "simple_quiz",
@@ -44,9 +44,45 @@
     }
   },
   {
-    "id": "grade_school_basic",
-    "name": "Grade School (Basic)",
+    "id": "mult",
+    "name": "Ace",
     "difficulty": 5,
+    "params": {
+      "type": "basic_math",
+      "operations": ["*", "/"],
+      "max_value": 10,
+      "allow_decimals": false,
+      "elements": 2
+    }
+  },
+  {
+    "id": "div",
+    "name": "Expert",
+    "difficulty": 6,
+    "params": {
+      "type": "basic_math",
+      "operations": ["/"],
+      "max_value": 20,
+      "allow_decimals": false,
+      "elements": 2
+    }
+  },
+  {
+    "id": "basic-math",
+    "name": "Elite",
+    "difficulty": 7,
+    "params": {
+      "type": "basic_math",
+      "operations": ["/", "+", "-", "*"],
+      "max_value": 30,
+      "allow_decimals": false,
+      "elements": 2
+    }
+  },
+  {
+    "id": "grade_school_basic",
+    "name": "Champion",
+    "difficulty": 8,
     "params": {
       "type": "grade_school",
       "num_unknowns": 2,
@@ -56,27 +92,15 @@
     }
   },
   {
-    "id": "grade_school_intermediate",
-    "name": "Grade School (Intermediate)",
-    "difficulty": 6,
+    "id": "grade_school_basic_intermediate",
+    "name": "Master",
+    "difficulty": 9,
     "params": {
       "type": "grade_school",
       "num_unknowns": 2,
       "operations": ["+", "-", "*"],
       "max_value": 15,
       "allow_decimals": false
-    }
-  },
-  {
-    "id": "grade_school_advanced",
-    "name": "Grade School (Advanced)",
-    "difficulty": 7,
-    "params": {
-      "type": "grade_school",
-      "num_unknowns": 3,
-      "operations": ["+", "-", "*", "/"],
-      "max_value": 10,
-      "allow_decimals": true
     }
   }
 ] 
