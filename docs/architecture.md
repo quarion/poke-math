@@ -15,6 +15,7 @@ poke-math/
 │   │   ├── firebase/        # Firebase configuration and utilities
 │   │   ├── game/            # Game logic and state management
 │   │   ├── storage/         # Storage implementations
+│   │   ├── view_models.py   # Strongly typed view models for templates
 │   │   └── app.py           # Flask application and routes
 │   ├── data/                # Application data files
 │   ├── static/              # Static assets
@@ -28,6 +29,9 @@ poke-math/
 
 ### Flask Web Application (`src/app/app.py`)
 Entry point for the web application that handles HTTP requests, routes, and coordinates between modules.
+
+### View Models (`src/app/view_models.py`)
+Strongly typed view model classes used to pass data to templates, providing a type-safe interface between the application and views.
 
 ### Authentication Module (`src/app/auth/`)
 
@@ -93,6 +97,7 @@ Unit tests and test fixtures for application components.
 - **Session**: User progress and history
 - **Storage**: Session data persistence mechanism
 - **Authentication**: User registration and login functionality
+- **View Models**: Strongly typed data containers for template rendering
 
 ## Extension Points
 

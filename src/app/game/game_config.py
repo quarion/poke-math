@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import json
 import os
 from pathlib import Path
@@ -101,7 +101,7 @@ def load_game_config(data_file: Path) -> GameConfig:
     )
 
 
-def load_equation_difficulties(file_path):
+def load_equation_difficulties(file_path: Path) -> List[Dict[str, Any]]:
     with open(file_path) as f:
         difficulties = json.load(f)
     return difficulties
