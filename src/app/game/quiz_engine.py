@@ -83,8 +83,8 @@ def generate_random_quiz_data(game_config, difficulty: Dict[str, Any], equation_
     Returns:
         Tuple of (quiz_id, quiz_data)
     """
-    # Generate a random equation using the MathEquationGenerator
-    quiz = equation_generator.generate_quiz(**difficulty['params'])
+    # Generate a random equation using the EquationsGeneratorV2
+    quiz = equation_generator.generate_equations(difficulty['params'])
 
     # Create a unique ID for the random quiz
     random_quiz_id = f"random_{uuid.uuid4().hex[:8]}"

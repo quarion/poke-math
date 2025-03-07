@@ -25,7 +25,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from src.app.game.game_config import load_game_config, load_equation_difficulties
 from src.app.game.game_manager import GameManager
-from src.app.equations.equations_generator import MathEquationGenerator
+from src.app.equations.equations_generator_v2 import EquationsGeneratorV2
 from src.app.game.quiz_engine import generate_random_quiz_data
 from src.app.storage.session_factory import create_session_manager
 from src.app.auth.auth import AuthManager
@@ -139,11 +139,11 @@ GAME_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'quizzes.json'
 GAME_CONFIG = load_game_config(GAME_CONFIG_PATH)
 
 # Load equation difficulties
-DIFFICULTY_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'equation_difficulties.json'
+DIFFICULTY_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'equation_difficulties_v2.json'
 EQUATION_DIFFICULTIES = load_equation_difficulties(DIFFICULTY_CONFIG_PATH)
 
 # Create equation generator
-EQUATION_GENERATOR = MathEquationGenerator()
+EQUATION_GENERATOR = EquationsGeneratorV2()
 
 # Get Pokemon images from the game configuration
 POKEMON_IMAGES = [pokemon.image_path for pokemon in GAME_CONFIG.pokemons.values()]

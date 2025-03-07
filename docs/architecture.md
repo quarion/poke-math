@@ -65,15 +65,15 @@ Data models and structures used throughout the game module.
 
 ### Equations Module (`src/app/equations/`)
 
-#### Equations Generator (`equations_generator.py`)
-Generates random mathematical equations based on difficulty settings.
+#### Equations Generator V2 (`equations_generator_v2.py`)
+Generates random mathematical equations based on difficulty settings
 
 #### Equations Tests (`equations_tests.py`)
 Contains internal tests for validating equation generation.
 
 ### Data Files (`src/data/`)
 
-- **equation_difficulties.json**: Configuration for equation difficulty levels.
+- **equation_difficulties_v2.json**: Configuration for equation difficulty levels using the V2 generator.
 - **quizzes.json**: Predefined quiz structures and progression paths.
 
 ## Infrastructure (`infrastructure/`)
