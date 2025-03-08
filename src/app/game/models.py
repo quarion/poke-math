@@ -121,4 +121,9 @@ class SessionState:
         """Reset the session state."""
         self.solved_quizzes.clear()
         self.quiz_attempts.clear()
-        # Don't clear user_name on reset - that should persist 
+        # Don't clear user_name on reset - that should persist
+        # Reset level and XP
+        self.level = 1
+        self.xp = 0
+        # Clear caught Pokémon
+        self.caught_pokemon.clear() 

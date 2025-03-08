@@ -55,8 +55,15 @@ def mock_session_manager():
         # Create session manager with mock storage and test user ID
         session_manager = SessionManager(storage=mock_storage, user_id='test_user')
         
-        # Initialize with empty state
-        session_manager.state = SessionState()
+        # Initialize with empty state that includes caught_pokemon
+        session_manager.state = SessionState(
+            solved_quizzes=set(),
+            quiz_attempts=[],
+            user_name=None,
+            level=1,
+            xp=0,
+            caught_pokemon={}
+        )
         
         # Mock _save_state to avoid storage calls
         session_manager._save_state = MagicMock()

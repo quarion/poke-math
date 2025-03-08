@@ -331,16 +331,12 @@ def profile():
     # Get user name and guest status
     user_name = game_manager.session_manager.get_user_name()
     is_guest = AuthManager.is_guest()
-    
-    # Get level information
-    level_info = game_manager.session_manager.get_level_info()
 
     return render_template('profile.html',
                            points=points,
                            solved_count=solved_count,
                            user_name=user_name,
-                           is_guest=is_guest,
-                           level_info=level_info)
+                           is_guest=is_guest)
 
 
 @app.route('/new-exercise')
@@ -576,6 +572,107 @@ def reset_progress():
     game_manager.save_session()
 
     return redirect(url_for('profile'))
+
+
+@app.route('/adventure/complete', methods=['POST'])
+@login_required
+def complete_adventure():
+    """
+    Handle adventure completion, including catching Pokémon and awarding XP.
+    
+    Expects JSON payload with:
+    - difficulty: Adventure difficulty (1-7)
+    - caught_pokemon: List of caught Pokémon IDs
+    
+    Returns JSON with:
+    - success: Boolean indicating success
+    - xp_gained: Amount of XP gained
+    - pokemon_counts: Dictionary of Pokémon IDs to new catch counts
+    - leveled_up: Boolean indicating if player leveled up
+    - level_info: Dictionary with level, XP, and XP needed for next level
+    """
+    data = request.json
+    difficulty = data.get('difficulty', 1)
+    caught_pokemon = data.get('caught_pokemon', [])
+    
+    # Get session manager and game config
+    game_manager = create_game_manager()
+    session_manager = game_manager.session_manager
+    game_config = game_manager.game_config
+    
+    # Record caught Pokémon and their new counts
+    pokemon_counts = {}
+    for pokemon_id in caught_pokemon:
+        pokemon_counts[pokemon_id] = session_manager.catch_pokemon(pokemon_id)
+    
+    # Calculate and award XP
+    xp_reward = session_manager.calculate_xp_reward(caught_pokemon, difficulty, game_config)
+    leveled_up = session_manager.add_xp(xp_reward)
+    
+    # Get updated level info
+    level_info = session_manager.get_level_info()
+    
+    return jsonify({
+        'success': True,
+        'xp_gained': xp_reward,
+        'pokemon_counts': pokemon_counts,
+        'leveled_up': leveled_up,
+        'level_info': level_info
+    })
+
+
+@app.route('/adventure/results', methods=['GET'])
+@login_required
+def adventure_results():
+    """
+    Display the results of an adventure, including caught Pokémon and XP gained.
+    
+    Expects query parameters:
+    - caught_pokemon: Comma-separated list of caught Pokémon IDs
+    - xp_gained: Amount of XP gained
+    - leveled_up: Boolean indicating if player leveled up
+    
+    Returns:
+    - Rendered adventure_results.html template
+    """
+    # Get query parameters
+    caught_pokemon_ids = request.args.get('caught_pokemon', '').split(',')
+    xp_gained = int(request.args.get('xp_gained', 0))
+    leveled_up = request.args.get('leveled_up', 'false').lower() == 'true'
+    
+    # Filter out empty strings
+    caught_pokemon_ids = [pid for pid in caught_pokemon_ids if pid]
+    
+    # Get game manager and session manager
+    game_manager = create_game_manager()
+    session_manager = game_manager.session_manager
+    game_config = game_manager.game_config
+    
+    # Get caught Pokémon details
+    caught_pokemon = []
+    pokemon_counts = {}
+    
+    for pokemon_id in caught_pokemon_ids:
+        if pokemon_id in game_config.pokemons:
+            pokemon = game_config.pokemons[pokemon_id]
+            caught_pokemon.append({
+                'id': pokemon_id,
+                'name': pokemon.name,
+                'image_path': pokemon.image_path
+            })
+            pokemon_counts[pokemon_id] = session_manager.get_caught_pokemon().get(pokemon_id, 0)
+    
+    # Get level info
+    level_info = session_manager.get_level_info()
+    
+    return render_template(
+        'adventure_results.html',
+        caught_pokemon=caught_pokemon,
+        pokemon_counts=pokemon_counts,
+        xp_gained=xp_gained,
+        leveled_up=leveled_up,
+        level_info=level_info
+    )
 
 
 # -----------------------------------------------------------------------------

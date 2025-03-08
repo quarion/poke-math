@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Adventure Complete - Pokemath!{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h2 class="mb-0">Adventure Complete!</h2>
+        </div>
+        <div class="card-body">
+            <h3 class="mb-4">Pokémon Caught</h3>
+            
+            <div class="row">
+                {% for pokemon in caught_pokemon %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <img src="{{ url_for('static', filename='images/' + pokemon.image_path) }}" 
+                             class="card-img-top" alt="{{ pokemon.name }}">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ pokemon.name }}</h5>
+                            <p class="card-text">Caught: {{ pokemon_counts[pokemon.id] }} times</p>
+                            {% if pokemon_counts[pokemon.id] == 1 %}
+                            <span class="badge bg-primary">First Catch!</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="alert alert-info mt-4">
+                <h4>XP Gained: {{ xp_gained }}</h4>
+                {% if leveled_up %}
+                <div class="alert alert-success mt-2">
+                    <h5>Level Up! You are now Level {{ level_info.level }}</h5>
+                </div>
+                {% endif %}
+                
+                <div class="progress mt-3">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%" 
+                         aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}">
+                         {{ level_info.xp }}/{{ level_info.xp_needed }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

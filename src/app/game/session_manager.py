@@ -61,56 +61,8 @@ class SessionManager:
     
     def reset(self):
         """Reset the session state."""
-        self.state.solved_quizzes.clear()
-        self.state.quiz_attempts.clear()
-        # Don't clear user_name on reset - that should persist
-        
-    def calculate_xp_needed(self, level: int) -> int:
-        """
-        Calculate XP needed for the next level.
-        
-        Args:
-            level: Current player level
-            
-        Returns:
-            XP needed for next level
-        """
-        return int(100 * (1.2 ** (level - 1)))
-    
-    def add_xp(self, xp_amount: int) -> bool:
-        """
-        Add XP to the player and handle level-ups.
-        
-        Args:
-            xp_amount: Amount of XP to add
-            
-        Returns:
-            True if player leveled up, False otherwise
-        """
-        self.state.xp += xp_amount
-        leveled_up = False
-        
-        # Check for level up
-        while self.state.xp >= self.calculate_xp_needed(self.state.level):
-            self.state.xp -= self.calculate_xp_needed(self.state.level)
-            self.state.level += 1
-            leveled_up = True
-            
+        self.state.reset()
         self._save_state()
-        return leveled_up
-    
-    def get_level_info(self) -> Dict[str, Any]:
-        """
-        Get player level information.
-        
-        Returns:
-            Dictionary with level, current XP, and XP needed for next level
-        """
-        return {
-            'level': self.state.level,
-            'xp': self.state.xp,
-            'xp_needed': self.calculate_xp_needed(self.state.level)
-        }
     
     def mark_quiz_solved(self, quiz_id: str):
         """
@@ -296,16 +248,68 @@ class SessionManager:
         
     def get_quiz_answers(self, quiz_id: str) -> Dict[str, int]:
         """
-        Get user answers for any quiz.
+        Get the user's answers for a quiz.
         
         Args:
-            quiz_id: The ID of the quiz
+            quiz_id: ID of the quiz
             
         Returns:
-            Dictionary of user answers or empty dict if not found
+            Dictionary of variable names to user-provided values
         """
         attempt = self.find_quiz_attempt(quiz_id)
-        
         if attempt:
             return attempt.user_answers
-        return {} 
+        return {}
+        
+    def catch_pokemon(self, pokemon_id: str) -> int:
+        """
+        Add a Pokémon to the player's caught list or increment its count.
+        
+        Args:
+            pokemon_id: ID of the Pokémon to catch
+            
+        Returns:
+            The new count for this Pokémon
+        """
+        current_count = self.state.caught_pokemon.get(pokemon_id, 0)
+        new_count = current_count + 1
+        self.state.caught_pokemon[pokemon_id] = new_count
+        self._save_state()
+        
+        return new_count
+    
+    def get_caught_pokemon(self) -> Dict[str, int]:
+        """
+        Get the dictionary of caught Pokémon IDs and their counts.
+        
+        Returns:
+            Dictionary mapping Pokémon IDs to catch counts
+        """
+        return self.state.caught_pokemon
+    
+    def calculate_xp_reward(self, caught_pokemon: List[str], difficulty: int, game_config) -> int:
+        """
+        Calculate XP reward for catching Pokémon and completing an adventure.
+        
+        Args:
+            caught_pokemon: List of caught Pokémon IDs
+            difficulty: Adventure difficulty (1-7)
+            game_config: GameConfig object containing Pokémon data
+            
+        Returns:
+            Total XP reward
+        """
+        # XP per Pokémon tier
+        tier_xp = {1: 50, 2: 100, 3: 200, 4: 400, 5: 800}
+        
+        # Calculate XP for caught Pokémon
+        pokemon_xp = 0
+        for pokemon_id in caught_pokemon:
+            if pokemon_id in game_config.pokemons:
+                tier = game_config.pokemons[pokemon_id].tier
+                pokemon_xp += tier_xp.get(tier, 50)
+        
+        # Add bonus XP for adventure completion
+        bonus_xp = 50 * difficulty
+        
+        return pokemon_xp + bonus_xp 

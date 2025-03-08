@@ -216,7 +216,7 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 - ✅ Simulate XP gains and check if level increments correctly
 - ✅ Verify UI updates reflect the current level and XP accurately
 
-## Checkpoint 3: Pokémon Appearance Algorithm
+## Checkpoint 3: Pokémon Appearance Algorithm ✅
 **Objective**: Implement logic to select Pokémon based on player level and adventure difficulty.
 
 ### Logic Implementation
@@ -330,15 +330,15 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    from src.app.game.game_config import load_game_config, load_equation_difficulties
    from src.app.game.game_manager import GameManager
    from src.app.game.session_manager import SessionManager
-   from src.app.game.quiz_engine import QuizEngine
+   from src.app.game.quiz_engine import check_quiz_answers, generate_random_quiz_data
    from src.app.game.pokemon_selector import PokemonSelector
    ```
 
 ### Testing
-- Create a test script to simulate adventures at various levels and difficulties
-- Confirm only unlocked tiers appear and higher difficulties favor higher tiers
+- ✅ Create a test script to simulate adventures at various levels and difficulties
+- ✅ Confirm only unlocked tiers appear and higher difficulties favor higher tiers
 
-## Checkpoint 4: Catching Pokémon and Earning XP
+## Checkpoint 4: Catching Pokémon and Earning XP ✅
 **Objective**: Enable catching Pokémon and awarding XP with adventure completion bonuses.
 
 ### Logic Implementation
@@ -402,13 +402,30 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 2. **Create a new route for adventure completion in `src/app/app.py`**:
    ```python
    @app.route('/adventure/complete', methods=['POST'])
+   @login_required
    def complete_adventure():
+       """
+       Handle adventure completion, including catching Pokémon and awarding XP.
+       
+       Expects JSON payload with:
+       - difficulty: Adventure difficulty (1-7)
+       - caught_pokemon: List of caught Pokémon IDs
+       
+       Returns JSON with:
+       - success: Boolean indicating success
+       - xp_gained: Amount of XP gained
+       - pokemon_counts: Dictionary of Pokémon IDs to new catch counts
+       - leveled_up: Boolean indicating if player leveled up
+       - level_info: Dictionary with level, XP, and XP needed for next level
+       """
        data = request.json
        difficulty = data.get('difficulty', 1)
        caught_pokemon = data.get('caught_pokemon', [])
        
-       session_manager = SessionManager.load_from_storage()
-       game_config = load_game_config(Path('src/data/quizzes.json'))
+       # Get session manager and game config
+       game_manager = create_game_manager()
+       session_manager = game_manager.session_manager
+       game_config = game_manager.game_config
        
        # Record caught Pokémon and their new counts
        pokemon_counts = {}
@@ -434,7 +451,8 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 3. **Create a new template `src/templates/adventure_results.html`**:
    ```html
    {% extends "base.html" %}
-   
+   {% block title %}Adventure Complete - Pokemath!{% endblock %}
+
    {% block content %}
    <div class="container mt-4">
        <div class="card">
@@ -489,8 +507,8 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    ```
 
 ### Testing
-- Simulate catching Pokémon and verify XP totals
-- Check UI for correct Pokémon listing and catch counts
+- ✅ Simulate catching Pokémon and verify XP totals
+- ✅ Check UI for correct Pokémon listing and catch counts
 
 ## Checkpoint 5: UI Enhancements and Collection Display
 **Objective**: Improve UI with collection stats and Pokémon collection display.
