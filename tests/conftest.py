@@ -41,10 +41,27 @@ def quiz_data(test_data_path):
 def mock_session_manager():
     """Create a SessionManager that doesn't depend on Flask session."""
     from src.app.game.session_manager import SessionManager, SessionState
-    session_manager = SessionManager()
-    # Initialize with empty state
-    session_manager.state = SessionState()
-    return session_manager
+    from unittest.mock import MagicMock, patch
+    
+    # Create a mock storage
+    mock_storage = MagicMock()
+    mock_storage.load_user_data.return_value = {'session_state': {}}
+    
+    # Patch AuthManager and _get_or_create_user_id to avoid Flask session dependency
+    with patch('src.app.auth.auth.AuthManager.get_user_id', return_value=None), \
+         patch('src.app.auth.auth.AuthManager.get_user_name', return_value=None), \
+         patch('src.app.game.session_manager.SessionManager._get_or_create_user_id', return_value='test_user'):
+        
+        # Create session manager with mock storage and test user ID
+        session_manager = SessionManager(storage=mock_storage, user_id='test_user')
+        
+        # Initialize with empty state
+        session_manager.state = SessionState()
+        
+        # Mock _save_state to avoid storage calls
+        session_manager._save_state = MagicMock()
+        
+        return session_manager
 
 
 @pytest.fixture

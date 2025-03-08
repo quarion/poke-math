@@ -61,8 +61,56 @@ class SessionManager:
     
     def reset(self):
         """Reset the session state."""
-        self.state.reset()
+        self.state.solved_quizzes.clear()
+        self.state.quiz_attempts.clear()
+        # Don't clear user_name on reset - that should persist
+        
+    def calculate_xp_needed(self, level: int) -> int:
+        """
+        Calculate XP needed for the next level.
+        
+        Args:
+            level: Current player level
+            
+        Returns:
+            XP needed for next level
+        """
+        return int(100 * (1.2 ** (level - 1)))
+    
+    def add_xp(self, xp_amount: int) -> bool:
+        """
+        Add XP to the player and handle level-ups.
+        
+        Args:
+            xp_amount: Amount of XP to add
+            
+        Returns:
+            True if player leveled up, False otherwise
+        """
+        self.state.xp += xp_amount
+        leveled_up = False
+        
+        # Check for level up
+        while self.state.xp >= self.calculate_xp_needed(self.state.level):
+            self.state.xp -= self.calculate_xp_needed(self.state.level)
+            self.state.level += 1
+            leveled_up = True
+            
         self._save_state()
+        return leveled_up
+    
+    def get_level_info(self) -> Dict[str, Any]:
+        """
+        Get player level information.
+        
+        Returns:
+            Dictionary with level, current XP, and XP needed for next level
+        """
+        return {
+            'level': self.state.level,
+            'xp': self.state.xp,
+            'xp_needed': self.calculate_xp_needed(self.state.level)
+        }
     
     def mark_quiz_solved(self, quiz_id: str):
         """

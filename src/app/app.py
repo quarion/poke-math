@@ -331,12 +331,16 @@ def profile():
     # Get user name and guest status
     user_name = game_manager.session_manager.get_user_name()
     is_guest = AuthManager.is_guest()
+    
+    # Get level information
+    level_info = game_manager.session_manager.get_level_info()
 
     return render_template('profile.html',
                            points=points,
                            solved_count=solved_count,
                            user_name=user_name,
-                           is_guest=is_guest)
+                           is_guest=is_guest,
+                           level_info=level_info)
 
 
 @app.route('/new-exercise')

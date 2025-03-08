@@ -86,13 +86,19 @@ class SessionState:
     solved_quizzes: Set[str] = field(default_factory=set)
     quiz_attempts: List[QuizAttempt] = field(default_factory=list)
     user_name: Optional[str] = None
+    level: int = 1
+    xp: int = 0
+    caught_pokemon: Dict[str, int] = field(default_factory=dict)  # Pokemon ID -> count
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             'solved_quizzes': list(self.solved_quizzes),
             'quiz_attempts': [attempt.to_dict() for attempt in self.quiz_attempts],
-            'user_name': self.user_name
+            'user_name': self.user_name,
+            'level': self.level,
+            'xp': self.xp,
+            'caught_pokemon': self.caught_pokemon
         }
 
     @classmethod
@@ -105,7 +111,10 @@ class SessionState:
         return cls(
             solved_quizzes=set(data.get('solved_quizzes', [])),
             quiz_attempts=quiz_attempts,
-            user_name=data.get('user_name')
+            user_name=data.get('user_name'),
+            level=data.get('level', 1),
+            xp=data.get('xp', 0),
+            caught_pokemon=data.get('caught_pokemon', {})
         )
 
     def reset(self):

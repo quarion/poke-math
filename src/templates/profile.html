@@ -27,6 +27,24 @@
         </div>
         {% endif %}
       </div>
+      
+      <div class="stats-card">
+        <h3>Player Level</h3>
+        <div class="stat-item">
+          <span class="stat-label">Level:</span>
+          <span class="stat-value">{{ level_info.level }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">XP:</span>
+          <span class="stat-value">{{ level_info.xp }}/{{ level_info.xp_needed }}</span>
+        </div>
+        <div class="progress mt-2">
+          <div class="progress-bar bg-success" role="progressbar" 
+               style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%" 
+               aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}">
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="profile-message">

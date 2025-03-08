@@ -67,7 +67,7 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 - ✅ Verify that every Pokémon in the database has a tier (1–5)
 - ✅ Retrieve a few Pokémon programmatically to ensure the tier field is stored and accessible
 
-## Checkpoint 2: Player Level and XP System
+## Checkpoint 2: Player Level and XP System ✅
 **Objective**: Add level and XP tracking for players with level-up mechanics.
 
 ### Data Model Changes
@@ -167,20 +167,20 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 1. **Update `profile.html` in `src/templates/`**:
    - Add a section to display player level and XP progress
    ```html
-   <div class="card mb-4">
-     <div class="card-header">
-       <h5 class="mb-0">Player Level</h5>
+   <div class="stats-card">
+     <h3>Player Level</h3>
+     <div class="stat-item">
+       <span class="stat-label">Level:</span>
+       <span class="stat-value">{{ level_info.level }}</span>
      </div>
-     <div class="card-body">
-       <div class="d-flex align-items-center mb-3">
-         <h2 class="mb-0 me-2">Level {{ level_info.level }}</h2>
-         <span class="text-muted">{{ level_info.xp }}/{{ level_info.xp_needed }} XP</span>
-       </div>
-       <div class="progress">
-         <div class="progress-bar bg-success" role="progressbar" 
-              style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%" 
-              aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}">
-         </div>
+     <div class="stat-item">
+       <span class="stat-label">XP:</span>
+       <span class="stat-value">{{ level_info.xp }}/{{ level_info.xp_needed }}</span>
+     </div>
+     <div class="progress mt-2">
+       <div class="progress-bar bg-success" role="progressbar" 
+            style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%" 
+            aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}">
        </div>
      </div>
    </div>
@@ -189,20 +189,32 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 2. **Update the route handler for profile in `src/app/app.py`**:
    ```python
    @app.route('/profile')
+   @login_required
    def profile():
-       session_manager = SessionManager.load_from_storage()
-       level_info = session_manager.get_level_info()
+       """Display the user's profile with points and progress."""
+       game_manager = create_game_manager()
+       solved_count = len(game_manager.solved_quizzes)
+       # Each solved quiz is worth 1 point
+       points = solved_count
        
-       return render_template(
-           'profile.html',
-           user_name=session_manager.get_user_name(),
-           level_info=level_info
-       )
+       # Get user name and guest status
+       user_name = game_manager.session_manager.get_user_name()
+       is_guest = AuthManager.is_guest()
+       
+       # Get level information
+       level_info = game_manager.session_manager.get_level_info()
+
+       return render_template('profile.html',
+                              points=points,
+                              solved_count=solved_count,
+                              user_name=user_name,
+                              is_guest=is_guest,
+                              level_info=level_info)
    ```
 
 ### Testing
-- Simulate XP gains and check if level increments correctly
-- Verify UI updates reflect the current level and XP accurately
+- ✅ Simulate XP gains and check if level increments correctly
+- ✅ Verify UI updates reflect the current level and XP accurately
 
 ## Checkpoint 3: Pokémon Appearance Algorithm
 **Objective**: Implement logic to select Pokémon based on player level and adventure difficulty.
