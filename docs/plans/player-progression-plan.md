@@ -50,16 +50,20 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    # Prepare Pokemon data
    pokemons = {}
    for name, pokemon_data in raw_data['pokemons'].items():
-       # Handle both old format (string) and new format (dict)
+       # Require the new format with tier information
        if isinstance(pokemon_data, str):
-           pokemons[name] = Pokemon(name=name, image_path=pokemon_data)
-       else:
-           pokemons[name] = Pokemon(
-               name=name,
-               image_path=pokemon_data.get('image_path', ''),
-               tier=pokemon_data.get('tier', 1)
-           )
+           raise ValueError(f"Pokemon {name} is using old format. Please update to include tier information.")
+       
+       pokemons[name] = Pokemon(
+           name=name,
+           image_path=pokemon_data.get('image_path', ''),
+           tier=pokemon_data.get('tier', 1)
+       )
    ```
+
+### Testing
+- Verify that every Pokémon in the database has a tier (1–5)
+- Retrieve a few Pokémon programmatically to ensure the tier field is stored and accessible
 
 ## Checkpoint 2: Player Level and XP System
 **Objective**: Add level and XP tracking for players with level-up mechanics.
@@ -76,7 +80,7 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
        user_name: Optional[str] = None
        level: int = 1
        xp: int = 0
-       caught_pokemon: List[str] = field(default_factory=list)
+       caught_pokemon: Dict[str, int] = field(default_factory=dict)  # Pokemon ID -> count
 
        def to_dict(self) -> Dict[str, Any]:
            """Convert to dictionary for serialization."""
@@ -102,7 +106,7 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
                user_name=data.get('user_name'),
                level=data.get('level', 1),
                xp=data.get('xp', 0),
-               caught_pokemon=data.get('caught_pokemon', [])
+               caught_pokemon=data.get('caught_pokemon', {})
            )
    ```
 
@@ -327,30 +331,29 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 
 1. **Add Pokémon catching methods to `SessionManager` in `src/app/game/session_manager.py`**:
    ```python
-   def catch_pokemon(self, pokemon_id: str) -> bool:
+   def catch_pokemon(self, pokemon_id: str) -> int:
        """
-       Add a Pokémon to the player's caught list.
+       Add a Pokémon to the player's caught list or increment its count.
        
        Args:
            pokemon_id: ID of the Pokémon to catch
            
        Returns:
-           True if this is the first time catching this Pokémon, False otherwise
+           The new count for this Pokémon
        """
-       is_new = pokemon_id not in self.state.caught_pokemon
+       current_count = self.state.caught_pokemon.get(pokemon_id, 0)
+       new_count = current_count + 1
+       self.state.caught_pokemon[pokemon_id] = new_count
+       self._save_state()
        
-       if is_new:
-           self.state.caught_pokemon.append(pokemon_id)
-           self._save_state()
-           
-       return is_new
+       return new_count
    
-   def get_caught_pokemon(self) -> List[str]:
+   def get_caught_pokemon(self) -> Dict[str, int]:
        """
-       Get the list of caught Pokémon IDs.
+       Get the dictionary of caught Pokémon IDs and their counts.
        
        Returns:
-           List of caught Pokémon IDs
+           Dictionary mapping Pokémon IDs to catch counts
        """
        return self.state.caught_pokemon
    
@@ -393,11 +396,10 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
        session_manager = SessionManager.load_from_storage()
        game_config = load_game_config(Path('src/data/quizzes.json'))
        
-       # Record newly caught Pokémon
-       new_catches = []
+       # Record caught Pokémon and their new counts
+       pokemon_counts = {}
        for pokemon_id in caught_pokemon:
-           if session_manager.catch_pokemon(pokemon_id):
-               new_catches.append(pokemon_id)
+           pokemon_counts[pokemon_id] = session_manager.catch_pokemon(pokemon_id)
        
        # Calculate and award XP
        xp_reward = session_manager.calculate_xp_reward(caught_pokemon, difficulty, game_config)
@@ -409,7 +411,7 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
        return jsonify({
            'success': True,
            'xp_gained': xp_reward,
-           'new_catches': new_catches,
+           'pokemon_counts': pokemon_counts,
            'leveled_up': leveled_up,
            'level_info': level_info
        })
@@ -436,8 +438,8 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
                                 class="card-img-top" alt="{{ pokemon.name }}">
                            <div class="card-body text-center">
                                <h5 class="card-title">{{ pokemon.name }}</h5>
-                               <p class="card-text">Tier {{ pokemon.tier }}</p>
-                               {% if pokemon.id in new_catches %}
+                               <p class="card-text">Caught: {{ pokemon_counts[pokemon.id] }} times</p>
+                               {% if pokemon_counts[pokemon.id] == 1 %}
                                <span class="badge bg-primary">First Catch!</span>
                                {% endif %}
                            </div>
@@ -474,10 +476,10 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 
 ### Testing
 - Simulate catching Pokémon and verify XP totals
-- Check UI for correct Pokémon listing and "First Catch" badges
+- Check UI for correct Pokémon listing and catch counts
 
-## Checkpoint 5: UI Enhancements and Feedback
-**Objective**: Improve UI with collection stats and tier unlock notifications.
+## Checkpoint 5: UI Enhancements and Collection Display
+**Objective**: Improve UI with collection stats and Pokémon collection display.
 
 ### UI Changes
 
@@ -488,20 +490,28 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
        <h5 class="mb-0">Pokémon Collection</h5>
      </div>
      <div class="card-body">
-       {% for tier in range(1, 6) %}
-       <div class="mb-3">
-         <h6>Tier {{ tier }}</h6>
-         <div class="d-flex align-items-center">
-           <div class="progress flex-grow-1">
-             <div class="progress-bar bg-info" role="progressbar" 
-                  style="width: {{ (collection_stats[tier].caught / collection_stats[tier].total * 100) | int if collection_stats[tier].total > 0 else 0 }}%" 
-                  aria-valuenow="{{ collection_stats[tier].caught }}" aria-valuemin="0" aria-valuemax="{{ collection_stats[tier].total }}">
-             </div>
-           </div>
-           <span class="ms-2">{{ collection_stats[tier].caught }}/{{ collection_stats[tier].total }}</span>
+       <p>You have caught {{ total_unique_pokemon }} unique Pokémon out of {{ total_available_pokemon }} available.</p>
+       <div class="progress mb-4">
+         <div class="progress-bar bg-info" role="progressbar" 
+              style="width: {{ (total_unique_pokemon / total_available_pokemon * 100) | int if total_available_pokemon > 0 else 0 }}%" 
+              aria-valuenow="{{ total_unique_pokemon }}" aria-valuemin="0" aria-valuemax="{{ total_available_pokemon }}">
          </div>
        </div>
-       {% endfor %}
+       
+       <div class="row">
+         {% for pokemon in collection %}
+         <div class="col-md-3 mb-3">
+           <div class="card">
+             <img src="{{ url_for('static', filename='images/' + pokemon.image_path) }}" 
+                  class="card-img-top" alt="{{ pokemon.name }}">
+             <div class="card-body text-center">
+               <h6 class="card-title">{{ pokemon.name }}</h6>
+               <p class="card-text">Caught: {{ pokemon.count }} times</p>
+             </div>
+           </div>
+         </div>
+         {% endfor %}
+       </div>
      </div>
    </div>
    ```
@@ -516,138 +526,41 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
        # Get game config for Pokémon data
        game_config = load_game_config(Path('src/data/quizzes.json'))
        
-       # Calculate collection stats
+       # Get caught Pokémon
        caught_pokemon = session_manager.get_caught_pokemon()
-       collection_stats = {}
        
-       for tier in range(1, 6):
-           tier_pokemon = [name for name, pokemon in game_config.pokemons.items() 
-                          if pokemon.tier == tier]
-           caught_tier_pokemon = [p for p in caught_pokemon if p in tier_pokemon]
-           
-           collection_stats[tier] = {
-               'caught': len(caught_tier_pokemon),
-               'total': len(tier_pokemon)
-           }
+       # Prepare collection data for the template
+       collection = []
+       for pokemon_id, count in caught_pokemon.items():
+           if pokemon_id in game_config.pokemons:
+               pokemon = game_config.pokemons[pokemon_id]
+               collection.append({
+                   'id': pokemon_id,
+                   'name': pokemon.name,
+                   'image_path': pokemon.image_path,
+                   'count': count
+               })
+       
+       # Sort by name
+       collection.sort(key=lambda p: p['name'])
+       
+       # Calculate totals
+       total_unique_pokemon = len(caught_pokemon)
+       total_available_pokemon = len(game_config.pokemons)
        
        return render_template(
            'profile.html',
            user_name=session_manager.get_user_name(),
            level_info=level_info,
-           collection_stats=collection_stats
+           collection=collection,
+           total_unique_pokemon=total_unique_pokemon,
+           total_available_pokemon=total_available_pokemon
        )
    ```
 
-3. **Create a notification system for tier unlocks in `src/app/app.py`**:
-   ```python
-   def check_tier_unlock(old_level: int, new_level: int) -> Optional[int]:
-       """
-       Check if a new tier has been unlocked.
-       
-       Args:
-           old_level: Previous player level
-           new_level: New player level
-           
-       Returns:
-           Newly unlocked tier number or None
-       """
-       tier_unlock_levels = {11: 2, 21: 3, 31: 4, 41: 5}
-       
-       for level, tier in tier_unlock_levels.items():
-           if old_level < level <= new_level:
-               return tier
-               
-       return None
-   ```
-
-4. **Update the XP addition method in `SessionManager` to track level changes**:
-   ```python
-   def add_xp(self, xp_amount: int) -> Dict[str, Any]:
-       """
-       Add XP to the player and handle level-ups.
-       
-       Args:
-           xp_amount: Amount of XP to add
-           
-       Returns:
-           Dict with level up info
-       """
-       old_level = self.state.level
-       self.state.xp += xp_amount
-       leveled_up = False
-       
-       # Check for level up
-       while self.state.xp >= self.calculate_xp_needed(self.state.level):
-           self.state.xp -= self.calculate_xp_needed(self.state.level)
-           self.state.level += 1
-           leveled_up = True
-           
-       self._save_state()
-       
-       return {
-           'leveled_up': leveled_up,
-           'old_level': old_level,
-           'new_level': self.state.level
-       }
-   ```
-
-5. **Update the adventure completion route to check for tier unlocks**:
-   ```python
-   @app.route('/adventure/complete', methods=['POST'])
-   def complete_adventure():
-       # ... existing code ...
-       
-       # Calculate and award XP
-       xp_reward = session_manager.calculate_xp_reward(caught_pokemon, difficulty, game_config)
-       level_result = session_manager.add_xp(xp_reward)
-       
-       # Check for tier unlock
-       unlocked_tier = None
-       if level_result['leveled_up']:
-           unlocked_tier = check_tier_unlock(
-               level_result['old_level'], 
-               level_result['new_level']
-           )
-       
-       # Get updated level info
-       level_info = session_manager.get_level_info()
-       
-       return jsonify({
-           'success': True,
-           'xp_gained': xp_reward,
-           'new_catches': new_catches,
-           'leveled_up': level_result['leveled_up'],
-           'level_info': level_info,
-           'unlocked_tier': unlocked_tier
-       })
-   ```
-
-6. **Add JavaScript to display tier unlock notifications in `adventure_results.html`**:
-   ```html
-   <script>
-   document.addEventListener('DOMContentLoaded', function() {
-       // Check for tier unlock
-       const unlockedTier = {{ unlocked_tier|tojson }};
-       
-       if (unlockedTier) {
-           // Create and show notification
-           const notification = document.createElement('div');
-           notification.className = 'alert alert-warning alert-dismissible fade show';
-           notification.innerHTML = `
-               <strong>New Tier Unlocked!</strong> 
-               You've unlocked Tier ${unlockedTier} Pokémon!
-               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-           `;
-           
-           document.querySelector('.container').prepend(notification);
-       }
-   });
-   </script>
-   ```
-
 ### Testing
-- Catch Pokémon and verify the collection summary updates correctly
-- Level up to 11, 21, etc., and check for unlock messages
+- Catch Pokémon and verify the collection display updates correctly
+- Check that catch counts are displayed properly
 
 ## Checkpoint 6: Final Testing and Balancing
 **Objective**: Test the full system and adjust for balance.
@@ -706,7 +619,6 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    - Update `calculate_xp_reward` in `SessionManager`
    - Update `calculate_adjusted_weight` in `PokemonSelector`
    - Update `get_eligible_tiers` in `PokemonSelector`
-   - Update `check_tier_unlock` in `app.py`
 
 ### Testing
 - Create a test script to simulate progression from Level 1 to 50
@@ -727,9 +639,9 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    - All progression data is stored in the user's session, which is already secured
    - No additional security measures are needed
 
-4. **Backward Compatibility**:
-   - The implementation maintains backward compatibility with existing quizzes
-   - The updated `load_game_config` function handles both old and new Pokémon data formats
+4. **Tier System Notes**:
+   - Tiers are kept internal to the system and not exposed to users in the UI
+   - They affect Pokémon appearance rates and XP rewards but are not directly shown
 
 5. **Future Extensions**:
    - The tier system could be extended to include more properties (e.g., special abilities)
