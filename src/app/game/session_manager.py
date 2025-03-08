@@ -7,6 +7,7 @@ from src.app.storage.storage_interface import UserStorageInterface
 from src.app.storage.flask_session_storage import FlaskSessionStorage
 from src.app.auth.auth import AuthManager
 from src.app.game.models import SessionState, QuizData, QuizAttempt
+from src.app.game.progression_config import BASE_XP, XP_MULTIPLIER, TIER_XP_REWARDS, DIFFICULTY_BONUS_XP
 
 class SessionManager:
     """
@@ -299,17 +300,48 @@ class SessionManager:
         Returns:
             Total XP reward
         """
-        # XP per Pokémon tier
-        tier_xp = {1: 50, 2: 100, 3: 200, 4: 400, 5: 800}
-        
         # Calculate XP for caught Pokémon
         pokemon_xp = 0
         for pokemon_id in caught_pokemon:
             if pokemon_id in game_config.pokemons:
                 tier = game_config.pokemons[pokemon_id].tier
-                pokemon_xp += tier_xp.get(tier, 50)
+                pokemon_xp += TIER_XP_REWARDS.get(tier, TIER_XP_REWARDS[1])  # Default to tier 1 reward
         
         # Add bonus XP for adventure completion
-        bonus_xp = 50 * difficulty
+        bonus_xp = DIFFICULTY_BONUS_XP * difficulty
         
-        return pokemon_xp + bonus_xp 
+        return pokemon_xp + bonus_xp
+
+    def calculate_xp_needed(self, level: int) -> int:
+        """
+        Calculate XP needed for the next level.
+        
+        Args:
+            level: Current player level
+            
+        Returns:
+            XP needed for next level
+        """
+        return int(BASE_XP * (XP_MULTIPLIER ** (level - 1)))
+    
+    def add_xp(self, xp_amount: int) -> bool:
+        """
+        Add XP to the player and handle level-ups.
+        
+        Args:
+            xp_amount: Amount of XP to add
+            
+        Returns:
+            True if player leveled up, False otherwise
+        """
+        self.state.xp += xp_amount
+        leveled_up = False
+        
+        # Check for level up
+        while self.state.xp >= self.calculate_xp_needed(self.state.level):
+            self.state.xp -= self.calculate_xp_needed(self.state.level)
+            self.state.level += 1
+            leveled_up = True
+            
+        self._save_state()
+        return leveled_up 

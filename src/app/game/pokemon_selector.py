@@ -4,6 +4,12 @@ Module for selecting Pokémon based on player level and adventure difficulty.
 import random
 from typing import List, Dict, Any
 
+from src.app.game.progression_config import (
+    TIER_BASE_WEIGHTS,
+    DIFFICULTY_MULTIPLIER,
+    TIER_UNLOCK_LEVELS
+)
+
 
 class PokemonSelector:
     """
@@ -21,16 +27,11 @@ class PokemonSelector:
         Returns:
             List of unlocked tier numbers
         """
-        if player_level >= 41:
-            return [1, 2, 3, 4, 5]
-        elif player_level >= 31:
-            return [1, 2, 3, 4]
-        elif player_level >= 21:
-            return [1, 2, 3]
-        elif player_level >= 11:
-            return [1, 2]
-        else:
-            return [1]
+        eligible_tiers = []
+        for tier, unlock_level in TIER_UNLOCK_LEVELS.items():
+            if player_level >= unlock_level:
+                eligible_tiers.append(tier)
+        return sorted(eligible_tiers)
     
     @staticmethod
     def calculate_adjusted_weight(tier: int, difficulty: int) -> float:
@@ -44,11 +45,8 @@ class PokemonSelector:
         Returns:
             Adjusted weight for random selection
         """
-        # Base weights by tier
-        base_weights = {1: 100, 2: 50, 3: 20, 4: 10, 5: 5}
-        
         # Apply the formula: W_T × (1 + (D-1)/6 × (T-1))
-        return base_weights[tier] * (1 + (difficulty - 1) / 6 * (tier - 1))
+        return TIER_BASE_WEIGHTS[tier] * (1 + (difficulty - 1) * DIFFICULTY_MULTIPLIER * (tier - 1))
     
     @classmethod
     def select_pokemon(cls, pokemons: Dict[str, Any], player_level: int, difficulty: int, count: int = 1) -> List[str]:
