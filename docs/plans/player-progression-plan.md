@@ -3,7 +3,7 @@
 ## Overview
 This plan outlines a progression system for our Pokémon-themed math adventure game, including Pokémon tiers, player XP/level mechanics, Pokémon appearance logic, catching mechanics, and UI feedback. Each checkpoint includes detailed instructions for data model extensions, UI changes, and formulas to implement the progression system within our existing codebase.
 
-## Checkpoint 1: Pokémon Tier Assignment
+## Checkpoint 1: Pokémon Tier Assignment ✅
 **Objective**: Extend the Pokémon data model to include tiers for rarity and power.
 
 ### Data Model Changes
@@ -50,20 +50,22 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    # Prepare Pokemon data
    pokemons = {}
    for name, pokemon_data in raw_data['pokemons'].items():
-       # Require the new format with tier information
+       # Handle both old and new format
        if isinstance(pokemon_data, str):
-           raise ValueError(f"Pokemon {name} is using old format. Please update to include tier information.")
-       
-       pokemons[name] = Pokemon(
-           name=name,
-           image_path=pokemon_data.get('image_path', ''),
-           tier=pokemon_data.get('tier', 1)
-       )
+           # Old format: just image path
+           pokemons[name] = Pokemon(name=name, image_path=pokemon_data)
+       else:
+           # New format: dictionary with image_path and tier
+           pokemons[name] = Pokemon(
+               name=name,
+               image_path=pokemon_data.get('image_path', ''),
+               tier=pokemon_data.get('tier', 1)
+           )
    ```
 
 ### Testing
-- Verify that every Pokémon in the database has a tier (1–5)
-- Retrieve a few Pokémon programmatically to ensure the tier field is stored and accessible
+- ✅ Verify that every Pokémon in the database has a tier (1–5)
+- ✅ Retrieve a few Pokémon programmatically to ensure the tier field is stored and accessible
 
 ## Checkpoint 2: Player Level and XP System
 **Objective**: Add level and XP tracking for players with level-up mechanics.

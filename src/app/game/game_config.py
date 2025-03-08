@@ -8,6 +8,7 @@ from pathlib import Path
 class Pokemon:
     name: str
     image_path: str
+    tier: int = 1  # Default to tier 1 (common)
 
 @dataclass
 class QuizAnswer:
@@ -47,10 +48,19 @@ def load_game_config(data_file: Path) -> GameConfig:
         raw_data = json.load(f)
 
     # Prepare Pokemon data
-    pokemons = {
-        name: Pokemon(name=name, image_path=image_path)
-        for name, image_path in raw_data['pokemons'].items()
-    }
+    pokemons = {}
+    for name, pokemon_data in raw_data['pokemons'].items():
+        # Handle both old and new format
+        if isinstance(pokemon_data, str):
+            # Old format: just image path
+            pokemons[name] = Pokemon(name=name, image_path=pokemon_data)
+        else:
+            # New format: dictionary with image_path and tier
+            pokemons[name] = Pokemon(
+                name=name,
+                image_path=pokemon_data.get('image_path', ''),
+                tier=pokemon_data.get('tier', 1)
+            )
 
     # Prepare sections and quizzes
     sections = []
