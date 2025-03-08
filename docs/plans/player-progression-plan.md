@@ -510,7 +510,7 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 - ✅ Simulate catching Pokémon and verify XP totals
 - ✅ Check UI for correct Pokémon listing and catch counts
 
-## Checkpoint 5: UI Enhancements and Collection Display
+## Checkpoint 5: UI Enhancements and Collection Display ✅
 **Objective**: Improve UI with collection stats and Pokémon collection display.
 
 ### UI Changes
@@ -519,7 +519,7 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    ```html
    <div class="card mb-4">
      <div class="card-header">
-       <h5 class="mb-0">Pokémon Collection</h5>
+       <h3 class="mb-0">Pokémon Collection</h3>
      </div>
      <div class="card-body">
        <p>You have caught {{ total_unique_pokemon }} unique Pokémon out of {{ total_available_pokemon }} available.</p>
@@ -551,21 +551,29 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 2. **Add collection stats to the profile route in `src/app/app.py`**:
    ```python
    @app.route('/profile')
+   @login_required
    def profile():
-       session_manager = SessionManager.load_from_storage()
-       level_info = session_manager.get_level_info()
+       """Display the user's profile with points and progress."""
+       game_manager = create_game_manager()
+       solved_count = len(game_manager.solved_quizzes)
+       # Each solved quiz is worth 1 point
+       points = solved_count
        
-       # Get game config for Pokémon data
-       game_config = load_game_config(Path('src/data/quizzes.json'))
+       # Get user name and guest status
+       user_name = game_manager.session_manager.get_user_name()
+       is_guest = AuthManager.is_guest()
+       
+       # Get level information
+       level_info = game_manager.session_manager.get_level_info()
        
        # Get caught Pokémon
-       caught_pokemon = session_manager.get_caught_pokemon()
+       caught_pokemon = game_manager.session_manager.get_caught_pokemon()
        
        # Prepare collection data for the template
        collection = []
        for pokemon_id, count in caught_pokemon.items():
-           if pokemon_id in game_config.pokemons:
-               pokemon = game_config.pokemons[pokemon_id]
+           if pokemon_id in game_manager.game_config.pokemons:
+               pokemon = game_manager.game_config.pokemons[pokemon_id]
                collection.append({
                    'id': pokemon_id,
                    'name': pokemon.name,
@@ -578,21 +586,22 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
        
        # Calculate totals
        total_unique_pokemon = len(caught_pokemon)
-       total_available_pokemon = len(game_config.pokemons)
-       
-       return render_template(
-           'profile.html',
-           user_name=session_manager.get_user_name(),
-           level_info=level_info,
-           collection=collection,
-           total_unique_pokemon=total_unique_pokemon,
-           total_available_pokemon=total_available_pokemon
-       )
+       total_available_pokemon = len(game_manager.game_config.pokemons)
+
+       return render_template('profile.html',
+                              points=points,
+                              solved_count=solved_count,
+                              user_name=user_name,
+                              is_guest=is_guest,
+                              level_info=level_info,
+                              collection=collection,
+                              total_unique_pokemon=total_unique_pokemon,
+                              total_available_pokemon=total_available_pokemon)
    ```
 
 ### Testing
-- Catch Pokémon and verify the collection display updates correctly
-- Check that catch counts are displayed properly
+- ✅ Catch Pokémon and verify the collection display updates correctly
+- ✅ Check that catch counts are displayed properly
 
 ## Checkpoint 6: Final Testing and Balancing
 **Objective**: Test the full system and adjust for balance.

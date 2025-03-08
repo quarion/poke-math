@@ -331,12 +331,41 @@ def profile():
     # Get user name and guest status
     user_name = game_manager.session_manager.get_user_name()
     is_guest = AuthManager.is_guest()
+    
+    # Get level information
+    level_info = game_manager.session_manager.get_level_info()
+    
+    # Get caught Pokémon
+    caught_pokemon = game_manager.session_manager.get_caught_pokemon()
+    
+    # Prepare collection data for the template
+    collection = []
+    for pokemon_id, count in caught_pokemon.items():
+        if pokemon_id in game_manager.game_config.pokemons:
+            pokemon = game_manager.game_config.pokemons[pokemon_id]
+            collection.append({
+                'id': pokemon_id,
+                'name': pokemon.name,
+                'image_path': pokemon.image_path,
+                'count': count
+            })
+    
+    # Sort by name
+    collection.sort(key=lambda p: p['name'])
+    
+    # Calculate totals
+    total_unique_pokemon = len(caught_pokemon)
+    total_available_pokemon = len(game_manager.game_config.pokemons)
 
     return render_template('profile.html',
                            points=points,
                            solved_count=solved_count,
                            user_name=user_name,
-                           is_guest=is_guest)
+                           is_guest=is_guest,
+                           level_info=level_info,
+                           collection=collection,
+                           total_unique_pokemon=total_unique_pokemon,
+                           total_available_pokemon=total_available_pokemon)
 
 
 @app.route('/new-exercise')
