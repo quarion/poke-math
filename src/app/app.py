@@ -460,7 +460,7 @@ def quiz(quiz_id):
         
         # Check answers
         result = process_quiz_answers(user_answers, quiz_data['solution'])
-        
+
         # Update session data if all answers are correct
         if result.correct:
             game_manager.session_manager.mark_quiz_solved(quiz_id)
@@ -936,3 +936,55 @@ def server_error(e):
     return render_template('error.html',
                            error_code=500,
                            error_message="Server error"), 500
+
+@app.route('/api/dev/quiz/<quiz_id>/answers', methods=['GET'])
+@login_required
+def dev_get_quiz_answers(quiz_id):
+    """
+    Development-only endpoint to get the correct answers for a quiz.
+    This endpoint is only available in development mode.
+    
+    Args:
+        quiz_id: The ID of the quiz to get answers for
+        
+    Returns:
+        JSON with the correct answers
+    """
+    # Only allow this endpoint in development mode
+    if not app.debug:
+        return jsonify({"error": "This endpoint is only available in development mode"}), 403
+    
+    # Get quiz data
+    game_manager = create_game_manager()
+    session_manager = game_manager.session_manager
+    quiz_data = session_manager.get_quiz_data(quiz_id)
+    
+    # If not found in session, try to get from game config (for regular quizzes)
+    if not quiz_data:
+        if not quiz_id.startswith('random_'):
+            # Regular quiz - get from game config
+            quiz_state = game_manager.get_quiz_state(quiz_id)
+            if quiz_state:
+                # Convert to unified format
+                quiz = quiz_state['quiz']
+                quiz_data = {
+                    'quiz_id': quiz_id,
+                    'title': quiz.title,
+                    'description': quiz.description,
+                    'equations': quiz.equations,
+                    'solution': quiz.answer.values,
+                    'image_mapping': quiz_state['image_mapping'],
+                    'next_quiz_id': quiz.next_quiz_id,
+                    'is_random': False
+                }
+            else:
+                return jsonify({"error": "Quiz not found"}), 404
+        else:
+            # Random quiz not found
+            return jsonify({"error": "Quiz not found"}), 404
+    
+    # Return the correct answers
+    return jsonify({
+        "quiz_id": quiz_id,
+        "answers": quiz_data['solution']
+    })
