@@ -344,4 +344,17 @@ class SessionManager:
             leveled_up = True
             
         self._save_state()
-        return leveled_up 
+        return leveled_up
+    
+    def get_level_info(self) -> Dict[str, Any]:
+        """
+        Get player level information.
+        
+        Returns:
+            Dictionary with level, current XP, and XP needed for next level
+        """
+        return {
+            'level': self.state.level,
+            'xp': self.state.xp,
+            'xp_needed': self.calculate_xp_needed(self.state.level)
+        } 

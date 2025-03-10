@@ -20,7 +20,7 @@ class BasePage:
             page (Page): The Playwright page object
         """
         self.page = page
-        self.base_url = os.environ.get("BASE_URL", "http://localhost:5000")
+        self.base_url = os.environ.get("BASE_URL", "http://localhost:8080")
     
     async def goto(self, path: str = ""):
         """
