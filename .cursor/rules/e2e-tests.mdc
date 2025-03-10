@@ -1,0 +1,43 @@
+---
+description: Creating and running unit e2e tests
+globs: tests/e2e/*
+alwaysApply: false
+---
+# E2E testing
+
+## Directory Structure
+
+Root: tests/e2e
+    Feature Subdirectories: e.g., login/, dashboard/ for grouping tests
+    Pages Directory: pages/ for Page Object Model (POM) classes
+Example:
+
+tests/e2e
+├── pages/                  # Page Object Model (POM) classes
+│   ├── LoginPage.py
+│   ├── PageOne.py
+├── fixtures/               # Test fixtures for reusable state (e.g., logged-in user)
+│   └── auth.py
+│   ├── specs/              # Test files grouped by feature
+│   │   ├── test_login.py
+│   │   └── test_dashboard.py
+│   │   └── test_smoke.py    
+├── utils/                  # Helper utilities (e.g., API calls, mocks)
+│   │   └── apiHelpers.py
+
+## File Organization
+
+- POM Classes: One file per page (e.g., LoginPage.py) in pages/.
+- Test Files: Grouped by feature in files (e.g., specs/test_login.py). 
+- Utils (Optional): Add utils/ for shared helpers if needed (e.g., utils/helpers.py).
+
+## Best Practices in Code
+
+- Page Object Model (POM):
+  - Create a class per page with methods for actions (e.g., goto, login).
+  - Use user-facing locators: get_by_role, get_by_label, get_by_text.
+- Test Isolation: Use a fresh browser context per test for independence.
+- State Management: Set up test state (e.g., logged-in user) via fixtures or methods.
+- Assertions: Use Playwright’s expect for readable assertions.
+- Test data: Keep tests data separate from test code. Test code should be parametrized.
+- Auto-waiting: Leverage Playwrights auto-waiting, avoid manual waits.
