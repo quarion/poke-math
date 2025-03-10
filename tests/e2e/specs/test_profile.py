@@ -39,20 +39,9 @@ async def test_profile_page_navigation(authenticated_page: Page):
         full_page=True
     )
     
-    # Assert - Check if we're on the profile page or if there's an error
+    # Assert - Check that the profile page is displayed correctly
     profile_page = ProfilePage(authenticated_page)
-    
-    if await profile_page.has_error():
-        # If there's an error, log it but don't fail the test
-        # This is because we know the profile page has a 500 error
-        error_message = await profile_page.get_error_message()
-        print(f"Profile page error: {error_message}")
-        
-        # Assert that we have an error (since we expect it)
-        assert await profile_page.has_error(), "Profile page should have an error"
-    else:
-        # If there's no error, check if the profile page title is visible
-        assert await profile_page.is_title_visible(), "Profile page title should be visible"
+    assert await profile_page.is_title_visible(), "Profile page title should be visible"
 
 
 @pytest.mark.asyncio
@@ -70,15 +59,5 @@ async def test_direct_profile_page_access(authenticated_page: Page):
         full_page=True
     )
     
-    # Assert - Check if we're on the profile page or if there's an error
-    if await profile_page.has_error():
-        # If there's an error, log it but don't fail the test
-        # This is because we know the profile page has a 500 error
-        error_message = await profile_page.get_error_message()
-        print(f"Profile page error: {error_message}")
-        
-        # Assert that we have an error (since we expect it)
-        assert await profile_page.has_error(), "Profile page should have an error"
-    else:
-        # If there's no error, check if the profile page title is visible
-        assert await profile_page.is_title_visible(), "Profile page title should be visible" 
+    # Assert - Check that the profile page is displayed correctly
+    assert await profile_page.is_title_visible(), "Profile page title should be visible" 
