@@ -9,6 +9,7 @@ import os
 import pytest
 import asyncio
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+import pytest_asyncio
 
 from tests.e2e.utils.test_helpers import setup_browser, teardown_browser, login_as_guest, ensure_screenshots_dir
 
@@ -17,15 +18,11 @@ from tests.e2e.utils.test_helpers import setup_browser, teardown_browser, login_
 ensure_screenshots_dir()
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+# We don't need to define a custom event_loop fixture anymore
+# pytest_asyncio will provide one for us
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def browser_context():
     """
     Set up a browser context for testing.
@@ -42,7 +39,7 @@ async def browser_context():
     await teardown_browser(playwright, browser)
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def authenticated_browser_context(browser_context):
     """
     Set up an authenticated browser context for testing.
@@ -61,7 +58,7 @@ async def authenticated_browser_context(browser_context):
     yield playwright, browser, context, page
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def page(browser_context):
     """
     Get the page from the browser context.
@@ -76,7 +73,7 @@ async def page(browser_context):
     return page
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def authenticated_page(authenticated_browser_context):
     """
     Get the authenticated page from the browser context.

@@ -41,3 +41,9 @@ tests/e2e
 - Assertions: Use Playwright’s expect for readable assertions.
 - Test data: Keep tests data separate from test code. Test code should be parametrized.
 - Auto-waiting: Leverage Playwrights auto-waiting, avoid manual waits.
+
+## Running tests
+- To run all tests: `.\tools\run_e2e_tests.ps1`
+- To run specific tests:
+  - First start a server `.\tools\start_server.ps1 `
+  - Then execute specific tests with pytest

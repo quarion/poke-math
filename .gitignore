@@ -60,3 +60,6 @@ infrastructure/backend.hcl
 
 # Firestore
 firebase-credentials.json
+
+# Playwright
+/tests/e2e/screenshots/
