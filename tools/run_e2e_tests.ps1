@@ -5,7 +5,7 @@ param(
     [string]$TestPath = "tests/e2e",
     
     [Parameter(Mandatory=$false)]
-    [string]$BaseUrl = "http://localhost:5000",
+    [string]$BaseUrl = "http://localhost:8080",
     
     [Parameter(Mandatory=$false)]
     [switch]$Headless = $false
