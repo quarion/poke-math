@@ -120,6 +120,53 @@
     {% else %}
       <div id="quiz-results"></div>
     {% endif %}
+    
+    <!-- Adventure Results Section -->
+    {% if adventure_results %}
+    <div class="adventure-results-container">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h2 class="mb-0">Adventure Complete!</h2>
+        </div>
+        <div class="card-body">
+          <h3 class="mb-4">Pokémon Caught</h3>
+          
+          <div class="pokemon-collection">
+            {% for pokemon in adventure_results.caught_pokemon %}
+            <div class="pokemon-card">
+              <img src="{{ url_for('static', filename='images/' + pokemon.image_path) }}" 
+                   class="pokemon-image" alt="{{ pokemon.name }}">
+              <div class="pokemon-info">
+                <h5 class="pokemon-name">{{ pokemon.name }}</h5>
+                <p class="pokemon-count">Caught: {{ adventure_results.pokemon_counts[pokemon.id] }} times</p>
+                {% if adventure_results.pokemon_counts[pokemon.id] == 1 %}
+                <span class="first-catch-badge">First Catch!</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <div class="xp-info">
+            <h4>XP Gained: {{ adventure_results.xp_gained }}</h4>
+            {% if adventure_results.leveled_up %}
+            <div class="level-up-alert">
+              <h5>Level Up! You are now Level {{ adventure_results.level_info.level }}</h5>
+            </div>
+            {% endif %}
+            
+            <div class="xp-progress">
+              <div class="xp-progress-bar xp-progress-{{ (adventure_results.level_info.xp / adventure_results.level_info.xp_needed * 100) | int }}">
+                {{ adventure_results.level_info.xp }}/{{ adventure_results.level_info.xp_needed }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <div id="adventure-results-container"></div>
   </article>
 
   {# Render some data as JSON for JavaScript to use #}
@@ -279,6 +326,73 @@
                 input.disabled = true;
               });
             }, 1000);
+            
+            // Display adventure results if available
+            if (data.adventure_results) {
+              const adventureResultsContainer = document.getElementById('adventure-results-container');
+              if (adventureResultsContainer) {
+                // Create HTML for caught Pokémon
+                let pokemonHtml = '';
+                data.adventure_results.caught_pokemon.forEach(pokemon => {
+                  const isFirstCatch = data.adventure_results.pokemon_counts[pokemon.id] === 1;
+                  pokemonHtml += `
+                    <div class="pokemon-card">
+                      <img src="/static/images/${pokemon.image_path}" class="pokemon-image" alt="${pokemon.name}">
+                      <div class="pokemon-info">
+                        <h5 class="pokemon-name">${pokemon.name}</h5>
+                        <p class="pokemon-count">Caught: ${data.adventure_results.pokemon_counts[pokemon.id]} times</p>
+                        ${isFirstCatch ? '<span class="first-catch-badge">First Catch!</span>' : ''}
+                      </div>
+                    </div>
+                  `;
+                });
+                
+                // Calculate XP progress percentage
+                const xpPercentage = Math.floor(
+                  (data.adventure_results.level_info.xp / data.adventure_results.level_info.xp_needed) * 100
+                );
+                
+                // Create HTML for adventure results
+                const adventureHtml = `
+                  <div class="adventure-results-container">
+                    <div class="card">
+                      <div class="card-header bg-success text-white">
+                        <h2 class="mb-0">Adventure Complete!</h2>
+                      </div>
+                      <div class="card-body">
+                        <h3 class="mb-4">Pokémon Caught</h3>
+                        
+                        <div class="pokemon-collection">
+                          ${pokemonHtml}
+                        </div>
+                        
+                        <div class="xp-info">
+                          <h4>XP Gained: ${data.adventure_results.xp_gained}</h4>
+                          ${data.adventure_results.leveled_up ? 
+                            `<div class="level-up-alert">
+                              <h5>Level Up! You are now Level ${data.adventure_results.level_info.level}</h5>
+                            </div>` : ''}
+                          
+                          <div class="xp-progress">
+                            <div class="xp-progress-bar xp-progress-${xpPercentage}">
+                              ${data.adventure_results.level_info.xp}/${data.adventure_results.level_info.xp_needed}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                
+                // Add the adventure results to the page
+                adventureResultsContainer.innerHTML = adventureHtml;
+                
+                // Scroll to the adventure results
+                setTimeout(() => {
+                  adventureResultsContainer.scrollIntoView({ behavior: 'smooth' });
+                }, 500);
+              }
+            }
           }
         })
         .catch(error => {

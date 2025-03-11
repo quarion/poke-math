@@ -245,7 +245,8 @@ def render_quiz_template(
         image_mapping: Dict[str, str],
         result: Optional[QuizResultViewModel] = None,
         user_answers: Optional[Dict[str, int]] = None,
-        already_solved: bool = False
+        already_solved: bool = False,
+        adventure_results: Optional[Dict[str, Any]] = None
 ) -> Any:
     """
     Render the quiz template for both random and regular quizzes.
@@ -257,6 +258,7 @@ def render_quiz_template(
         result: Optional result object from checking answers
         user_answers: Optional dictionary of user submitted answers
         already_solved: Flag indicating if the quiz is already solved
+        adventure_results: Optional dictionary with adventure completion results
         
     Returns:
         Response: Flask response with rendered template
@@ -282,7 +284,8 @@ def render_quiz_template(
         'quiz': quiz,  # Strongly typed view model
         'result': result,
         'user_answers': user_answers,
-        'already_solved': already_solved
+        'already_solved': already_solved,
+        'adventure_results': adventure_results
     }
 
     return render_template('quiz.html', **template_args)
@@ -446,6 +449,9 @@ def quiz(quiz_id):
         user_answers = {var: int(float(val)) for var, val in quiz_data['solution'].items()}
         session_manager.save_quiz_answers(quiz_id, user_answers)
     
+    # Initialize adventure results data
+    adventure_results = None
+    
     # Handle form submission
     if request.method == 'POST':
         # If the quiz is already solved, don't process the answers again
@@ -464,10 +470,66 @@ def quiz(quiz_id):
         # Update session data if all answers are correct
         if result.correct:
             game_manager.session_manager.mark_quiz_solved(quiz_id)
-        
-        # If it's an AJAX request, return JSON
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify(result.to_dict())
+            
+            # Process adventure completion if the quiz was solved correctly
+            # Determine difficulty level (default to 1 if not specified)
+            difficulty = 1
+            if quiz_data.get('difficulty'):
+                difficulty = quiz_data.get('difficulty').get('level', 1)
+            
+            # Determine which Pokémon to catch based on the quiz
+            # For now, we'll use the Pokémon from the image mapping as the caught Pokémon
+            caught_pokemon = []
+            for var, img_path in quiz_data['image_mapping'].items():
+                # Extract Pokémon ID from image path (remove file extension)
+                pokemon_id = img_path.split('.')[0]
+                if pokemon_id not in caught_pokemon:
+                    caught_pokemon.append(pokemon_id)
+            
+            # Record caught Pokémon and their new counts
+            pokemon_counts = {}
+            for pokemon_id in caught_pokemon:
+                pokemon_counts[pokemon_id] = session_manager.catch_pokemon(pokemon_id)
+            
+            # Calculate and award XP
+            game_config = game_manager.game_config
+            xp_reward = session_manager.calculate_xp_reward(caught_pokemon, difficulty, game_config)
+            leveled_up = session_manager.add_xp(xp_reward)
+            
+            # Get updated level info
+            level_info = session_manager.get_level_info()
+            
+            # Get caught Pokémon details for display
+            caught_pokemon_details = []
+            for pokemon_id in caught_pokemon:
+                if pokemon_id in game_config.pokemons:
+                    pokemon = game_config.pokemons[pokemon_id]
+                    caught_pokemon_details.append({
+                        'id': pokemon_id,
+                        'name': pokemon.name,
+                        'image_path': pokemon.image_path
+                    })
+            
+            # Create adventure results data
+            adventure_results = {
+                'caught_pokemon': caught_pokemon_details,
+                'pokemon_counts': pokemon_counts,
+                'xp_gained': xp_reward,
+                'leveled_up': leveled_up,
+                'level_info': level_info
+            }
+            
+            # Add adventure results to the result dictionary for AJAX requests
+            result_dict = result.to_dict()
+            result_dict['adventure_results'] = adventure_results
+            
+            # If it's an AJAX request, return JSON with adventure results
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(result_dict)
+        else:
+            # If it's an AJAX request, return JSON without adventure results
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(result.to_dict())
         
         # For regular form submissions
         return render_quiz_template(
@@ -476,7 +538,8 @@ def quiz(quiz_id):
             image_mapping=quiz_data['image_mapping'],
             result=result,
             user_answers=user_answers,
-            already_solved=already_solved
+            already_solved=already_solved,
+            adventure_results=adventure_results
         )
     
     # GET request - just display the quiz
