@@ -7,6 +7,7 @@ These classes provide a strongly-typed interface between the application and vie
 
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
+import re
 
 
 @dataclass
@@ -37,8 +38,10 @@ class QuizViewModel:
         for var, img_path in self.image_mapping.items():
             img_tag = f'<img src="/static/images/{img_path}" class="pokemon-var" alt="{var}">'
 
-            # Replace direct variable name
-            result = result.replace(var, img_tag)
+            # Replace direct variable name using regex with word boundaries
+            # This ensures we only replace standalone variables, not variables that are part of other words
+            pattern = r'\b' + re.escape(var) + r'\b'
+            result = re.sub(pattern, img_tag, result)
 
             # Also replace {var} placeholders
             placeholder = "{" + var + "}"
