@@ -6,7 +6,6 @@ from src.app.storage.storage_interface import UserStorageInterface
 from src.app.storage.flask_session_storage import FlaskSessionStorage
 from src.app.auth.auth import AuthManager
 from src.app.game.models import SessionState, QuizData, QuizAttempt
-from src.app.game.progression_config import BASE_XP, XP_MULTIPLIER, TIER_XP_REWARDS, DIFFICULTY_BONUS_XP
 
 
 class SessionManager:
@@ -199,73 +198,36 @@ class SessionManager:
         """
         return self.state.caught_pokemon
 
-    def calculate_xp_reward(self, caught_pokemon: List[str], difficulty: int, game_config) -> int:
+    def update_xp(self, xp_amount: int) -> None:
         """
-        Calculate XP reward for catching Pokémon and completing an adventure.
-        
-        Args:
-            caught_pokemon: List of caught Pokémon IDs
-            difficulty: Adventure difficulty (1-7)
-            game_config: GameConfig object containing Pokémon data
-            
-        Returns:
-            Total XP reward
-        """
-        # Calculate XP for caught Pokémon
-        pokemon_xp = 0
-        for pokemon_id in caught_pokemon:
-            if pokemon_id in game_config.pokemons:
-                tier = game_config.pokemons[pokemon_id].tier
-                pokemon_xp += TIER_XP_REWARDS.get(tier, TIER_XP_REWARDS[1])  # Default to tier 1 reward
-
-        # Add bonus XP for adventure completion
-        bonus_xp = DIFFICULTY_BONUS_XP * difficulty
-
-        return pokemon_xp + bonus_xp
-
-    def calculate_xp_needed(self, level: int) -> int:
-        """
-        Calculate XP needed for the next level.
-        
-        Args:
-            level: Current player level
-            
-        Returns:
-            XP needed for next level
-        """
-        return int(BASE_XP * (XP_MULTIPLIER ** (level - 1)))
-
-    def add_xp(self, xp_amount: int) -> bool:
-        """
-        Add XP to the player and handle level-ups.
+        Update player's XP by adding the specified amount.
         
         Args:
             xp_amount: Amount of XP to add
-            
-        Returns:
-            True if player leveled up, False otherwise
         """
         self.state.xp += xp_amount
-        leveled_up = False
-
-        # Check for level up
-        while self.state.xp >= self.calculate_xp_needed(self.state.level):
-            self.state.xp -= self.calculate_xp_needed(self.state.level)
-            self.state.level += 1
-            leveled_up = True
-
         self._save_state()
-        return leveled_up
 
-    def get_level_info(self) -> Dict[str, Any]:
+    def update_level_and_xp(self, level: int, xp: int) -> None:
         """
-        Get player level information.
+        Update player's level and XP directly.
+        
+        Args:
+            level: New player level
+            xp: New player XP
+        """
+        self.state.level = level
+        self.state.xp = xp
+        self._save_state()
+
+    def get_level_and_xp(self) -> Dict[str, Any]:
+        """
+        Get player's current level and XP.
         
         Returns:
-            Dictionary with level, current XP, and XP needed for next level
+            Dictionary with level and XP
         """
         return {
             'level': self.state.level,
-            'xp': self.state.xp,
-            'xp_needed': self.calculate_xp_needed(self.state.level)
+            'xp': self.state.xp
         }

@@ -4,6 +4,7 @@ import random
 from src.app.game.game_config import GameConfig
 from src.app.game.session_manager import SessionManager
 from src.app.game.quiz_engine import check_quiz_answers, get_display_variables
+from src.app.game.progression_manager import ProgressionManager
 
 
 class GameManager:
@@ -85,3 +86,71 @@ class GameManager:
     def solved_quizzes(self) -> Set[str]:
         """Get the set of solved quizzes."""
         return self.session_manager.solved_quizzes
+
+    def add_xp_and_handle_level_up(self, xp_amount: int) -> bool:
+        """
+        Add XP to the player and handle level-ups.
+        
+        Args:
+            xp_amount: Amount of XP to add
+            
+        Returns:
+            True if player leveled up, False otherwise
+        """
+        # Get current level and XP from session
+        current_state = self.session_manager.get_level_and_xp()
+        current_level = current_state['level']
+        current_xp = current_state['xp']
+        
+        # Add XP to current amount
+        current_xp += xp_amount
+        
+        # Use ProgressionManager to process level-up logic
+        result = ProgressionManager.process_level_up(current_level, current_xp)
+        
+        # Update session with new level and XP
+        self.session_manager.update_level_and_xp(result['level'], result['xp'])
+        
+        return result['leveled_up']
+
+    def calculate_adventure_rewards(self, caught_pokemon, difficulty):
+        """
+        Calculate rewards for completing an adventure.
+        
+        Args:
+            caught_pokemon: List of caught Pokémon IDs
+            difficulty: Adventure difficulty level
+            
+        Returns:
+            Dictionary with XP reward and whether player leveled up
+        """
+        # Calculate XP reward using ProgressionManager
+        xp_reward = ProgressionManager.calculate_xp_reward(
+            caught_pokemon, 
+            difficulty, 
+            self.game_config
+        )
+        
+        # Add XP and handle level-up
+        leveled_up = self.add_xp_and_handle_level_up(xp_reward)
+        
+        return {
+            'xp_reward': xp_reward,
+            'leveled_up': leveled_up
+        }
+
+    def get_player_level_info(self):
+        """
+        Get player level information.
+        
+        Returns:
+            Dictionary with level, current XP, and XP needed for next level
+        """
+        # Get current level and XP from session
+        current_state = self.session_manager.get_level_and_xp()
+        
+        # Use ProgressionManager to get level info
+        return ProgressionManager.get_level_info(
+            current_state['level'], 
+            current_state['xp']
+        )

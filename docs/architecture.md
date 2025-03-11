@@ -57,6 +57,9 @@ Loads quiz definitions and Pokémon data from JSON files.
 #### Session Manager (`session_manager.py`)
 Manages user session data and progress persistence.
 
+#### Progression Manager (`progression_manager.py`)
+Handles XP calculations, level-up logic, and progression-related functionality.
+
 #### Models (`models.py`)
 Data models and structures used throughout the game module.
 

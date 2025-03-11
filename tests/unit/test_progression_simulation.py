@@ -4,7 +4,7 @@ Test script to simulate player progression from Level 1 to 50.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from src.app.game.session_manager import SessionManager
+from src.app.game.progression_manager import ProgressionManager
 from src.app.game.game_config import Pokemon, GameConfig
 from src.app.game.pokemon_selector import PokemonSelector
 from src.app.game.progression_config import (
@@ -18,12 +18,8 @@ from src.app.game.progression_config import (
 
 def test_xp_progression_curve():
     """Test the XP progression curve from Level 1 to 50."""
-    # Create a mock session manager
-    mock_session_manager = MagicMock()
-    mock_session_manager.calculate_xp_needed = lambda level: int(BASE_XP * (XP_MULTIPLIER ** (level - 1)))
-    
     # Calculate XP needed for each level
-    xp_per_level = [mock_session_manager.calculate_xp_needed(level) for level in range(1, 51)]
+    xp_per_level = [ProgressionManager.calculate_xp_needed(level) for level in range(1, 51)]
     
     # Print XP needed for each level
     for level, xp in enumerate(xp_per_level, 1):
@@ -94,9 +90,6 @@ def test_pokemon_tier_distribution():
 
 def test_xp_rewards():
     """Test XP rewards for catching Pokémon and completing adventures."""
-    # Create a mock session manager
-    mock_session_manager = MagicMock()
-    
     # Create a mock game config with Pokémon of different tiers
     pokemons = {
         f"pokemon_{tier}": Pokemon(name=f"Pokemon {tier}", image_path=f"pokemon_{tier}.png", tier=tier)
@@ -116,13 +109,8 @@ def test_xp_rewards():
     ]
     
     for caught_pokemon, difficulty, expected_xp in test_cases:
-        # Mock the calculate_xp_reward method
-        mock_session_manager.calculate_xp_reward = lambda caught, diff, config: sum(
-            TIER_XP_REWARDS[config.pokemons[p].tier] for p in caught if p in config.pokemons
-        ) + 50 * diff
-        
-        # Calculate XP reward
-        xp_reward = mock_session_manager.calculate_xp_reward(caught_pokemon, difficulty, mock_game_config)
+        # Calculate XP reward using ProgressionManager
+        xp_reward = ProgressionManager.calculate_xp_reward(caught_pokemon, difficulty, mock_game_config)
         
         # Check that the XP reward is correct
         assert xp_reward == expected_xp 
