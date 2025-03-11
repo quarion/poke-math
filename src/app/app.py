@@ -862,7 +862,7 @@ def name_input():
         Rendered name input page template
     """
     # Get the current name if it exists
-    current_name = AuthManager.get_user_name()
+    current_name = create_session_manager().get_user_name()
     
     return render_template('name_input.html', current_name=current_name)
 

@@ -47,10 +47,8 @@ def mock_session_manager():
     mock_storage = MagicMock()
     mock_storage.load_user_data.return_value = {'session_state': {}}
     
-    # Patch AuthManager and _get_or_create_user_id to avoid Flask session dependency
-    with patch('src.app.auth.auth.AuthManager.get_user_id', return_value=None), \
-         patch('src.app.auth.auth.AuthManager.get_user_name', return_value=None), \
-         patch('src.app.game.session_manager.SessionManager._get_or_create_user_id', return_value='test_user'):
+    # Patch _get_or_create_user_id to avoid Flask session dependency
+    with patch('src.app.game.session_manager.SessionManager._get_or_create_user_id', return_value='test_user'):
         
         # Create session manager with mock storage and test user ID
         session_manager = SessionManager(storage=mock_storage, user_id='test_user')

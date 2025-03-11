@@ -77,55 +77,18 @@ class AuthManager:
                 httponly=True,
                 samesite='Lax'
             )
-    
-    @staticmethod
-    def set_user_name(name: str) -> None:
-        """
-        Set the user's display name in the session.
-        
-        Args:
-            name: The user's display name
-        """
-        session['display_name'] = name
-    
-    @staticmethod
-    def get_user_name() -> Optional[str]:
-        """
-        Get the user's display name from the session.
-        
-        Returns:
-            The user's display name or None if not set
-        """
-        return session.get('display_name')
+
     
     @staticmethod
     def is_authenticated() -> bool:
-        """
-        Check if the user is authenticated.
-        
-        Returns:
-            True if the user is authenticated, False otherwise
-        """
         return session.get('authenticated', False)
     
     @staticmethod
     def is_guest() -> bool:
-        """
-        Check if the user is a guest.
-        
-        Returns:
-            True if the user is a guest, False otherwise
-        """
         return session.get('auth_type') == 'guest'
     
     @staticmethod
     def get_user_id() -> Optional[str]:
-        """
-        Get the user ID from the session.
-        
-        Returns:
-            The user ID or None if not set
-        """
         return session.get('user_id')
     
     @staticmethod
