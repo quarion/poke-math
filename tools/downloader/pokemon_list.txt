@@ -1,0 +1,5 @@
+Caterpie;1
+Weedle;1
+Rattata;1
+Zigzagoon;1
+Bidoof;1

@@ -1,59 +1,276 @@
 {
-  "pokemons": {
-    "pidgey": {
-      "image_path": "pidgey.png"
+    "pokemons": {
+        "pidgey": {
+            "image_path": "pidgey.png"
+        },
+        "rattata": {
+            "image_path": "rattata.png"
+        },
+        "pikachu": {
+            "image_path": "pikachu.png"
+        },
+        "bulbasaur": {
+            "image_path": "bulbasaur.png"
+        },
+        "charmander": {
+            "image_path": "charmander.png"
+        },
+        "squirtle": {
+            "image_path": "squirtle.png"
+        },
+        "eevee": {
+            "image_path": "eevee.png"
+        },
+        "ditto": {
+            "image_path": "ditto.png"
+        },
+        "machop": {
+            "image_path": "machop.png"
+        },
+        "quaxly": {
+            "image_path": "quaxly.png"
+        },
+        "sprigatito": {
+            "image_path": "sprigatito.png"
+        },
+        "fuecoco": {
+            "image_path": "fuecoco.png"
+        },
+        "skeledirge": {
+            "image_path": "skeledirge.png"
+        },
+        "meowscarada": {
+            "image_path": "meowscarada.png"
+        },
+        "mew": {
+            "image_path": "mew.png"
+        },
+        "mewtwo": {
+            "image_path": "mewtwo.png"
+        },
+        "charizard": {
+            "image_path": "charizard.png"
+        },
+        "gengar": {
+            "image_path": "gengar.png"
+        },
+        "snorlax": {
+            "image_path": "snorlax.png"
+        },
+        "lucario": {
+            "image_path": "lucario.png"
+        },
+        "greninja": {
+            "image_path": "greninja.png"
+        },
+        "gardevoir": {
+            "image_path": "gardevoir.png"
+        },
+        "togepi": {
+            "image_path": "togepi.png"
+        },
+        "jigglypuff": {
+            "image_path": "jigglypuff.png"
+        },
+        "rowlet": {
+            "image_path": "rowlet.png"
+        },
+        "chikorita": {
+            "image_path": "chikorita.png"
+        },
+        "mudkip": {
+            "image_path": "mudkip.png"
+        },
+        "torchic": {
+            "image_path": "torchic.png"
+        },
+        "piplup": {
+            "image_path": "piplup.png"
+        },
+        "sylveon": {
+            "image_path": "sylveon.png"
+        },
+        "dragonite": {
+            "image_path": "dragonite.png"
+        },
+        "garchomp": {
+            "image_path": "garchomp.png"
+        },
+        "zorua": {
+            "image_path": "zorua.png"
+        },
+        "scorbunny": {
+            "image_path": "scorbunny.png"
+        },
+        "grookey": {
+            "image_path": "grookey.png"
+        },
+        "sobble": {
+            "image_path": "sobble.png"
+        },
+        "meowth": {
+            "image_path": "meowth.png"
+        },
+        "psyduck": {
+            "image_path": "psyduck.png"
+        },
+        "turtwig": {
+            "image_path": "turtwig.png"
+        },
+        "chimchar": {
+            "image_path": "chimchar.png"
+        },
+        "pachirisu": {
+            "image_path": "pachirisu.png"
+        },
+        "buneary": {
+            "image_path": "buneary.png"
+        },
+        "shinx": {
+            "image_path": "shinx.png"
+        },
+        "glaceon": {
+            "image_path": "glaceon.png"
+        },
+        "leafeon": {
+            "image_path": "leafeon.png"
+        },
+        "umbreon": {
+            "image_path": "umbreon.png"
+        },
+        "espeon": {
+            "image_path": "espeon.png"
+        },
+        "vaporeon": {
+            "image_path": "vaporeon.png"
+        },
+        "jolteon": {
+            "image_path": "jolteon.png"
+        },
+        "flareon": {
+            "image_path": "flareon.png"
+        },
+        "arcanine": {
+            "image_path": "arcanine.png"
+        },
+        "milotic": {
+            "image_path": "milotic.png"
+        },
+        "absol": {
+            "image_path": "absol.png"
+        },
+        "rayquaza": {
+            "image_path": "rayquaza.png"
+        },
+        "kyogre": {
+            "image_path": "kyogre.png"
+        },
+        "groudon": {
+            "image_path": "groudon.png"
+        },
+        "zekrom": {
+            "image_path": "zekrom.png"
+        },
+        "reshiram": {
+            "image_path": "reshiram.png"
+        },
+        "lugia": {
+            "image_path": "lugia.png"
+        },
+        "ho-oh": {
+            "image_path": "ho-oh.png"
+        },
+        "celebi": {
+            "image_path": "celebi.png"
+        },
+        "caterpie": {
+            "image_path": "caterpie.png"
+        },
+        "weedle": {
+            "image_path": "weedle.png"
+        },
+        "zigzagoon": {
+            "image_path": "zigzagoon.png"
+        },
+        "bidoof": {
+            "image_path": "bidoof.png"
+        }
     },
-    "rattata": {
-      "image_path": "rattata.png"
-    },
-    "pikachu": {
-      "image_path": "pikachu.png"
-    },
-    "bulbasaur": {
-      "image_path": "bulbasaur.png"
-    },
-    "charmander": {
-      "image_path": "charmander.png"
-    },
-    "squirtle": {
-      "image_path": "squirtle.png"
-    },
-    "eevee": {
-      "image_path": "eevee.png"
-    },
-    "ditto": {
-      "image_path": "ditto.png"
-    },
-    "machop": {
-      "image_path": "machop.png"
-    },
-    "quaxly": {
-      "image_path": "quaxly.png"
-    },
-    "sprigatito": {
-      "image_path": "sprigatito.png"
-    },
-    "fuecoco": {
-      "image_path": "fuecoco.png"
-    },
-    "skeledirge": {
-      "image_path": "skeledirge.png"
-    },
-    "meowscarada": {
-      "image_path": "meowscarada.png"
-    },
-    "mew": {
-      "image_path": "mew.png"
-    },
-    "mewtwo": {
-      "image_path": "mewtwo.png"
+    "tiers": {
+        "1": [
+            "pidgey",
+            "jigglypuff",
+            "meowth",
+            "psyduck",
+            "caterpie",
+            "weedle",
+            "rattata",
+            "zigzagoon",
+            "bidoof"
+        ],
+        "2": [
+             "chikorita",
+            "squirtle",
+            "bulbasaur",
+            "charmander",
+            "eevee",
+            "snorlax",
+            "togepi",
+            "rowlet",
+            "mudkip",
+            "torchic",
+            "piplup",
+            "scorbunny",
+            "grookey",
+            "sobble",
+            "turtwig",
+            "chimchar",
+            "pachirisu",
+            "buneary",
+            "shinx"
+        ],
+        "3": [
+            "ditto",
+            "machop",
+            "quaxly",
+            "sprigatito",
+            "fuecoco",
+            "pikachu",
+            "gengar",
+            "gardevoir",
+            "sylveon",
+            "zorua",
+            "glaceon",
+            "leafeon",
+            "umbreon",
+            "espeon",
+            "vaporeon",
+            "jolteon",
+            "flareon",
+            "arcanine",
+            "milotic",
+            "absol"
+        ],
+        "4": [
+            "skeledirge",
+            "meowscarada",
+            "charizard",
+            "lucario",
+            "greninja",
+            "dragonite",
+            "garchomp"
+        ],
+        "5": [
+            "mewtwo",
+            "rayquaza",
+            "kyogre",
+            "groudon",
+            "zekrom",
+            "reshiram",
+            "lugia",
+            "ho-oh",
+            "mew",
+            "celebi"
+        ]
     }
-  },
-  "tiers": {
-    "1": ["pidgey", "rattata"],
-    "2": ["pikachu", "bulbasaur", "charmander", "squirtle", "eevee"],
-    "3": ["ditto", "machop", "quaxly", "sprigatito", "fuecoco"],
-    "4": ["skeledirge", "meowscarada"],
-    "5": ["mew", "mewtwo"]
-  }
-} 
+}
