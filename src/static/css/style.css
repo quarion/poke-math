@@ -1254,4 +1254,267 @@ input[disabled] {
         left: 50%;
         right: auto;
     }
+}
+
+/* Adventure Results Styles */
+.adventure-results-container {
+  margin-top: 2rem;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.adventure-results-container .card {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.adventure-results-container .card-header {
+  padding: 1rem;
+  background-color: var(--pokemon-green);
+  color: white;
+}
+
+.adventure-results-container .card-body {
+  padding: 1.5rem;
+}
+
+.pokemon-collection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.pokemon-card {
+  width: 180px;
+  border: 1px solid var(--border-color-light);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--card-background);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.pokemon-card:hover {
+  transform: translateY(-5px);
+}
+
+.pokemon-image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background-color: #f5f5f5;
+  padding: 0.5rem;
+}
+
+.pokemon-info {
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.pokemon-name {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.pokemon-count {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color-muted);
+  font-size: 0.9rem;
+}
+
+.first-catch-badge {
+  display: inline-block;
+  background-color: var(--pokemon-blue);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.xp-info {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.level-up-alert {
+  background-color: var(--pokemon-yellow);
+  color: var(--pokemon-dark);
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  text-align: center;
+  animation: pulse 1.5s infinite;
+}
+
+.xp-progress {
+  height: 24px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.xp-progress-bar {
+  height: 100%;
+  background-color: var(--pokemon-green);
+  color: white;
+  text-align: center;
+  line-height: 24px;
+  font-weight: bold;
+  transition: width 1s ease;
+  width: 0%; /* Default width */
+}
+
+/* Progress bar percentage classes */
+.xp-progress-0 { width: 0%; }
+.xp-progress-1 { width: 1%; }
+.xp-progress-2 { width: 2%; }
+.xp-progress-3 { width: 3%; }
+.xp-progress-4 { width: 4%; }
+.xp-progress-5 { width: 5%; }
+.xp-progress-6 { width: 6%; }
+.xp-progress-7 { width: 7%; }
+.xp-progress-8 { width: 8%; }
+.xp-progress-9 { width: 9%; }
+.xp-progress-10 { width: 10%; }
+.xp-progress-11 { width: 11%; }
+.xp-progress-12 { width: 12%; }
+.xp-progress-13 { width: 13%; }
+.xp-progress-14 { width: 14%; }
+.xp-progress-15 { width: 15%; }
+.xp-progress-16 { width: 16%; }
+.xp-progress-17 { width: 17%; }
+.xp-progress-18 { width: 18%; }
+.xp-progress-19 { width: 19%; }
+.xp-progress-20 { width: 20%; }
+.xp-progress-21 { width: 21%; }
+.xp-progress-22 { width: 22%; }
+.xp-progress-23 { width: 23%; }
+.xp-progress-24 { width: 24%; }
+.xp-progress-25 { width: 25%; }
+.xp-progress-26 { width: 26%; }
+.xp-progress-27 { width: 27%; }
+.xp-progress-28 { width: 28%; }
+.xp-progress-29 { width: 29%; }
+.xp-progress-30 { width: 30%; }
+.xp-progress-31 { width: 31%; }
+.xp-progress-32 { width: 32%; }
+.xp-progress-33 { width: 33%; }
+.xp-progress-34 { width: 34%; }
+.xp-progress-35 { width: 35%; }
+.xp-progress-36 { width: 36%; }
+.xp-progress-37 { width: 37%; }
+.xp-progress-38 { width: 38%; }
+.xp-progress-39 { width: 39%; }
+.xp-progress-40 { width: 40%; }
+.xp-progress-41 { width: 41%; }
+.xp-progress-42 { width: 42%; }
+.xp-progress-43 { width: 43%; }
+.xp-progress-44 { width: 44%; }
+.xp-progress-45 { width: 45%; }
+.xp-progress-46 { width: 46%; }
+.xp-progress-47 { width: 47%; }
+.xp-progress-48 { width: 48%; }
+.xp-progress-49 { width: 49%; }
+.xp-progress-50 { width: 50%; }
+.xp-progress-51 { width: 51%; }
+.xp-progress-52 { width: 52%; }
+.xp-progress-53 { width: 53%; }
+.xp-progress-54 { width: 54%; }
+.xp-progress-55 { width: 55%; }
+.xp-progress-56 { width: 56%; }
+.xp-progress-57 { width: 57%; }
+.xp-progress-58 { width: 58%; }
+.xp-progress-59 { width: 59%; }
+.xp-progress-60 { width: 60%; }
+.xp-progress-61 { width: 61%; }
+.xp-progress-62 { width: 62%; }
+.xp-progress-63 { width: 63%; }
+.xp-progress-64 { width: 64%; }
+.xp-progress-65 { width: 65%; }
+.xp-progress-66 { width: 66%; }
+.xp-progress-67 { width: 67%; }
+.xp-progress-68 { width: 68%; }
+.xp-progress-69 { width: 69%; }
+.xp-progress-70 { width: 70%; }
+.xp-progress-71 { width: 71%; }
+.xp-progress-72 { width: 72%; }
+.xp-progress-73 { width: 73%; }
+.xp-progress-74 { width: 74%; }
+.xp-progress-75 { width: 75%; }
+.xp-progress-76 { width: 76%; }
+.xp-progress-77 { width: 77%; }
+.xp-progress-78 { width: 78%; }
+.xp-progress-79 { width: 79%; }
+.xp-progress-80 { width: 80%; }
+.xp-progress-81 { width: 81%; }
+.xp-progress-82 { width: 82%; }
+.xp-progress-83 { width: 83%; }
+.xp-progress-84 { width: 84%; }
+.xp-progress-85 { width: 85%; }
+.xp-progress-86 { width: 86%; }
+.xp-progress-87 { width: 87%; }
+.xp-progress-88 { width: 88%; }
+.xp-progress-89 { width: 89%; }
+.xp-progress-90 { width: 90%; }
+.xp-progress-91 { width: 91%; }
+.xp-progress-92 { width: 92%; }
+.xp-progress-93 { width: 93%; }
+.xp-progress-94 { width: 94%; }
+.xp-progress-95 { width: 95%; }
+.xp-progress-96 { width: 96%; }
+.xp-progress-97 { width: 97%; }
+.xp-progress-98 { width: 98%; }
+.xp-progress-99 { width: 99%; }
+.xp-progress-100 { width: 100%; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Media queries for adventure results */
+@media (max-width: 768px) {
+  .pokemon-collection {
+    gap: 0.5rem;
+  }
+  
+  .pokemon-card {
+    width: 150px;
+  }
+  
+  .xp-info {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pokemon-card {
+    width: 130px;
+  }
+  
+  .pokemon-name {
+    font-size: 1rem;
+  }
+  
+  .pokemon-count {
+    font-size: 0.8rem;
+  }
+  
+  .first-catch-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
 } 

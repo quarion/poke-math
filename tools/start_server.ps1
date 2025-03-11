@@ -29,4 +29,4 @@ Write-Host "Press Ctrl+C to stop the server" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor Cyan
 
 # Run the Flask application using the correct command
-python -m src.app
+flask --app src.app.app run --host $serverHost --port $serverPort --debug --exclude-patterns "`tests\*"

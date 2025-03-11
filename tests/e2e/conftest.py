@@ -13,6 +13,8 @@ import pytest_asyncio
 
 from tests.e2e.utils.test_helpers import setup_browser, teardown_browser, login_as_guest, ensure_screenshots_dir
 
+# Import our new fixtures
+from tests.e2e.fixtures.adventure import completed_adventure, player_stats_before_adventure
 
 # Ensure screenshots directory exists
 ensure_screenshots_dir()

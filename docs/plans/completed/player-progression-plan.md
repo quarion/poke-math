@@ -3,7 +3,7 @@
 ## Overview
 This plan outlines a progression system for our Pokémon-themed math adventure game, including Pokémon tiers, player XP/level mechanics, Pokémon appearance logic, catching mechanics, and UI feedback. Each checkpoint includes detailed instructions for data model extensions, UI changes, and formulas to implement the progression system within our existing codebase.
 
-## Checkpoint 1: Pokémon Tier Assignment
+## Checkpoint 1: Pokémon Tier Assignment ✅
 **Objective**: Extend the Pokémon data model to include tiers for rarity and power.
 
 ### Data Model Changes
@@ -50,22 +50,24 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    # Prepare Pokemon data
    pokemons = {}
    for name, pokemon_data in raw_data['pokemons'].items():
-       # Require the new format with tier information
+       # Handle both old and new format
        if isinstance(pokemon_data, str):
-           raise ValueError(f"Pokemon {name} is using old format. Please update to include tier information.")
-       
-       pokemons[name] = Pokemon(
-           name=name,
-           image_path=pokemon_data.get('image_path', ''),
-           tier=pokemon_data.get('tier', 1)
-       )
+           # Old format: just image path
+           pokemons[name] = Pokemon(name=name, image_path=pokemon_data)
+       else:
+           # New format: dictionary with image_path and tier
+           pokemons[name] = Pokemon(
+               name=name,
+               image_path=pokemon_data.get('image_path', ''),
+               tier=pokemon_data.get('tier', 1)
+           )
    ```
 
 ### Testing
-- Verify that every Pokémon in the database has a tier (1–5)
-- Retrieve a few Pokémon programmatically to ensure the tier field is stored and accessible
+- ✅ Verify that every Pokémon in the database has a tier (1–5)
+- ✅ Retrieve a few Pokémon programmatically to ensure the tier field is stored and accessible
 
-## Checkpoint 2: Player Level and XP System
+## Checkpoint 2: Player Level and XP System ✅
 **Objective**: Add level and XP tracking for players with level-up mechanics.
 
 ### Data Model Changes
@@ -165,20 +167,20 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 1. **Update `profile.html` in `src/templates/`**:
    - Add a section to display player level and XP progress
    ```html
-   <div class="card mb-4">
-     <div class="card-header">
-       <h5 class="mb-0">Player Level</h5>
+   <div class="stats-card">
+     <h3>Player Level</h3>
+     <div class="stat-item">
+       <span class="stat-label">Level:</span>
+       <span class="stat-value">{{ level_info.level }}</span>
      </div>
-     <div class="card-body">
-       <div class="d-flex align-items-center mb-3">
-         <h2 class="mb-0 me-2">Level {{ level_info.level }}</h2>
-         <span class="text-muted">{{ level_info.xp }}/{{ level_info.xp_needed }} XP</span>
-       </div>
-       <div class="progress">
-         <div class="progress-bar bg-success" role="progressbar" 
-              style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%" 
-              aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}">
-         </div>
+     <div class="stat-item">
+       <span class="stat-label">XP:</span>
+       <span class="stat-value">{{ level_info.xp }}/{{ level_info.xp_needed }}</span>
+     </div>
+     <div class="progress mt-2">
+       <div class="progress-bar bg-success" role="progressbar" 
+            style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%" 
+            aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}">
        </div>
      </div>
    </div>
@@ -187,22 +189,34 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 2. **Update the route handler for profile in `src/app/app.py`**:
    ```python
    @app.route('/profile')
+   @login_required
    def profile():
-       session_manager = SessionManager.load_from_storage()
-       level_info = session_manager.get_level_info()
+       """Display the user's profile with points and progress."""
+       game_manager = create_game_manager()
+       solved_count = len(game_manager.solved_quizzes)
+       # Each solved quiz is worth 1 point
+       points = solved_count
        
-       return render_template(
-           'profile.html',
-           user_name=session_manager.get_user_name(),
-           level_info=level_info
-       )
+       # Get user name and guest status
+       user_name = game_manager.session_manager.get_user_name()
+       is_guest = AuthManager.is_guest()
+       
+       # Get level information
+       level_info = game_manager.session_manager.get_level_info()
+
+       return render_template('profile.html',
+                              points=points,
+                              solved_count=solved_count,
+                              user_name=user_name,
+                              is_guest=is_guest,
+                              level_info=level_info)
    ```
 
 ### Testing
-- Simulate XP gains and check if level increments correctly
-- Verify UI updates reflect the current level and XP accurately
+- ✅ Simulate XP gains and check if level increments correctly
+- ✅ Verify UI updates reflect the current level and XP accurately
 
-## Checkpoint 3: Pokémon Appearance Algorithm
+## Checkpoint 3: Pokémon Appearance Algorithm ✅
 **Objective**: Implement logic to select Pokémon based on player level and adventure difficulty.
 
 ### Logic Implementation
@@ -316,15 +330,15 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    from src.app.game.game_config import load_game_config, load_equation_difficulties
    from src.app.game.game_manager import GameManager
    from src.app.game.session_manager import SessionManager
-   from src.app.game.quiz_engine import QuizEngine
+   from src.app.game.quiz_engine import check_quiz_answers, generate_random_quiz_data
    from src.app.game.pokemon_selector import PokemonSelector
    ```
 
 ### Testing
-- Create a test script to simulate adventures at various levels and difficulties
-- Confirm only unlocked tiers appear and higher difficulties favor higher tiers
+- ✅ Create a test script to simulate adventures at various levels and difficulties
+- ✅ Confirm only unlocked tiers appear and higher difficulties favor higher tiers
 
-## Checkpoint 4: Catching Pokémon and Earning XP
+## Checkpoint 4: Catching Pokémon and Earning XP ✅
 **Objective**: Enable catching Pokémon and awarding XP with adventure completion bonuses.
 
 ### Logic Implementation
@@ -388,13 +402,30 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 2. **Create a new route for adventure completion in `src/app/app.py`**:
    ```python
    @app.route('/adventure/complete', methods=['POST'])
+   @login_required
    def complete_adventure():
+       """
+       Handle adventure completion, including catching Pokémon and awarding XP.
+       
+       Expects JSON payload with:
+       - difficulty: Adventure difficulty (1-7)
+       - caught_pokemon: List of caught Pokémon IDs
+       
+       Returns JSON with:
+       - success: Boolean indicating success
+       - xp_gained: Amount of XP gained
+       - pokemon_counts: Dictionary of Pokémon IDs to new catch counts
+       - leveled_up: Boolean indicating if player leveled up
+       - level_info: Dictionary with level, XP, and XP needed for next level
+       """
        data = request.json
        difficulty = data.get('difficulty', 1)
        caught_pokemon = data.get('caught_pokemon', [])
        
-       session_manager = SessionManager.load_from_storage()
-       game_config = load_game_config(Path('src/data/quizzes.json'))
+       # Get session manager and game config
+       game_manager = create_game_manager()
+       session_manager = game_manager.session_manager
+       game_config = game_manager.game_config
        
        # Record caught Pokémon and their new counts
        pokemon_counts = {}
@@ -420,7 +451,8 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 3. **Create a new template `src/templates/adventure_results.html`**:
    ```html
    {% extends "base.html" %}
-   
+   {% block title %}Adventure Complete - Pokemath!{% endblock %}
+
    {% block content %}
    <div class="container mt-4">
        <div class="card">
@@ -475,10 +507,10 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    ```
 
 ### Testing
-- Simulate catching Pokémon and verify XP totals
-- Check UI for correct Pokémon listing and catch counts
+- ✅ Simulate catching Pokémon and verify XP totals
+- ✅ Check UI for correct Pokémon listing and catch counts
 
-## Checkpoint 5: UI Enhancements and Collection Display
+## Checkpoint 5: UI Enhancements and Collection Display ✅
 **Objective**: Improve UI with collection stats and Pokémon collection display.
 
 ### UI Changes
@@ -487,7 +519,7 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    ```html
    <div class="card mb-4">
      <div class="card-header">
-       <h5 class="mb-0">Pokémon Collection</h5>
+       <h3 class="mb-0">Pokémon Collection</h3>
      </div>
      <div class="card-body">
        <p>You have caught {{ total_unique_pokemon }} unique Pokémon out of {{ total_available_pokemon }} available.</p>
@@ -519,21 +551,29 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
 2. **Add collection stats to the profile route in `src/app/app.py`**:
    ```python
    @app.route('/profile')
+   @login_required
    def profile():
-       session_manager = SessionManager.load_from_storage()
-       level_info = session_manager.get_level_info()
+       """Display the user's profile with points and progress."""
+       game_manager = create_game_manager()
+       solved_count = len(game_manager.solved_quizzes)
+       # Each solved quiz is worth 1 point
+       points = solved_count
        
-       # Get game config for Pokémon data
-       game_config = load_game_config(Path('src/data/quizzes.json'))
+       # Get user name and guest status
+       user_name = game_manager.session_manager.get_user_name()
+       is_guest = AuthManager.is_guest()
+       
+       # Get level information
+       level_info = game_manager.session_manager.get_level_info()
        
        # Get caught Pokémon
-       caught_pokemon = session_manager.get_caught_pokemon()
+       caught_pokemon = game_manager.session_manager.get_caught_pokemon()
        
        # Prepare collection data for the template
        collection = []
        for pokemon_id, count in caught_pokemon.items():
-           if pokemon_id in game_config.pokemons:
-               pokemon = game_config.pokemons[pokemon_id]
+           if pokemon_id in game_manager.game_config.pokemons:
+               pokemon = game_manager.game_config.pokemons[pokemon_id]
                collection.append({
                    'id': pokemon_id,
                    'name': pokemon.name,
@@ -546,23 +586,24 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
        
        # Calculate totals
        total_unique_pokemon = len(caught_pokemon)
-       total_available_pokemon = len(game_config.pokemons)
-       
-       return render_template(
-           'profile.html',
-           user_name=session_manager.get_user_name(),
-           level_info=level_info,
-           collection=collection,
-           total_unique_pokemon=total_unique_pokemon,
-           total_available_pokemon=total_available_pokemon
-       )
+       total_available_pokemon = len(game_manager.game_config.pokemons)
+
+       return render_template('profile.html',
+                              points=points,
+                              solved_count=solved_count,
+                              user_name=user_name,
+                              is_guest=is_guest,
+                              level_info=level_info,
+                              collection=collection,
+                              total_unique_pokemon=total_unique_pokemon,
+                              total_available_pokemon=total_available_pokemon)
    ```
 
 ### Testing
-- Catch Pokémon and verify the collection display updates correctly
-- Check that catch counts are displayed properly
+- ✅ Catch Pokémon and verify the collection display updates correctly
+- ✅ Check that catch counts are displayed properly
 
-## Checkpoint 6: Final Testing and Balancing
+## Checkpoint 6: Final Testing and Balancing ✅
 **Objective**: Test the full system and adjust for balance.
 
 ### Configuration Implementation
@@ -621,9 +662,9 @@ This plan outlines a progression system for our Pokémon-themed math adventure g
    - Update `get_eligible_tiers` in `PokemonSelector`
 
 ### Testing
-- Create a test script to simulate progression from Level 1 to 50
-- Assess pacing (too fast/slow) and tier distribution (too common/rare)
-- Adjust configuration values as needed based on testing results
+- ✅ Create a test script to simulate progression from Level 1 to 50
+- ✅ Assess pacing (too fast/slow) and tier distribution (too common/rare)
+- ✅ Adjust configuration values as needed based on testing results
 
 ## Implementation Notes
 

@@ -245,7 +245,8 @@ def render_quiz_template(
         image_mapping: Dict[str, str],
         result: Optional[QuizResultViewModel] = None,
         user_answers: Optional[Dict[str, int]] = None,
-        already_solved: bool = False
+        already_solved: bool = False,
+        adventure_results: Optional[Dict[str, Any]] = None
 ) -> Any:
     """
     Render the quiz template for both random and regular quizzes.
@@ -257,6 +258,7 @@ def render_quiz_template(
         result: Optional result object from checking answers
         user_answers: Optional dictionary of user submitted answers
         already_solved: Flag indicating if the quiz is already solved
+        adventure_results: Optional dictionary with adventure completion results
         
     Returns:
         Response: Flask response with rendered template
@@ -282,7 +284,8 @@ def render_quiz_template(
         'quiz': quiz,  # Strongly typed view model
         'result': result,
         'user_answers': user_answers,
-        'already_solved': already_solved
+        'already_solved': already_solved,
+        'adventure_results': adventure_results
     }
 
     return render_template('quiz.html', **template_args)
@@ -322,8 +325,12 @@ def all_exercises():
 @app.route('/profile')
 @login_required
 def profile():
-    """Display the user's profile with points and progress."""
+    """
+    Display user profile with solved quizzes and level information.
+    """
     game_manager = create_game_manager()
+    
+    # Count solved quizzes
     solved_count = len(game_manager.solved_quizzes)
     # Each solved quiz is worth 1 point
     points = solved_count
@@ -331,12 +338,41 @@ def profile():
     # Get user name and guest status
     user_name = game_manager.session_manager.get_user_name()
     is_guest = AuthManager.is_guest()
+    
+    # Get level information
+    level_info = game_manager.get_player_level_info()
+    
+    # Get caught Pokémon
+    caught_pokemon = game_manager.session_manager.get_caught_pokemon()
+    
+    # Prepare collection data for the template
+    collection = []
+    for pokemon_id, count in caught_pokemon.items():
+        if pokemon_id in game_manager.game_config.pokemons:
+            pokemon = game_manager.game_config.pokemons[pokemon_id]
+            collection.append({
+                'id': pokemon_id,
+                'name': pokemon.name,
+                'image_path': pokemon.image_path,
+                'count': count
+            })
+    
+    # Sort by name
+    collection.sort(key=lambda p: p['name'])
+    
+    # Calculate totals
+    total_unique_pokemon = len(caught_pokemon)
+    total_available_pokemon = len(game_manager.game_config.pokemons)
 
     return render_template('profile.html',
                            points=points,
                            solved_count=solved_count,
                            user_name=user_name,
-                           is_guest=is_guest)
+                           is_guest=is_guest,
+                           level_info=level_info,
+                           collection=collection,
+                           total_unique_pokemon=total_unique_pokemon,
+                           total_available_pokemon=total_available_pokemon)
 
 
 @app.route('/new-exercise')
@@ -369,7 +405,9 @@ def generate_random_exercise(difficulty_id):
 @app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
 @login_required
 def quiz(quiz_id):
-    """Display any quiz (random or regular) and process answers."""
+    """
+    Display and process a quiz.
+    """
     game_manager = create_game_manager()
     
     # Check if this is a random quiz ID format
@@ -417,6 +455,9 @@ def quiz(quiz_id):
         user_answers = {var: int(float(val)) for var, val in quiz_data['solution'].items()}
         session_manager.save_quiz_answers(quiz_id, user_answers)
     
+    # Initialize adventure results data
+    adventure_results = None
+    
     # Handle form submission
     if request.method == 'POST':
         # If the quiz is already solved, don't process the answers again
@@ -431,14 +472,68 @@ def quiz(quiz_id):
         
         # Check answers
         result = process_quiz_answers(user_answers, quiz_data['solution'])
-        
+
         # Update session data if all answers are correct
         if result.correct:
             game_manager.session_manager.mark_quiz_solved(quiz_id)
-        
-        # If it's an AJAX request, return JSON
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify(result.to_dict())
+            
+            # Process adventure completion if the quiz was solved correctly
+            # Determine difficulty level (default to 1 if not specified)
+            difficulty = 1
+            if quiz_data.get('difficulty'):
+                difficulty = quiz_data.get('difficulty').get('level', 1)
+            
+            # Determine which Pokémon to catch based on the quiz
+            # For now, we'll use the Pokémon from the image mapping as the caught Pokémon
+            caught_pokemon = []
+            for var, img_path in quiz_data['image_mapping'].items():
+                # Extract Pokémon ID from image path (remove file extension)
+                pokemon_id = img_path.split('.')[0]
+                if pokemon_id not in caught_pokemon:
+                    caught_pokemon.append(pokemon_id)
+            
+            # Record caught Pokémon and their new counts
+            pokemon_counts = {}
+            for pokemon_id in caught_pokemon:
+                pokemon_counts[pokemon_id] = game_manager.session_manager.catch_pokemon(pokemon_id)
+            
+            # Calculate and award XP using the new progression system
+            rewards = game_manager.calculate_adventure_rewards(caught_pokemon, difficulty)
+            
+            # Get updated level info
+            level_info = game_manager.get_player_level_info()
+            
+            # Get caught Pokémon details for display
+            caught_pokemon_details = []
+            for pokemon_id in caught_pokemon:
+                if pokemon_id in game_manager.game_config.pokemons:
+                    pokemon = game_manager.game_config.pokemons[pokemon_id]
+                    caught_pokemon_details.append({
+                        'id': pokemon_id,
+                        'name': pokemon.name,
+                        'image_path': pokemon.image_path
+                    })
+            
+            # Create adventure results data
+            adventure_results = {
+                'caught_pokemon': caught_pokemon_details,
+                'pokemon_counts': pokemon_counts,
+                'xp_gained': rewards['xp_reward'],
+                'leveled_up': rewards['leveled_up'],
+                'level_info': level_info
+            }
+            
+            # Add adventure results to the result dictionary for AJAX requests
+            result_dict = result.to_dict()
+            result_dict['adventure_results'] = adventure_results
+            
+            # If it's an AJAX request, return JSON with adventure results
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(result_dict)
+        else:
+            # If it's an AJAX request, return JSON without adventure results
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(result.to_dict())
         
         # For regular form submissions
         return render_quiz_template(
@@ -447,7 +542,8 @@ def quiz(quiz_id):
             image_mapping=quiz_data['image_mapping'],
             result=result,
             user_answers=user_answers,
-            already_solved=already_solved
+            already_solved=already_solved,
+            adventure_results=adventure_results
         )
     
     # GET request - just display the quiz
@@ -573,6 +669,38 @@ def reset_progress():
 
     return redirect(url_for('profile'))
 
+
+@app.route('/adventure/complete', methods=['POST'])
+@login_required
+def complete_adventure():
+    """
+    Complete an adventure and award XP.
+    """
+    data = request.json
+    difficulty = data.get('difficulty', 1)
+    caught_pokemon = data.get('caught_pokemon', [])
+    
+    # Get game manager
+    game_manager = create_game_manager()
+    
+    # Record caught Pokémon and their new counts
+    pokemon_counts = {}
+    for pokemon_id in caught_pokemon:
+        pokemon_counts[pokemon_id] = game_manager.session_manager.catch_pokemon(pokemon_id)
+    
+    # Calculate and award XP using the new progression system
+    rewards = game_manager.calculate_adventure_rewards(caught_pokemon, difficulty)
+    
+    # Get updated level info
+    level_info = game_manager.get_player_level_info()
+    
+    return jsonify({
+        'success': True,
+        'xp_gained': rewards['xp_reward'],
+        'pokemon_counts': pokemon_counts,
+        'leveled_up': rewards['leveled_up'],
+        'level_info': level_info
+    })
 
 # -----------------------------------------------------------------------------
 # Authentication Routes
@@ -724,7 +852,7 @@ def name_input():
         Rendered name input page template
     """
     # Get the current name if it exists
-    current_name = AuthManager.get_user_name()
+    current_name = create_session_manager().get_user_name()
     
     return render_template('name_input.html', current_name=current_name)
 
@@ -806,3 +934,55 @@ def server_error(e):
     return render_template('error.html',
                            error_code=500,
                            error_message="Server error"), 500
+
+@app.route('/api/dev/quiz/<quiz_id>/answers', methods=['GET'])
+@login_required
+def dev_get_quiz_answers(quiz_id):
+    """
+    Development-only endpoint to get the correct answers for a quiz.
+    This endpoint is only available in development mode.
+    
+    Args:
+        quiz_id: The ID of the quiz to get answers for
+        
+    Returns:
+        JSON with the correct answers
+    """
+    # Only allow this endpoint in development mode
+    if not app.debug:
+        return jsonify({"error": "This endpoint is only available in development mode"}), 403
+    
+    # Get quiz data
+    game_manager = create_game_manager()
+    session_manager = game_manager.session_manager
+    quiz_data = session_manager.get_quiz_data(quiz_id)
+    
+    # If not found in session, try to get from game config (for regular quizzes)
+    if not quiz_data:
+        if not quiz_id.startswith('random_'):
+            # Regular quiz - get from game config
+            quiz_state = game_manager.get_quiz_state(quiz_id)
+            if quiz_state:
+                # Convert to unified format
+                quiz = quiz_state['quiz']
+                quiz_data = {
+                    'quiz_id': quiz_id,
+                    'title': quiz.title,
+                    'description': quiz.description,
+                    'equations': quiz.equations,
+                    'solution': quiz.answer.values,
+                    'image_mapping': quiz_state['image_mapping'],
+                    'next_quiz_id': quiz.next_quiz_id,
+                    'is_random': False
+                }
+            else:
+                return jsonify({"error": "Quiz not found"}), 404
+        else:
+            # Random quiz not found
+            return jsonify({"error": "Quiz not found"}), 404
+    
+    # Return the correct answers
+    return jsonify({
+        "quiz_id": quiz_id,
+        "answers": quiz_data['solution']
+    })

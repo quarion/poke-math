@@ -27,6 +27,24 @@
         </div>
         {% endif %}
       </div>
+      
+      <div class="stats-card">
+        <h3>Player Level</h3>
+        <div class="stat-item">
+          <span class="stat-label">Level:</span>
+          <span class="stat-value">{{ level_info.level }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">XP:</span>
+          <span class="stat-value">{{ level_info.xp }}/{{ level_info.xp_needed }}</span>
+        </div>
+        <div class="progress mt-2">
+          <div class="progress-bar bg-success" role="progressbar" 
+               style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%" 
+               aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}">
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="profile-message">
@@ -37,6 +55,36 @@
       {% else %}
         <p>Start solving exercises to earn your first points!</p>
       {% endif %}
+    </div>
+    
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0">Pokémon Collection</h3>
+      </div>
+      <div class="card-body">
+        <p>You have caught {{ total_unique_pokemon }} unique Pokémon out of {{ total_available_pokemon }} available.</p>
+        <div class="progress mb-4">
+          <div class="progress-bar bg-info" role="progressbar" 
+               style="width: {{ (total_unique_pokemon / total_available_pokemon * 100) | int if total_available_pokemon > 0 else 0 }}%" 
+               aria-valuenow="{{ total_unique_pokemon }}" aria-valuemin="0" aria-valuemax="{{ total_available_pokemon }}">
+          </div>
+        </div>
+        
+        <div class="row">
+          {% for pokemon in collection %}
+          <div class="col-md-3 mb-3">
+            <div class="card">
+              <img src="{{ url_for('static', filename='images/' + pokemon.image_path) }}" 
+                   class="card-img-top" alt="{{ pokemon.name }}">
+              <div class="card-body text-center">
+                <h6 class="card-title">{{ pokemon.name }}</h6>
+                <p class="card-text">Caught: {{ pokemon.count }} times</p>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
     
     <div class="profile-actions">
