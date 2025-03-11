@@ -40,8 +40,8 @@
         </div>
         <div class="progress mt-2">
           <div class="progress-bar bg-success" role="progressbar" 
-               style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%" 
-               aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}">
+               aria-valuenow="{{ level_info.xp }}" aria-valuemin="0" aria-valuemax="{{ level_info.xp_needed }}"
+               style="width: {{ (level_info.xp / level_info.xp_needed * 100) | int }}%">
           </div>
         </div>
       </div>
@@ -65,21 +65,21 @@
         <p>You have caught {{ total_unique_pokemon }} unique Pokémon out of {{ total_available_pokemon }} available.</p>
         <div class="progress mb-4">
           <div class="progress-bar bg-info" role="progressbar" 
-               style="width: {{ (total_unique_pokemon / total_available_pokemon * 100) | int if total_available_pokemon > 0 else 0 }}%" 
-               aria-valuenow="{{ total_unique_pokemon }}" aria-valuemin="0" aria-valuemax="{{ total_available_pokemon }}">
+               aria-valuenow="{{ total_unique_pokemon }}" aria-valuemin="0" aria-valuemax="{{ total_available_pokemon }}"
+               style="width: {{ (total_unique_pokemon / total_available_pokemon * 100) | int if total_available_pokemon > 0 else 0 }}%">
           </div>
         </div>
         
-        <div class="row">
+        <div class="pokemon-collection">
           {% for pokemon in collection %}
-          <div class="col-md-3 mb-3">
-            <div class="card">
+          <div class="pokemon-card">
+            <div class="pokemon-image-container">
               <img src="{{ url_for('static', filename='images/' + pokemon.image_path) }}" 
-                   class="card-img-top" alt="{{ pokemon.name }}">
-              <div class="card-body text-center">
-                <h6 class="card-title">{{ pokemon.name }}</h6>
-                <p class="card-text">Caught: {{ pokemon.count }} times</p>
-              </div>
+                   class="pokemon-image" alt="{{ pokemon.name }}">
+            </div>
+            <div class="pokemon-info text-center">
+              <h6 class="pokemon-name">{{ pokemon.name }}</h6>
+              <p class="pokemon-count">Caught: {{ pokemon.count }} times</p>
             </div>
           </div>
           {% endfor %}
