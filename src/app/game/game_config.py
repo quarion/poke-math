@@ -36,7 +36,7 @@ class Section:
 @dataclass
 class GameConfig:
     pokemons: Dict[str, Pokemon]
-    sections: List[Section]T
+    sections: List[Section]
     quizzes_by_id: Dict[str, Quiz]
 
 def load_pokemon_config(data_file: Path) -> Dict[str, Pokemon]:
@@ -44,12 +44,25 @@ def load_pokemon_config(data_file: Path) -> Dict[str, Pokemon]:
         raw_data = json.load(f)
 
     pokemons = {}
-    for name, pokemon_data in raw_data.items():
+    
+    # Get Pokemon data and tier assignments
+    pokemon_data = raw_data['pokemons']
+    tier_data = raw_data['tiers']
+    
+    # First create all Pokemon objects with default tier
+    for name, data in pokemon_data.items():
         pokemons[name] = Pokemon(
             name=name,
-            image_path=pokemon_data.get('image_path', ''),
-            tier=pokemon_data.get('tier', 1)
+            image_path=data.get('image_path', ''),
+            tier=1  # Default tier
         )
+    
+    # Then assign tiers based on the tiers mapping
+    for tier_str, pokemon_names in tier_data.items():
+        tier = int(tier_str)
+        for pokemon_name in pokemon_names:
+            if pokemon_name in pokemons:
+                pokemons[pokemon_name].tier = tier
     
     return pokemons
 

@@ -1,18 +1,19 @@
 {
-    "pikachu": {
-        "image_path": "pikachu.png",
-        "tier": 2
+    "pokemons": {
+        "pikachu": {
+            "image_path": "pikachu.png"
+        },
+        "bulbasaur": {
+            "image_path": "bulbasaur.png"
+        },
+        "charmander": {
+            "image_path": "charmander.png"
+        },
+        "squirtle": {
+            "image_path": "squirtle.png"
+        }
     },
-    "bulbasaur": {
-        "image_path": "bulbasaur.png",
-        "tier": 2
-    },
-    "charmander": {
-        "image_path": "charmander.png",
-        "tier": 2
-    },
-    "squirtle": {
-        "image_path": "squirtle.png",
-        "tier": 2
+    "tiers": {
+        "2": ["pikachu", "bulbasaur", "charmander", "squirtle"]
     }
 } 

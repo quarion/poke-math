@@ -23,20 +23,25 @@ def test_pokemon_tier_custom():
 
 
 def test_load_pokemon_config_with_tiers():
-    """Test loading Pokemon config with tiers."""
-    # Create a temporary JSON file with Pokemon tiers
+    """Test loading Pokemon config with the new tier format."""
+    # Create a temporary JSON file with Pokemon tiers in the new format
     with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as temp_file:
         json_data = {
-            "pikachu": {
-                "image_path": "pikachu.png",
-                "tier": 2
+            "pokemons": {
+                "pikachu": {
+                    "image_path": "pikachu.png"
+                },
+                "mew": {
+                    "image_path": "mew.png"
+                },
+                "rattata": {
+                    "image_path": "rattata.png"
+                }
             },
-            "mew": {
-                "image_path": "mew.png",
-                "tier": 5
-            },
-            "rattata": {
-                "image_path": "rattata.png"
+            "tiers": {
+                "2": ["pikachu"],
+                "5": ["mew"]
+                # rattata not in any tier, should default to 1
             }
         }
         json.dump(json_data, temp_file)

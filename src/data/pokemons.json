@@ -1,66 +1,59 @@
 {
-  "pidgey": {
-    "image_path": "pidgey.png",
-    "tier": 1
+  "pokemons": {
+    "pidgey": {
+      "image_path": "pidgey.png"
+    },
+    "rattata": {
+      "image_path": "rattata.png"
+    },
+    "pikachu": {
+      "image_path": "pikachu.png"
+    },
+    "bulbasaur": {
+      "image_path": "bulbasaur.png"
+    },
+    "charmander": {
+      "image_path": "charmander.png"
+    },
+    "squirtle": {
+      "image_path": "squirtle.png"
+    },
+    "eevee": {
+      "image_path": "eevee.png"
+    },
+    "ditto": {
+      "image_path": "ditto.png"
+    },
+    "machop": {
+      "image_path": "machop.png"
+    },
+    "quaxly": {
+      "image_path": "quaxly.png"
+    },
+    "sprigatito": {
+      "image_path": "sprigatito.png"
+    },
+    "fuecoco": {
+      "image_path": "fuecoco.png"
+    },
+    "skeledirge": {
+      "image_path": "skeledirge.png"
+    },
+    "meowscarada": {
+      "image_path": "meowscarada.png"
+    },
+    "mew": {
+      "image_path": "mew.png"
+    },
+    "mewtwo": {
+      "image_path": "mewtwo.png"
+    }
   },
-  "rattata": {
-    "image_path": "rattata.png",
-    "tier": 1
-  },
-  "pikachu": {
-    "image_path": "pikachu.png",
-    "tier": 2
-  },
-  "bulbasaur": {
-    "image_path": "bulbasaur.png",
-    "tier": 2
-  },
-  "charmander": {
-    "image_path": "charmander.png",
-    "tier": 2
-  },
-  "squirtle": {
-    "image_path": "squirtle.png",
-    "tier": 2
-  },
-  "eevee": {
-    "image_path": "eevee.png",
-    "tier": 2
-  },
-  "ditto": {
-    "image_path": "ditto.png",
-    "tier": 3
-  },
-  "machop": {
-    "image_path": "machop.png",
-    "tier": 3
-  },
-  "quaxly": {
-    "image_path": "quaxly.png",
-    "tier": 3
-  },
-  "sprigatito": {
-    "image_path": "sprigatito.png",
-    "tier": 3
-  },
-  "fuecoco": {
-    "image_path": "fuecoco.png",
-    "tier": 3
-  },
-  "skeledirge": {
-    "image_path": "skeledirge.png",
-    "tier": 4
-  },
-  "meowscarada": {
-    "image_path": "meowscarada.png",
-    "tier": 4
-  },
-  "mew": {
-    "image_path": "mew.png",
-    "tier": 5
-  },
-  "mewtwo": {
-    "image_path": "mewtwo.png",
-    "tier": 5
+  "tiers": {
+    "1": ["pidgey", "rattata"],
+    "2": ["pikachu", "bulbasaur", "charmander", "squirtle", "eevee"],
+    "3": ["ditto", "machop", "quaxly", "sprigatito", "fuecoco"],
+    "4": ["skeledirge", "meowscarada"],
+    "5": ["mew", "mewtwo"]
   }
 } 
