@@ -712,61 +712,6 @@ def complete_adventure():
         'level_info': level_info
     })
 
-
-@app.route('/adventure/results', methods=['GET'])
-@login_required
-def adventure_results():
-    """
-    Display the results of an adventure, including caught Pokémon and XP gained.
-    
-    Expects query parameters:
-    - caught_pokemon: Comma-separated list of caught Pokémon IDs
-    - xp_gained: Amount of XP gained
-    - leveled_up: Boolean indicating if player leveled up
-    
-    Returns:
-    - Rendered adventure_results.html template
-    """
-    # Get query parameters
-    caught_pokemon_ids = request.args.get('caught_pokemon', '').split(',')
-    xp_gained = int(request.args.get('xp_gained', 0))
-    leveled_up = request.args.get('leveled_up', 'false').lower() == 'true'
-    
-    # Filter out empty strings
-    caught_pokemon_ids = [pid for pid in caught_pokemon_ids if pid]
-    
-    # Get game manager and session manager
-    game_manager = create_game_manager()
-    session_manager = game_manager.session_manager
-    game_config = game_manager.game_config
-    
-    # Get caught Pokémon details
-    caught_pokemon = []
-    pokemon_counts = {}
-    
-    for pokemon_id in caught_pokemon_ids:
-        if pokemon_id in game_config.pokemons:
-            pokemon = game_config.pokemons[pokemon_id]
-            caught_pokemon.append({
-                'id': pokemon_id,
-                'name': pokemon.name,
-                'image_path': pokemon.image_path
-            })
-            pokemon_counts[pokemon_id] = session_manager.get_caught_pokemon().get(pokemon_id, 0)
-    
-    # Get level info
-    level_info = session_manager.get_level_info()
-    
-    return render_template(
-        'adventure_results.html',
-        caught_pokemon=caught_pokemon,
-        pokemon_counts=pokemon_counts,
-        xp_gained=xp_gained,
-        leveled_up=leveled_up,
-        level_info=level_info
-    )
-
-
 # -----------------------------------------------------------------------------
 # Authentication Routes
 # -----------------------------------------------------------------------------
