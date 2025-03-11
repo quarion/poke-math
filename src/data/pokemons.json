@@ -194,6 +194,129 @@
         },
         "bidoof": {
             "image_path": "bidoof.png"
+        },
+        "totodile": {
+            "image_path": "totodile.png"
+        },
+        "cyndaquil": {
+            "image_path": "cyndaquil.png"
+        },
+        "feraligatr": {
+            "image_path": "feraligatr.png"
+        },
+        "typhlosion": {
+            "image_path": "typhlosion.png"
+        },
+        "meganium": {
+            "image_path": "meganium.png"
+        },
+        "luxio": {
+            "image_path": "luxio.png"
+        },
+        "staraptor": {
+            "image_path": "staraptor.png"
+        },
+        "blaziken": {
+            "image_path": "blaziken.png"
+        },
+        "swampert": {
+            "image_path": "swampert.png"
+        },
+        "sceptile": {
+            "image_path": "sceptile.png"
+        },
+        "luxray": {
+            "image_path": "luxray.png"
+        },
+        "infernape": {
+            "image_path": "infernape.png"
+        },
+        "salamence": {
+            "image_path": "salamence.png"
+        },
+        "metagross": {
+            "image_path": "metagross.png"
+        },
+        "torterra": {
+            "image_path": "torterra.png"
+        },
+        "empoleon": {
+            "image_path": "empoleon.png"
+        },
+        "hydreigon": {
+            "image_path": "hydreigon.png"
+        },
+        "dialga": {
+            "image_path": "dialga.png"
+        },
+        "palkia": {
+            "image_path": "palkia.png"
+        },
+        "darkrai": {
+            "image_path": "darkrai.png"
+        },
+        "arceus": {
+            "image_path": "arceus.png"
+        },
+        "axew": {
+            "image_path": "axew.png"
+        },
+        "zoroark": {
+            "image_path": "zoroark.png"
+        },
+        "fraxure": {
+            "image_path": "fraxure.png"
+        },
+        "haxorus": {
+            "image_path": "haxorus.png"
+        },
+        "volcarona": {
+            "image_path": "volcarona.png"
+        },
+        "krookodile": {
+            "image_path": "krookodile.png"
+        },
+        "excadrill": {
+            "image_path": "excadrill.png"
+        },
+        "chandelure": {
+            "image_path": "chandelure.png"
+        },
+        "bisharp": {
+            "image_path": "bisharp.png"
+        },
+        "kyurem": {
+            "image_path": "kyurem.png"
+        },
+        "incineroar": {
+            "image_path": "incineroar.png"
+        },
+        "decidueye": {
+            "image_path": "decidueye.png"
+        },
+        "primarina": {
+            "image_path": "primarina.png"
+        },
+        "kommo-o": {
+            "image_path": "kommo-o.png"
+        },
+        "dhelmise": {
+            "image_path": "dhelmise.png"
+        },
+        "tapu koko": {
+            "image_path": "tapu koko.png"
+        },
+        "solgaleo": {
+            "image_path": "solgaleo.png"
+        },
+        "lunala": {
+            "image_path": "lunala.png"
+        },
+        "necrozma": {
+            "image_path": "necrozma.png"
+        },
+        "drednaw": {
+            "image_path": "drednaw.png"
         }
     },
     "tiers": {
@@ -206,10 +329,15 @@
             "weedle",
             "rattata",
             "zigzagoon",
-            "bidoof"
+            "totodile",
+            "cyndaquil",
+            "chikorita",
+            "bidoof",
+            "shinx",
+            "zorua",
+            "axew"
         ],
         "2": [
-             "chikorita",
             "squirtle",
             "bulbasaur",
             "charmander",
@@ -227,7 +355,14 @@
             "chimchar",
             "pachirisu",
             "buneary",
-            "shinx"
+            "feraligatr",
+            "typhlosion",
+            "meganium",
+            "luxio",
+            "staraptor",
+            "zoroark",
+            "fraxure",
+            "drednaw"
         ],
         "3": [
             "ditto",
@@ -239,7 +374,6 @@
             "gengar",
             "gardevoir",
             "sylveon",
-            "zorua",
             "glaceon",
             "leafeon",
             "umbreon",
@@ -249,7 +383,21 @@
             "flareon",
             "arcanine",
             "milotic",
-            "absol"
+            "absol",
+            "blaziken",
+            "swampert",
+            "sceptile",
+            "luxray",
+            "infernape",
+            "haxorus",
+            "krookodile",
+            "excadrill",
+            "chandelure",
+            "bisharp",
+            "incineroar",
+            "decidueye",
+            "primarina",
+            "dhelmise"
         ],
         "4": [
             "skeledirge",
@@ -258,19 +406,35 @@
             "lucario",
             "greninja",
             "dragonite",
-            "garchomp"
+            "garchomp",
+            "salamence",
+            "metagross",
+            "torterra",
+            "empoleon",
+            "hydreigon",
+            "volcarona",
+            "kommo-o"
         ],
         "5": [
             "mewtwo",
             "rayquaza",
             "kyogre",
             "groudon",
-            "zekrom",
-            "reshiram",
             "lugia",
             "ho-oh",
             "mew",
-            "celebi"
+            "celebi",
+            "dialga",
+            "palkia",
+            "darkrai",
+            "arceus",
+            "kyurem",
+            "reshiram",
+            "zekrom",
+            "tapu koko",
+            "solgaleo",
+            "lunala",
+            "necrozma"
         ]
     }
 }
