@@ -325,8 +325,12 @@ def all_exercises():
 @app.route('/profile')
 @login_required
 def profile():
-    """Display the user's profile with points and progress."""
+    """
+    Display user profile with solved quizzes and level information.
+    """
     game_manager = create_game_manager()
+    
+    # Count solved quizzes
     solved_count = len(game_manager.solved_quizzes)
     # Each solved quiz is worth 1 point
     points = solved_count
@@ -336,7 +340,7 @@ def profile():
     is_guest = AuthManager.is_guest()
     
     # Get level information
-    level_info = game_manager.session_manager.get_level_info()
+    level_info = game_manager.get_player_level_info()
     
     # Get caught Pokémon
     caught_pokemon = game_manager.session_manager.get_caught_pokemon()
@@ -401,7 +405,9 @@ def generate_random_exercise(difficulty_id):
 @app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
 @login_required
 def quiz(quiz_id):
-    """Display any quiz (random or regular) and process answers."""
+    """
+    Display and process a quiz.
+    """
     game_manager = create_game_manager()
     
     # Check if this is a random quiz ID format
@@ -489,21 +495,19 @@ def quiz(quiz_id):
             # Record caught Pokémon and their new counts
             pokemon_counts = {}
             for pokemon_id in caught_pokemon:
-                pokemon_counts[pokemon_id] = session_manager.catch_pokemon(pokemon_id)
+                pokemon_counts[pokemon_id] = game_manager.session_manager.catch_pokemon(pokemon_id)
             
-            # Calculate and award XP
-            game_config = game_manager.game_config
-            xp_reward = session_manager.calculate_xp_reward(caught_pokemon, difficulty, game_config)
-            leveled_up = session_manager.add_xp(xp_reward)
+            # Calculate and award XP using the new progression system
+            rewards = game_manager.calculate_adventure_rewards(caught_pokemon, difficulty)
             
             # Get updated level info
-            level_info = session_manager.get_level_info()
+            level_info = game_manager.get_player_level_info()
             
             # Get caught Pokémon details for display
             caught_pokemon_details = []
             for pokemon_id in caught_pokemon:
-                if pokemon_id in game_config.pokemons:
-                    pokemon = game_config.pokemons[pokemon_id]
+                if pokemon_id in game_manager.game_config.pokemons:
+                    pokemon = game_manager.game_config.pokemons[pokemon_id]
                     caught_pokemon_details.append({
                         'id': pokemon_id,
                         'name': pokemon.name,
@@ -514,8 +518,8 @@ def quiz(quiz_id):
             adventure_results = {
                 'caught_pokemon': caught_pokemon_details,
                 'pokemon_counts': pokemon_counts,
-                'xp_gained': xp_reward,
-                'leveled_up': leveled_up,
+                'xp_gained': rewards['xp_reward'],
+                'leveled_up': rewards['leveled_up'],
                 'level_info': level_info
             }
             
@@ -670,45 +674,31 @@ def reset_progress():
 @login_required
 def complete_adventure():
     """
-    Handle adventure completion, including catching Pokémon and awarding XP.
-    
-    Expects JSON payload with:
-    - difficulty: Adventure difficulty (1-7)
-    - caught_pokemon: List of caught Pokémon IDs
-    
-    Returns JSON with:
-    - success: Boolean indicating success
-    - xp_gained: Amount of XP gained
-    - pokemon_counts: Dictionary of Pokémon IDs to new catch counts
-    - leveled_up: Boolean indicating if player leveled up
-    - level_info: Dictionary with level, XP, and XP needed for next level
+    Complete an adventure and award XP.
     """
     data = request.json
     difficulty = data.get('difficulty', 1)
     caught_pokemon = data.get('caught_pokemon', [])
     
-    # Get session manager and game config
+    # Get game manager
     game_manager = create_game_manager()
-    session_manager = game_manager.session_manager
-    game_config = game_manager.game_config
     
     # Record caught Pokémon and their new counts
     pokemon_counts = {}
     for pokemon_id in caught_pokemon:
-        pokemon_counts[pokemon_id] = session_manager.catch_pokemon(pokemon_id)
+        pokemon_counts[pokemon_id] = game_manager.session_manager.catch_pokemon(pokemon_id)
     
-    # Calculate and award XP
-    xp_reward = session_manager.calculate_xp_reward(caught_pokemon, difficulty, game_config)
-    leveled_up = session_manager.add_xp(xp_reward)
+    # Calculate and award XP using the new progression system
+    rewards = game_manager.calculate_adventure_rewards(caught_pokemon, difficulty)
     
     # Get updated level info
-    level_info = session_manager.get_level_info()
+    level_info = game_manager.get_player_level_info()
     
     return jsonify({
         'success': True,
-        'xp_gained': xp_reward,
+        'xp_gained': rewards['xp_reward'],
         'pokemon_counts': pokemon_counts,
-        'leveled_up': leveled_up,
+        'leveled_up': rewards['leveled_up'],
         'level_info': level_info
     })
 
