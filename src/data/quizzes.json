@@ -1,5 +1,13 @@
 {
     "pokemons": {
+      "pidgey": {
+        "image_path": "pidgey.png",
+        "tier": 1
+      },
+      "rattata": {
+        "image_path": "rattata.png",
+        "tier": 1
+      },
       "pikachu": {
         "image_path": "pikachu.png",
         "tier": 2
@@ -12,13 +20,45 @@
         "image_path": "charmander.png",
         "tier": 2
       },
+      "squirtle": {
+        "image_path": "squirtle.png",
+        "tier": 2
+      },
+      "eevee": {
+        "image_path": "eevee.png",
+        "tier": 2
+      },
+      "ditto": {
+        "image_path": "ditto.png",
+        "tier": 3
+      },
+      "quaxly": {
+        "image_path": "quaxly.png",
+        "tier": 3
+      },
+      "sprigatito": {
+        "image_path": "sprigatito.png",
+        "tier": 3
+      },
+      "fuecoco": {
+        "image_path": "fuecoco.png",
+        "tier": 3
+      },
+      "skeledirge": {
+        "image_path": "skeledirge.png",
+        "tier": 4
+      },
+      "meowscarada": {
+        "image_path": "meowscarada.png",
+        "tier": 4
+      },
       "mew": {
         "image_path": "mew.png",
         "tier": 5
       },
-      "squirtle": {
-        "image_path": "squirtle.png",
-        "tier": 2
+      "mewtwo": {
+        "image_path": "mewtwo.png",
+        "tier": 5
       }
     },
     "sections": [
