@@ -6,15 +6,19 @@ Tests the loading and validation of quiz data from JSON files.
 
 import pytest
 from pathlib import Path
-from src.app.game.game_config import load_game_config, GameConfig, Quiz, Section, Pokemon, QuizAnswer
+from src.app.game.game_config import load_game_config, load_pokemon_config, GameConfig, Quiz, Section, Pokemon, QuizAnswer
 
 @pytest.fixture
 def test_data_path():
     return Path('tests/data/quizzes.json')
 
 @pytest.fixture
-def quiz_data(test_data_path):
-    return load_game_config(test_data_path)
+def test_pokemon_data_path():
+    return Path('tests/data/pokemons.json')
+
+@pytest.fixture
+def quiz_data(test_data_path, test_pokemon_data_path):
+    return load_game_config(test_data_path, test_pokemon_data_path)
 
 def test_load_quiz_data_structure(quiz_data):
     """Test if the quiz data is loaded with correct structure."""
@@ -30,11 +34,21 @@ def test_pokemon_data_loading(quiz_data):
     assert isinstance(pikachu, Pokemon)
     assert pikachu.name == 'pikachu'
     assert pikachu.image_path == 'pikachu.png'
+    assert pikachu.tier == 2  # Check tier value
     
     # Check other Pokémon
     assert 'bulbasaur' in quiz_data.pokemons
     assert 'charmander' in quiz_data.pokemons
     assert 'squirtle' in quiz_data.pokemons
+
+def test_load_pokemon_config_function(test_pokemon_data_path):
+    """Test if the load_pokemon_config function works correctly."""
+    pokemons = load_pokemon_config(test_pokemon_data_path)
+    assert len(pokemons) == 4
+    assert isinstance(pokemons['pikachu'], Pokemon)
+    assert pokemons['pikachu'].name == 'pikachu'
+    assert pokemons['pikachu'].image_path == 'pikachu.png'
+    assert pokemons['pikachu'].tier == 2
 
 def test_section_structure(quiz_data):
     """Test if sections are structured correctly."""

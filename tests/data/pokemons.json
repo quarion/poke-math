@@ -1,0 +1,18 @@
+{
+    "pikachu": {
+        "image_path": "pikachu.png",
+        "tier": 2
+    },
+    "bulbasaur": {
+        "image_path": "bulbasaur.png",
+        "tier": 2
+    },
+    "charmander": {
+        "image_path": "charmander.png",
+        "tier": 2
+    },
+    "squirtle": {
+        "image_path": "squirtle.png",
+        "tier": 2
+    }
+} 

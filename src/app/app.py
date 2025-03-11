@@ -137,7 +137,8 @@ def after_request(response):
 
 # Load game configuration
 GAME_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'quizzes.json'
-GAME_CONFIG = load_game_config(GAME_CONFIG_PATH)
+POKEMON_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'pokemons.json'
+GAME_CONFIG = load_game_config(GAME_CONFIG_PATH, POKEMON_CONFIG_PATH)
 
 # Load equation difficulties
 DIFFICULTY_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'equation_difficulties_v2.json'

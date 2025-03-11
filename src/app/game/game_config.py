@@ -36,31 +36,29 @@ class Section:
 @dataclass
 class GameConfig:
     pokemons: Dict[str, Pokemon]
-    sections: List[Section]
+    sections: List[Section]T
     quizzes_by_id: Dict[str, Quiz]
 
-def load_game_config(data_file: Path) -> GameConfig:
-    """
-    Load and prepare quiz data from a JSON file.
-    Returns a GameConfig object containing all necessary information.
-    """
+def load_pokemon_config(data_file: Path) -> Dict[str, Pokemon]:
     with open(data_file) as f:
         raw_data = json.load(f)
 
-    # Prepare Pokemon data
     pokemons = {}
-    for name, pokemon_data in raw_data['pokemons'].items():
-        # Handle both old and new format
-        if isinstance(pokemon_data, str):
-            # Old format: just image path
-            pokemons[name] = Pokemon(name=name, image_path=pokemon_data)
-        else:
-            # New format: dictionary with image_path and tier
-            pokemons[name] = Pokemon(
-                name=name,
-                image_path=pokemon_data.get('image_path', ''),
-                tier=pokemon_data.get('tier', 1)
-            )
+    for name, pokemon_data in raw_data.items():
+        pokemons[name] = Pokemon(
+            name=name,
+            image_path=pokemon_data.get('image_path', ''),
+            tier=pokemon_data.get('tier', 1)
+        )
+    
+    return pokemons
+
+def load_game_config(data_file: Path, pokemon_file: Path) -> GameConfig:
+    with open(data_file) as f:
+        raw_data = json.load(f)
+    
+    # Load Pokemon data from separate file
+    pokemons = load_pokemon_config(pokemon_file)
 
     # Prepare sections and quizzes
     sections = []

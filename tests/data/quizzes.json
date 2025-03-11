@@ -1,10 +1,4 @@
 {
-    "pokemons": {
-        "pikachu": "pikachu.png",
-        "bulbasaur": "bulbasaur.png",
-        "charmander": "charmander.png",
-        "squirtle": "squirtle.png"
-    },
     "sections": [
         {
             "id": "test_section",

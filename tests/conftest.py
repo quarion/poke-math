@@ -28,13 +28,22 @@ def test_data_path() -> Path:
     return Path('tests/data/quizzes.json')
 
 
+@pytest.fixture(scope="session")
+def test_pokemon_data_path() -> Path:
+    """
+    Fixture providing the path to test Pokemon data file.
+    Uses session scope as the path never changes during test run.
+    """
+    return Path('tests/data/pokemons.json')
+
+
 @pytest.fixture
-def quiz_data(test_data_path):
+def quiz_data(test_data_path, test_pokemon_data_path):
     """
     Fixture providing loaded quiz data.
     Creates fresh data for each test to avoid state contamination.
     """
-    return load_game_config(test_data_path)
+    return load_game_config(test_data_path, test_pokemon_data_path)
 
 
 @pytest.fixture

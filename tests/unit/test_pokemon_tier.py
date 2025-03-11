@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from src.app.game.game_config import load_game_config, Pokemon
+from src.app.game.game_config import load_game_config, load_pokemon_config, Pokemon
 
 
 def test_pokemon_tier_default():
@@ -22,35 +22,34 @@ def test_pokemon_tier_custom():
     assert pokemon.tier == 3
 
 
-def test_load_game_config_with_tiers():
-    """Test loading game config with Pokemon tiers."""
+def test_load_pokemon_config_with_tiers():
+    """Test loading Pokemon config with tiers."""
     # Create a temporary JSON file with Pokemon tiers
     with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as temp_file:
         json_data = {
-            "pokemons": {
-                "pikachu": {
-                    "image_path": "pikachu.png",
-                    "tier": 2
-                },
-                "mew": {
-                    "image_path": "mew.png",
-                    "tier": 5
-                },
-                "rattata": "rattata.png"  # Old format without tier
+            "pikachu": {
+                "image_path": "pikachu.png",
+                "tier": 2
             },
-            "sections": []
+            "mew": {
+                "image_path": "mew.png",
+                "tier": 5
+            },
+            "rattata": {
+                "image_path": "rattata.png"
+            }
         }
         json.dump(json_data, temp_file)
         temp_file_path = temp_file.name
 
     try:
-        # Load the game config
-        game_config = load_game_config(Path(temp_file_path))
+        # Load the Pokemon config
+        pokemons = load_pokemon_config(Path(temp_file_path))
 
         # Check that Pokemon tiers are loaded correctly
-        assert game_config.pokemons["pikachu"].tier == 2
-        assert game_config.pokemons["mew"].tier == 5
-        assert game_config.pokemons["rattata"].tier == 1  # Default tier
+        assert pokemons["pikachu"].tier == 2
+        assert pokemons["mew"].tier == 5
+        assert pokemons["rattata"].tier == 1  # Default tier
     finally:
         # Clean up the temporary file
         Path(temp_file_path).unlink() 
