@@ -317,6 +317,87 @@
         },
         "drednaw": {
             "image_path": "drednaw.png"
+        },
+        "ivysaur": {
+            "image_path": "ivysaur.png"
+        },
+        "charmeleon": {
+            "image_path": "charmeleon.png"
+        },
+        "wartortle": {
+            "image_path": "wartortle.png"
+        },
+        "venusaur": {
+            "image_path": "venusaur.png"
+        },
+        "blastoise": {
+            "image_path": "blastoise.png"
+        },
+        "metapod": {
+            "image_path": "metapod.png"
+        },
+        "butterfree": {
+            "image_path": "butterfree.png"
+        },
+        "kakuna": {
+            "image_path": "kakuna.png"
+        },
+        "beedrill": {
+            "image_path": "beedrill.png"
+        },
+        "pidgeotto": {
+            "image_path": "pidgeotto.png"
+        },
+        "pidgeot": {
+            "image_path": "pidgeot.png"
+        },
+        "raticate": {
+            "image_path": "raticate.png"
+        },
+        "raboot": {
+            "image_path": "raboot.png"
+        },
+        "cinderace": {
+            "image_path": "cinderace.png"
+        },
+        "togetic": {
+            "image_path": "togetic.png"
+        },
+        "gastly": {
+            "image_path": "gastly.png"
+        },
+        "haunter": {
+            "image_path": "haunter.png"
+        },
+        "machoke": {
+            "image_path": "machoke.png"
+        },
+        "machamp": {
+            "image_path": "machamp.png"
+        },
+        "bellsprout": {
+            "image_path": "bellsprout.png"
+        },
+        "weepinbell": {
+            "image_path": "weepinbell.png"
+        },
+        "victreebel": {
+            "image_path": "victreebel.png"
+        },
+        "raichu": {
+            "image_path": "raichu.png"
+        },
+        "pichu": {
+            "image_path": "pichu.png"
+        },
+        "floragato": {
+            "image_path": "floragato.png"
+        },
+        "crocalor": {
+            "image_path": "crocalor.png"
+        },
+        "quaxwell": {
+            "image_path": "quaxwell.png"
         }
     },
     "tiers": {
@@ -329,20 +410,19 @@
             "weedle",
             "rattata",
             "zigzagoon",
-            "totodile",
-            "cyndaquil",
-            "chikorita",
             "bidoof",
             "shinx",
             "zorua",
-            "axew"
-        ],
-        "2": [
+            "axew",
             "squirtle",
             "bulbasaur",
             "charmander",
+            "bellsprout",
+            "pichu"
+        ],
+        "2": [
             "eevee",
-            "snorlax",
+            "pikachu",
             "togepi",
             "rowlet",
             "mudkip",
@@ -355,23 +435,24 @@
             "chimchar",
             "pachirisu",
             "buneary",
-            "feraligatr",
-            "typhlosion",
-            "meganium",
             "luxio",
-            "staraptor",
-            "zoroark",
-            "fraxure",
-            "drednaw"
-        ],
-        "3": [
-            "ditto",
-            "machop",
-            "quaxly",
             "sprigatito",
             "fuecoco",
-            "pikachu",
-            "gengar",
+            "quaxly",
+            "machop",
+            "ditto",
+            "ivysaur",
+            "charmeleon",
+            "wartortle",
+            "metapod",
+            "kakuna",
+            "pidgeotto",
+            "raticate",
+            "gastly",
+            "weepinbell"
+        ],
+        "3": [
+            "snorlax",
             "gardevoir",
             "sylveon",
             "glaceon",
@@ -397,12 +478,32 @@
             "incineroar",
             "decidueye",
             "primarina",
-            "dhelmise"
+            "dhelmise",
+            "totodile",
+            "cyndaquil",
+            "chikorita",
+            "drednaw",
+            "zoroark",
+            "fraxure",
+            "staraptor",
+            "venusaur",
+            "charizard",
+            "blastoise",
+            "butterfree",
+            "beedrill",
+            "pidgeot",
+            "raboot",
+            "haunter",
+            "machoke",
+            "victreebel",
+            "raichu",
+            "floragato",
+            "crocalor",
+            "quaxwell"
         ],
         "4": [
             "skeledirge",
             "meowscarada",
-            "charizard",
             "lucario",
             "greninja",
             "dragonite",
@@ -413,7 +514,14 @@
             "empoleon",
             "hydreigon",
             "volcarona",
-            "kommo-o"
+            "kommo-o",
+            "gengar",
+            "feraligatr",
+            "typhlosion",
+            "meganium",
+            "cinderace",
+            "togetic",
+            "machamp"
         ],
         "5": [
             "mewtwo",
