@@ -14,3 +14,7 @@ alwaysApply: true
 - For non-docstrings comments:
     - Omit comments for self-explanatory code with descriptive function/variable names
     - Add comments for non-obvious logic, complex algorithms, or business rules
+
+## Error handling
+- Follow "fail fast" rule - throw exception on incorrect or missing parameters, do not try to assign defaults
+- When handling inputs from a file or an API do not maintain backward compatibility, assume that the data will be adjusted to match changed code
