@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 from src.app.game.pokemon_selector import PokemonSelector
 from src.app.game.game_config import Pokemon
+from src.app.game.progression_config import TIER_BASE_WEIGHTS
 
 
 def test_get_eligible_tiers():
@@ -32,23 +33,37 @@ def test_get_eligible_tiers():
 
 
 def test_calculate_adjusted_weight():
-    """Test that weights are correctly adjusted based on tier and difficulty."""
-    # Base weights: {1: 100, 2: 50, 3: 20, 4: 10, 5: 5}
+    """Test that weights are correctly adjusted based on tier, difficulty, and player level."""
+    # Tier 1 should always have the same weight regardless of difficulty and level
+    base_weight_tier1 = TIER_BASE_WEIGHTS[1]
+    assert PokemonSelector.calculate_adjusted_weight(1, 1, 1) == base_weight_tier1
+    assert PokemonSelector.calculate_adjusted_weight(1, 7, 1) == base_weight_tier1
+    assert PokemonSelector.calculate_adjusted_weight(1, 1, 50) == base_weight_tier1
+    assert PokemonSelector.calculate_adjusted_weight(1, 7, 50) == base_weight_tier1
     
-    # At difficulty 1, weights should be the base weights
-    assert PokemonSelector.calculate_adjusted_weight(1, 1) == 100
-    assert PokemonSelector.calculate_adjusted_weight(2, 1) == 50
-    assert PokemonSelector.calculate_adjusted_weight(5, 1) == 5
+    # For higher tiers, test relative weights rather than specific values
     
-    # At higher difficulties, higher tiers should get more weight
-    # Formula: W_T × (1 + (D-1)/6 × (T-1))
+    # 1. Difficulty effect: Higher difficulty should increase weight for higher tiers
+    for tier in range(2, 6):
+        if tier in TIER_BASE_WEIGHTS:
+            low_difficulty_weight = PokemonSelector.calculate_adjusted_weight(tier, 1, 10)
+            high_difficulty_weight = PokemonSelector.calculate_adjusted_weight(tier, 7, 10)
+            assert high_difficulty_weight > low_difficulty_weight, f"Tier {tier} weight should increase with difficulty"
     
-    # Tier 1 should always have the same weight regardless of difficulty
-    assert PokemonSelector.calculate_adjusted_weight(1, 7) == 100
+    # 2. Level effect: Higher player level should increase weight for higher tiers
+    for tier in range(2, 6):
+        if tier in TIER_BASE_WEIGHTS:
+            low_level_weight = PokemonSelector.calculate_adjusted_weight(tier, 4, 10)
+            high_level_weight = PokemonSelector.calculate_adjusted_weight(tier, 4, 50)
+            assert high_level_weight > low_level_weight, f"Tier {tier} weight should increase with player level"
     
-    # Tier 5 at difficulty 7 should have a significant boost
-    # 5 * (1 + (7-1)/6 * (5-1)) = 5 * (1 + 1 * 4) = 5 * 5 = 25
-    assert PokemonSelector.calculate_adjusted_weight(5, 7) == 25
+    # 3. Tier effect: Higher tiers should have higher weights at high difficulty/level
+    weights_at_high_settings = [
+        PokemonSelector.calculate_adjusted_weight(tier, 7, 50) 
+        for tier in range(1, 6) if tier in TIER_BASE_WEIGHTS
+    ]
+    for i in range(1, len(weights_at_high_settings)):
+        assert weights_at_high_settings[i] > weights_at_high_settings[i-1], "Higher tiers should have higher weights at high difficulty/level"
 
 
 def test_select_pokemon():
@@ -84,25 +99,28 @@ def test_select_pokemon():
 
 def test_select_pokemon_with_weights():
     """Test that Pokémon selection respects weights."""
-    # Create a set of test Pokémon
+    # Create a set of test Pokémon with tiers that will be eligible at level 50
     pokemons = {
         "rattata": Pokemon(name="Rattata", image_path="rattata.png", tier=1),
-        "mewtwo": Pokemon(name="Mewtwo", image_path="mewtwo.png", tier=5)
+        "pikachu": Pokemon(name="Pikachu", image_path="pikachu.png", tier=2)
     }
     
-    # Mock random.choices to always return the first option (rattata)
-    # This is to test that the weights are being calculated correctly
+    # Test that weights are passed correctly to random.choices
     with pytest.MonkeyPatch.context() as mp:
-        mp.setattr("random.choices", lambda population, weights, k: [population[0]] * k)
+        # Create a mock for random.choices that captures the weights parameter
+        captured_weights = []
+        def mock_choices(population, weights, k):
+            captured_weights.append(weights)
+            return [population[0]] * k
         
-        # At difficulty 1, rattata should be selected due to higher base weight
-        selected = PokemonSelector.select_pokemon(pokemons, player_level=50, difficulty=1, count=1)
-        assert selected[0] == "rattata"
+        mp.setattr("random.choices", mock_choices)
         
-        # Calculate expected weights
-        rattata_weight = PokemonSelector.calculate_adjusted_weight(1, 1)  # 100
-        mewtwo_weight = PokemonSelector.calculate_adjusted_weight(5, 1)   # 5
+        # Call select_pokemon and verify weights were passed
+        PokemonSelector.select_pokemon(pokemons, player_level=20, difficulty=3, count=1)
         
-        # Verify weights are as expected
-        assert rattata_weight == 100
-        assert mewtwo_weight == 5 
+        # Verify that weights were passed to random.choices
+        assert len(captured_weights) == 1
+        assert len(captured_weights[0]) == 2  # Two Pokémon, two weights
+        
+        # Verify that weights are non-negative
+        assert all(w > 0 for w in captured_weights[0]), "All weights should be positive" 

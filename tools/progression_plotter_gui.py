@@ -56,7 +56,7 @@ def calculate_tier_distribution(player_level: int, difficulty: int) -> Dict[int,
     eligible_tiers = PokemonSelector.get_eligible_tiers(player_level)
     
     weights = {
-        tier: PokemonSelector.calculate_adjusted_weight(tier, difficulty)
+        tier: PokemonSelector.calculate_adjusted_weight(tier, difficulty, player_level)
         for tier in eligible_tiers
     }
     

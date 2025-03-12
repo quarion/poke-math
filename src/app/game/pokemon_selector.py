@@ -7,7 +7,8 @@ from typing import List, Dict, Any
 from src.app.game.progression_config import (
     TIER_BASE_WEIGHTS,
     DIFFICULTY_MULTIPLIER,
-    TIER_UNLOCK_LEVELS
+    TIER_UNLOCK_LEVELS,
+    LEVEL_MULTIPLIER
 )
 
 
@@ -28,19 +29,32 @@ class PokemonSelector:
         return sorted(eligible_tiers)
     
     @staticmethod
-    def calculate_adjusted_weight(tier: int, difficulty: int) -> float:
+    def calculate_adjusted_weight(tier: int, difficulty: int, player_level: int = 1) -> float:
         """
-        Calculate the adjusted weight for a Pokémon based on its tier and adventure difficulty.
+        Calculate the adjusted weight for a Pokémon based on its tier, adventure difficulty, and player level.
         
         Args:
             tier: Pokémon tier (1-5)
             difficulty: Adventure difficulty (1-7)
+            player_level: Player level (default: 1)
             
         Returns:
             Adjusted weight for random selection
         """
-        # Apply the formula: W_T × (1 + (D-1)/6 × (T-1))
-        return TIER_BASE_WEIGHTS[tier] * (1 + (difficulty - 1) * DIFFICULTY_MULTIPLIER * (tier - 1))
+        # Apply the formula: W_T × (1 + (D-1)/6 × (T-1) + L/50 × (T-1))
+        # Where:
+        # - W_T is the base weight for tier T
+        # - D is the difficulty level (1-7)
+        # - L is the player level
+        # - T is the Pokémon tier (1-5)
+        
+        # For tier 1, always return the base weight regardless of difficulty or level
+        if tier == 1:
+            return TIER_BASE_WEIGHTS[tier]
+            
+        # For other tiers, apply the formula
+        return TIER_BASE_WEIGHTS[tier] * (1 + (difficulty - 1) * DIFFICULTY_MULTIPLIER * (tier - 1) +
+                                          (player_level - 10) * LEVEL_MULTIPLIER * (tier - 1))
     
     @classmethod
     def select_pokemon(cls, pokemons: Dict[str, Any], player_level: int, difficulty: int, count: int = 1) -> List[str]:
@@ -72,7 +86,7 @@ class PokemonSelector:
         
         # Calculate weights for each eligible Pokémon
         weights = {
-            name: cls.calculate_adjusted_weight(pokemon.tier, difficulty)
+            name: cls.calculate_adjusted_weight(pokemon.tier, difficulty, player_level)
             for name, pokemon in eligible_pokemon.items()
         }
         

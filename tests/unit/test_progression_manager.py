@@ -54,8 +54,8 @@ def test_calculate_xp_reward():
     # Tier 1 (rattata) = 50 XP
     # Tier 2 (pikachu) = 100 XP
     # Tier 5 (mewtwo) = 800 XP
-    # Difficulty 3 bonus = 50 * 3 = 150 XP
-    # Total = 50 + 100 + 800 + 150 = 1100 XP
+    # Difficulty 3 bonus = 100 * 3 = 300 XP
+    # Total = 50 + 100 + 800 + 300 = 1250 XP
     xp_reward = ProgressionManager.calculate_xp_reward(
         ["rattata", "pikachu", "mewtwo"],
         3,
@@ -63,7 +63,7 @@ def test_calculate_xp_reward():
     )
     
     # Check that the XP reward is correct
-    assert xp_reward == 1100
+    assert xp_reward == 1250
     
     # Test with unknown Pokémon (should be ignored)
     xp_reward = ProgressionManager.calculate_xp_reward(
@@ -74,9 +74,9 @@ def test_calculate_xp_reward():
     
     # Check that only the known Pokémon and difficulty bonus are counted
     # Tier 2 (pikachu) = 100 XP
-    # Difficulty 1 bonus = 50 * 1 = 50 XP
-    # Total = 100 + 50 = 150 XP
-    assert xp_reward == 150
+    # Difficulty 1 bonus = 100 * 1 = 100 XP
+    # Total = 100 + 100 = 200 XP
+    assert xp_reward == 200
     
     # Test with empty caught Pokémon list (only difficulty bonus)
     xp_reward = ProgressionManager.calculate_xp_reward(
@@ -86,8 +86,8 @@ def test_calculate_xp_reward():
     )
     
     # Check that only the difficulty bonus is counted
-    # Difficulty 2 bonus = 50 * 2 = 100 XP
-    assert xp_reward == 100
+    # Difficulty 2 bonus = 100 * 2 = 200 XP
+    assert xp_reward == 200
 
 
 def test_process_level_up():

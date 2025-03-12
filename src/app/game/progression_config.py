@@ -20,15 +20,18 @@ TIER_XP_REWARDS = {
 
 # Base weights for Pokémon selection by tier
 TIER_BASE_WEIGHTS = {
-    1: 2,  # Common
-    2: 4,   # Uncommon
-    3: 8,   # Rare
-    4: 16,   # Very Rare
-    5: 32     # Legendary
+    1: 1,  # Common
+    2: 2,   # Uncommon
+    3: 3,   # Rare
+    4: 5,   # Very Rare
+    5: 8     # Legendary
 }
 
 # Difficulty multiplier for tier weights
-DIFFICULTY_MULTIPLIER = 1/6
+DIFFICULTY_MULTIPLIER = 1/5
+
+# Level multiplier for tier weights
+LEVEL_MULTIPLIER = 1/4
 
 # Tier unlock levels
 TIER_UNLOCK_LEVELS = {
