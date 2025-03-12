@@ -395,7 +395,17 @@ def generate_random_exercise(difficulty_id):
         return "Difficulty not found", 404
 
     game_manager = create_game_manager()
-    random_quiz_id, quiz_data = generate_random_quiz_data(GAME_CONFIG, selected_difficulty, EQUATION_GENERATOR)
+    
+    # Get the player's current level
+    level_info = game_manager.get_player_level_info()
+    player_level = level_info['level']
+    
+    random_quiz_id, quiz_data = generate_random_quiz_data(
+        GAME_CONFIG, 
+        selected_difficulty, 
+        EQUATION_GENERATOR,
+        player_level=player_level
+    )
 
     # Store the quiz in the session manager
     game_manager.session_manager.save_quiz_data(random_quiz_id, quiz_data, is_random=True)
@@ -479,10 +489,8 @@ def quiz(quiz_id):
             game_manager.session_manager.mark_quiz_solved(quiz_id)
             
             # Process adventure completion if the quiz was solved correctly
-            # Determine difficulty level (default to 1 if not specified)
-            difficulty = 1
-            if quiz_data.get('difficulty'):
-                difficulty = quiz_data.get('difficulty').get('level', 1)
+            # Determine difficulty level
+            difficulty = quiz_data.get('difficulty').get('difficulty')
             
             # Determine which Pokémon to catch based on the quiz
             # For now, we'll use the Pokémon from the image mapping as the caught Pokémon

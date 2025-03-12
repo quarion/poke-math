@@ -20,12 +20,6 @@ class PokemonSelector:
     def get_eligible_tiers(player_level: int) -> List[int]:
         """
         Determine which Pokémon tiers are unlocked based on player level.
-        
-        Args:
-            player_level: Current player level
-            
-        Returns:
-            List of unlocked tier numbers
         """
         eligible_tiers = []
         for tier, unlock_level in TIER_UNLOCK_LEVELS.items():
@@ -52,6 +46,9 @@ class PokemonSelector:
     def select_pokemon(cls, pokemons: Dict[str, Any], player_level: int, difficulty: int, count: int = 1) -> List[str]:
         """
         Select Pokémon based on player level and adventure difficulty.
+        Pokemon will be only select from eligible tiers, based on level
+        From all eligible pokemon they will be selected based on their weight - on lower level and with lower difficulty
+        common pokemon are more likely, with higher level and higher difficulty more rare pokemon start to appear
         
         Args:
             pokemons: Dictionary of all available Pokémon

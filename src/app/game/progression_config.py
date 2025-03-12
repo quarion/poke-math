@@ -7,7 +7,7 @@ Contains adjustable parameters for XP, leveling, and Pokémon selection.
 XP_MULTIPLIER = 1.2
 
 # Base XP needed for level 1
-BASE_XP = 100
+BASE_XP = 150
 
 # XP rewards per Pokémon tier
 TIER_XP_REWARDS = {
@@ -40,4 +40,4 @@ TIER_UNLOCK_LEVELS = {
 }
 
 # Bonus XP per difficulty level
-DIFFICULTY_BONUS_XP = 50 
+DIFFICULTY_BONUS_XP = 100

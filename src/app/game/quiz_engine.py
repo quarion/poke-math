@@ -2,6 +2,7 @@ import random
 import uuid
 from typing import Dict, Tuple, Any
 from src.app.game.game_config import Quiz, GameConfig
+from src.app.game.pokemon_selector import PokemonSelector
 
 
 def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool, Dict[str, bool], bool]:
@@ -71,15 +72,20 @@ def get_display_variables(game_config: GameConfig,
     return display_vars
 
 
-def generate_random_quiz_data(game_config, difficulty: Dict[str, Any], equation_generator) -> Tuple[str, Dict[str, Any]]:
+def generate_random_quiz_data(game_config, difficulty: Dict[str, Any], equation_generator, player_level: int = 1) -> Tuple[str, Dict[str, Any]]:
     """
-    Generate random quiz data for the given difficulty.
-
+    Generate random quiz data for the given difficulty and player level.
+    
+    The function uses PokemonSelector to select appropriate Pokémon based on the player's level
+    and the difficulty of the quiz. Higher player levels unlock higher tier Pokémon, and
+    higher difficulties increase the probability of selecting higher tier Pokémon.
+    
     Args:
         game_config: The game configuration containing Pokemon information
-        difficulty: Difficulty configuration
+        difficulty: Difficulty configuration with 'name' and 'level' keys
         equation_generator: The equation generator to use
-
+        player_level: Current player level, determines which Pokémon tiers are available
+    
     Returns:
         Tuple of (quiz_id, quiz_data)
     """
@@ -91,20 +97,25 @@ def generate_random_quiz_data(game_config, difficulty: Dict[str, Any], equation_
 
     # Create Pokemon variable mappings for the random variables
     image_mapping = {}
-    available_pokemon_images = {name: pokemon.image_path for name, pokemon in game_config.pokemons.items()}
-
-    # Get a list of Pokemon names and shuffle it to ensure random selection
-    pokemon_names = list(available_pokemon_images.keys())
-    random.shuffle(pokemon_names)
-
-    # Assign a unique Pokemon to each variable
-    for i, var in enumerate(quiz.solution.human_readable.keys()):
-        # Use modulo to avoid index errors if there are more variables than Pokemon
-        pokemon_name = pokemon_names[i % len(pokemon_names)]
-        image_mapping[var] = available_pokemon_images[pokemon_name]
-        # Remove the used Pokemon to ensure it's not reused
-        pokemon_names.remove(pokemon_name)
-        available_pokemon_images.pop(pokemon_name)
+    
+    # Get the number of variables needed for this quiz
+    num_variables = len(quiz.solution.human_readable.keys())
+    
+    # Use PokemonSelector to select appropriate Pokemon based on player level and difficulty
+    difficulty_level = difficulty.get('level', 1)  # Default to 1 if not specified
+    selected_pokemon = PokemonSelector.select_pokemon(
+        game_config.pokemons, 
+        player_level, 
+        difficulty_level, 
+        count=num_variables
+    )
+    
+    # Map variables to selected Pokemon
+    variables = list(quiz.solution.human_readable.keys())
+    for i, pokemon_name in enumerate(selected_pokemon):
+        if i < len(variables):  # Ensure we don't go out of bounds
+            var = variables[i]
+            image_mapping[var] = game_config.pokemons[pokemon_name].image_path
 
     # Format equations to ensure consistent variable format
     formatted_equations = []
