@@ -1,10 +1,9 @@
 """
 Unit tests for Pokémon collection display.
 """
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from src.app.game.game_config import Pokemon, GameConfig
+from src.app.game.game_config import GameConfig, Pokemon
 
 
 def test_prepare_collection_data():

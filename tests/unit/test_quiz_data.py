@@ -4,9 +4,20 @@ Unit tests for quiz data loading and structure.
 Tests the loading and validation of quiz data from JSON files.
 """
 
-import pytest
 from pathlib import Path
-from src.app.game.game_config import load_game_config, load_pokemon_config, GameConfig, Quiz, Section, Pokemon, QuizAnswer
+
+import pytest
+
+from src.app.game.game_config import (
+    GameConfig,
+    Pokemon,
+    Quiz,
+    QuizAnswer,
+    Section,
+    load_game_config,
+    load_pokemon_config,
+)
+
 
 @pytest.fixture
 def test_data_path():

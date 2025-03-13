@@ -15,7 +15,17 @@ Design goals:
 
 import random
 from fractions import Fraction
-from typing import List, Dict, Tuple, Set, Union, Optional, Any, NamedTuple, TypedDict, Literal
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    TypedDict,
+    Union,
+)
+
 import sympy as sp
 
 
@@ -296,7 +306,7 @@ class EquationsGeneratorV2:
                 return self.generate_simple_quiz(num_unknowns, max_value, random_seed)
         
         # Create equation objects
-        equation_objects = [EquationV2(eq, fmt) for eq, fmt in zip(equations, formatted_equations)]
+        equation_objects = [EquationV2(eq, fmt) for eq, fmt in zip(equations, formatted_equations, strict=False)]
         
         # Create the quiz
         return DynamicQuizV2(
@@ -342,7 +352,7 @@ class EquationsGeneratorV2:
         
         # Generate random solutions for each variable
         solution_values = {}
-        for i, var in enumerate(var_symbols):
+        for _i, var in enumerate(var_symbols):
             if allow_decimals:
                 # Generate a decimal value with one decimal place
                 solution_values[var] = round(random.uniform(1, max_value // 3), 1)
@@ -365,7 +375,7 @@ class EquationsGeneratorV2:
             equations = []
             formatted_equations = []
             
-            for i in range(num_unknowns):
+            for _i in range(num_unknowns):
                 # Decide which variables to include in this equation
                 # Always include at least one variable
                 num_vars_to_use = random.randint(1, min(num_unknowns, 3))
@@ -506,7 +516,7 @@ class EquationsGeneratorV2:
             equations = []
             formatted_equations = []
             
-            for i, var in enumerate(var_symbols):
+            for _i, var in enumerate(var_symbols):
                 # Create a simple equation like x + 5 = 10 or 2*y - 3 = 7
                 coef = random.randint(1, min(3, max_value // 3))
                 const = random.randint(1, max_value // 3)
@@ -564,7 +574,7 @@ class EquationsGeneratorV2:
                 formatted_equations.append(formatted_equation)
         
         # Create equation objects
-        equation_objects = [EquationV2(eq, fmt) for eq, fmt in zip(equations, formatted_equations)]
+        equation_objects = [EquationV2(eq, fmt) for eq, fmt in zip(equations, formatted_equations, strict=False)]
         
         # Create the quiz
         return DynamicQuizV2(

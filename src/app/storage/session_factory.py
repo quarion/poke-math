@@ -2,6 +2,7 @@ from src.app.game.session_manager import SessionManager
 from src.app.storage.firestore_storage import FirestoreStorage
 from src.app.storage.flask_session_storage import FlaskSessionStorage
 
+
 def create_session_manager(use_firestore: bool = True) -> SessionManager:
     """
     Factory function to create a SessionManager with the appropriate storage.

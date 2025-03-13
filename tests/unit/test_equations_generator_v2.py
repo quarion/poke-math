@@ -1,11 +1,8 @@
+
 import pytest
 import sympy as sp
-import random
-import numpy as np
-from typing import Dict, Any, List, Optional, Union
-from fractions import Fraction
 
-from src.app.equations.equations_generator_v2 import EquationsGeneratorV2, DynamicQuizV2
+from src.app.equations.equations_generator_v2 import EquationsGeneratorV2
 
 """
 Tests for the EquationsGeneratorV2 class.
@@ -180,7 +177,7 @@ class TestEquationsGeneratorV2:
                     if eq.symbolic is not None:
                         result = eq.symbolic.subs(quiz.solution.symbolic)
                         # Verify that the equation is satisfied
-                        assert result == True, f"Equation {eq.formatted} not satisfied by solution {quiz.solution.human_readable}"
+                        assert result is True, f"Equation {eq.formatted} not satisfied by solution {quiz.solution.human_readable}"
     
     @pytest.mark.basic_math
     def test_basic_math_unique_solution(self, generator):
@@ -379,7 +376,7 @@ class TestEquationsGeneratorV2:
                     if eq.symbolic is not None:
                         result = eq.symbolic.subs(quiz.solution.symbolic)
                         # Verify that the equation is satisfied
-                        assert result == True, f"Equation {eq.formatted} not satisfied by solution {quiz.solution.human_readable}"
+                        assert result is True, f"Equation {eq.formatted} not satisfied by solution {quiz.solution.human_readable}"
     
     @pytest.mark.simple_quiz
     def test_simple_quiz_unique_solution(self, generator):
@@ -570,7 +567,7 @@ class TestEquationsGeneratorV2:
         for eq in quiz_with_decimals.equations:
             if eq.symbolic is not None:
                 result = eq.symbolic.subs(quiz_with_decimals.solution.symbolic)
-                assert result == True, f"Equation {eq.formatted} not satisfied by solution {quiz_with_decimals.solution.human_readable}"
+                assert result is True, f"Equation {eq.formatted} not satisfied by solution {quiz_with_decimals.solution.human_readable}"
     
     @pytest.mark.grade_school
     def test_grade_school_solution_correctness(self, generator):
@@ -602,7 +599,7 @@ class TestEquationsGeneratorV2:
                     if eq.symbolic is not None:
                         result = eq.symbolic.subs(quiz.solution.symbolic)
                         # Verify that the equation is satisfied
-                        assert result == True, f"Equation {eq.formatted} not satisfied by solution {quiz.solution.human_readable}"
+                        assert result is True, f"Equation {eq.formatted} not satisfied by solution {quiz.solution.human_readable}"
     
     @pytest.mark.grade_school
     def test_grade_school_unique_solution(self, generator):

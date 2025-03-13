@@ -4,8 +4,8 @@ This module contains dataclasses for strongly typed quiz data structures.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Set
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Set
 
 
 @dataclass

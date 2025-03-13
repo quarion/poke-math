@@ -6,6 +6,7 @@ Home Page Object Model class for the home page functionality.
 """
 
 from playwright.async_api import Page, expect
+
 from .BasePage import BasePage
 
 

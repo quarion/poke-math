@@ -6,13 +6,16 @@ Tests for the adventure completion functionality.
 This file focuses on adventure mechanics rather than player progression.
 """
 
-import pytest
-import json
-from playwright.async_api import Page, expect
 
-from tests.e2e.pages import HomePage, ProfilePage
+import pytest
+from playwright.async_api import Page
+
+from tests.e2e.pages import ProfilePage
+from tests.e2e.utils.api_helpers import (
+    complete_adventure,
+    verify_adventure_response_structure,
+)
 from tests.e2e.utils.test_helpers import generate_screenshot_name
-from tests.e2e.utils.api_helpers import complete_adventure, verify_adventure_response_structure
 
 
 @pytest.mark.asyncio

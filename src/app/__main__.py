@@ -5,6 +5,7 @@ This allows the app to be run with 'python -m src.app'.
 """
 
 import os
+
 from src.app.app import app
 
 if __name__ == "__main__":

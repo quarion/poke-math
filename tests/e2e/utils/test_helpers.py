@@ -6,9 +6,9 @@ Helper functions for end-to-end testing.
 """
 
 import os
-import asyncio
 from datetime import datetime
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+
+from playwright.async_api import Page, async_playwright
 
 from tests.e2e.pages import LoginPage, NamePage
 

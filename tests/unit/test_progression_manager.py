@@ -1,17 +1,11 @@
 """
 Unit tests for the ProgressionManager class.
 """
-import pytest
 from unittest.mock import MagicMock
 
+from src.app.game.game_config import GameConfig, Pokemon
+from src.app.game.progression_config import BASE_XP, XP_MULTIPLIER
 from src.app.game.progression_manager import ProgressionManager
-from src.app.game.game_config import Pokemon, GameConfig
-from src.app.game.progression_config import (
-    BASE_XP,
-    XP_MULTIPLIER,
-    TIER_XP_REWARDS,
-    DIFFICULTY_BONUS_XP
-)
 
 
 def test_calculate_xp_needed():

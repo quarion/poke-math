@@ -1,6 +1,9 @@
+from typing import Any, Dict
+
 from flask import session as flask_session
-from typing import Dict, Any
+
 from .storage_interface import UserStorageInterface
+
 
 class FlaskSessionStorage(UserStorageInterface):
     """Stores user data in Flask session."""

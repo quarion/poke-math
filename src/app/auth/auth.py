@@ -5,14 +5,16 @@ This module handles user authentication using Firebase Authentication,
 including Google sign-in and guest user functionality.
 """
 
-import os
 import uuid
-from typing import Dict, Any, Optional, Tuple, Callable
 from datetime import datetime
-from flask import session, redirect, url_for, request
 from functools import wraps
-from ..firebase.firebase_init import get_auth_client
+from typing import Any, Callable, Dict, Optional, Tuple
+
+from flask import redirect, request, session, url_for
 from flask_wtf.csrf import generate_csrf
+
+from ..firebase.firebase_init import get_auth_client
+
 
 class AuthManager:
     """
@@ -101,7 +103,7 @@ class AuthManager:
         
         # Remember if this was a guest account
         was_guest = session.get('auth_type') == 'guest'
-        guest_id = session.get('user_id') if was_guest else None
+        session.get('user_id') if was_guest else None
         
         # Clear the session
         session.clear()

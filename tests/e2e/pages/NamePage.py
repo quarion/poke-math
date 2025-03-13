@@ -6,6 +6,7 @@ Name Page Object Model class for the trainer name input functionality.
 """
 
 from playwright.async_api import Page, expect
+
 from .BasePage import BasePage
 
 

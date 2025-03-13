@@ -6,6 +6,7 @@ Base Page Object Model class that all other page objects will inherit from.
 """
 
 import os
+
 from playwright.async_api import Page
 
 

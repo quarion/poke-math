@@ -7,16 +7,17 @@ Pytest automatically discovers and makes these fixtures available to all test fi
 
 import os
 import sys
+from pathlib import Path
+
+import pytest
+
+from src.app.game.game_config import load_game_config
+from src.app.game.game_manager import GameManager
 
 # Add the project root directory to Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
-import pytest
-from pathlib import Path
-from src.app.game.game_config import load_game_config
-from src.app.game.game_manager import GameManager
 
 
 @pytest.fixture(scope="session")
@@ -49,32 +50,26 @@ def quiz_data(test_data_path, test_pokemon_data_path):
 @pytest.fixture
 def mock_session_manager():
     """Create a SessionManager that doesn't depend on Flask session."""
-    from src.app.game.session_manager import SessionManager, SessionState
     from unittest.mock import MagicMock, patch
-    
+
+    from src.app.game.session_manager import SessionManager, SessionState
+
     # Create a mock storage
     mock_storage = MagicMock()
     mock_storage.load_user_data.return_value = {'session_state': {}}
-    
+
     # Patch _get_or_create_user_id to avoid Flask session dependency
     with patch('src.app.game.session_manager.SessionManager._get_or_create_user_id', return_value='test_user'):
-        
         # Create session manager with mock storage and test user ID
         session_manager = SessionManager(storage=mock_storage, user_id='test_user')
-        
+
         # Initialize with empty state
-        session_manager.state = SessionState(
-            solved_quizzes=set(),
-            quiz_attempts=[],
-            user_name=None,
-            level=1,
-            xp=0,
-            caught_pokemon={}
-        )
-        
+        session_manager.state = SessionState(solved_quizzes=set(), quiz_attempts=[], user_name=None, level=1, xp=0,
+                                             caught_pokemon={})
+
         # Mock _save_state to avoid storage calls
         session_manager._save_state = MagicMock()
-        
+
         return session_manager
 
 
@@ -95,4 +90,4 @@ def solved_game_manager(game_manager):
     """
     # Solve the basic quiz
     game_manager.check_answers('test_basic', {'pikachu': 3})
-    return game_manager 
+    return game_manager

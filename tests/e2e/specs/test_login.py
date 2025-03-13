@@ -8,7 +8,7 @@ Tests for the login functionality.
 import pytest
 from playwright.async_api import Page, expect
 
-from tests.e2e.pages import LoginPage, NamePage, HomePage
+from tests.e2e.pages import HomePage, LoginPage, NamePage
 from tests.e2e.utils.test_helpers import generate_screenshot_name
 
 

@@ -1,7 +1,7 @@
-import random
 import uuid
-from typing import Dict, Tuple, Any
-from src.app.game.game_config import Quiz, GameConfig
+from typing import Any, Dict, Tuple
+
+from src.app.game.game_config import GameConfig, Quiz
 from src.app.game.pokemon_selector import PokemonSelector
 
 

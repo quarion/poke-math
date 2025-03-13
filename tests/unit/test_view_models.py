@@ -7,6 +7,7 @@ with Pokémon names like 'quaxly' that contain those letters.
 """
 
 import pytest
+
 from src.app.view_models import QuizViewModel
 
 

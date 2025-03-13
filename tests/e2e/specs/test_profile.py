@@ -6,7 +6,7 @@ Tests for the profile page functionality.
 """
 
 import pytest
-from playwright.async_api import Page, expect
+from playwright.async_api import Page
 
 from tests.e2e.pages import HomePage, ProfilePage
 from tests.e2e.utils.test_helpers import generate_screenshot_name

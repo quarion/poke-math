@@ -15,18 +15,18 @@ Usage:
 """
 
 import argparse
-import sys
 import os
+import sys
 import traceback
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List
 
 # Add the project root to the Python path to allow importing from src
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Check for required packages
 try:
-    import numpy as np
     import matplotlib.pyplot as plt
+    import numpy as np
 except ImportError as e:
     print(f"Error: {e}")
     print("Please install the required packages with:")
@@ -35,14 +35,14 @@ except ImportError as e:
 
 # Import project modules
 try:
-    from src.app.game.progression_config import (
-        TIER_BASE_WEIGHTS,
-        DIFFICULTY_MULTIPLIER,
-        TIER_UNLOCK_LEVELS,
-        BASE_XP,
-        XP_MULTIPLIER
-    )
     from src.app.game.pokemon_selector import PokemonSelector
+    from src.app.game.progression_config import (
+        BASE_XP,
+        DIFFICULTY_MULTIPLIER,
+        TIER_BASE_WEIGHTS,
+        TIER_UNLOCK_LEVELS,
+        XP_MULTIPLIER,
+    )
     from src.app.game.progression_manager import ProgressionManager
 except ImportError as e:
     print(f"Error importing project modules: {e}")

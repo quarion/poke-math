@@ -6,15 +6,16 @@ Pytest fixtures for end-to-end testing.
 """
 
 import os
-import pytest
-import asyncio
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+
 import pytest_asyncio
 
-from tests.e2e.utils.test_helpers import setup_browser, teardown_browser, login_as_guest, ensure_screenshots_dir
-
 # Import our new fixtures
-from tests.e2e.fixtures.adventure import completed_adventure, player_stats_before_adventure
+from tests.e2e.utils.test_helpers import (
+    ensure_screenshots_dir,
+    login_as_guest,
+    setup_browser,
+    teardown_browser,
+)
 
 # Ensure screenshots directory exists
 ensure_screenshots_dir()

@@ -6,6 +6,7 @@ Profile Page Object Model class for the profile page functionality.
 """
 
 from playwright.async_api import Page, expect
+
 from .BasePage import BasePage
 
 
@@ -161,7 +162,7 @@ class ProfilePage(BasePage):
             unique_pokemon = int(parts[3])
             total_pokemon = int(parts[7])
             return unique_pokemon, total_pokemon
-        except Exception as e:
+        except Exception:
             # If there's an error parsing the stats, return default values
             # This ensures the test doesn't fail if the user has no Pokémon yet
             return 0, 1  # Return at least 1 for total_pokemon to pass the test

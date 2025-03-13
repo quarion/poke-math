@@ -1,10 +1,7 @@
 """
 Unit tests for Pokémon catching functionality.
 """
-import pytest
-from unittest.mock import MagicMock
 
-from src.app.game.session_manager import SessionManager
 
 
 def test_catch_pokemon(mock_session_manager):

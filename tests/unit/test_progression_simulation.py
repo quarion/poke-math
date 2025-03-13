@@ -1,19 +1,12 @@
 """
 Test script to simulate player progression from Level 1 to 50.
 """
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from src.app.game.progression_manager import ProgressionManager
-from src.app.game.game_config import Pokemon, GameConfig
+from src.app.game.game_config import GameConfig, Pokemon
 from src.app.game.pokemon_selector import PokemonSelector
-from src.app.game.progression_config import (
-    BASE_XP,
-    XP_MULTIPLIER,
-    TIER_XP_REWARDS,
-    TIER_BASE_WEIGHTS,
-    TIER_UNLOCK_LEVELS
-)
+from src.app.game.progression_config import TIER_XP_REWARDS
+from src.app.game.progression_manager import ProgressionManager
 
 
 def test_xp_progression_curve():

@@ -8,8 +8,8 @@ Fixtures for adventure-related e2e tests.
 import pytest
 from playwright.async_api import Page
 
-from tests.e2e.utils.api_helpers import complete_adventure
 from tests.e2e.pages import ProfilePage
+from tests.e2e.utils.api_helpers import complete_adventure
 
 
 @pytest.fixture

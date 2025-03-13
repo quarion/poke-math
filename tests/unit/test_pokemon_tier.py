@@ -5,9 +5,7 @@ import json
 import tempfile
 from pathlib import Path
 
-import pytest
-
-from src.app.game.game_config import load_game_config, load_pokemon_config, Pokemon
+from src.app.game.game_config import Pokemon, load_pokemon_config
 
 
 def test_pokemon_tier_default():

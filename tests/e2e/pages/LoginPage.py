@@ -6,6 +6,7 @@ Login Page Object Model class for the login functionality.
 """
 
 from playwright.async_api import Page, expect
+
 from .BasePage import BasePage
 
 

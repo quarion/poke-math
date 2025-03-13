@@ -1,8 +1,10 @@
-from typing import Dict, Any
-import os
-from ..firebase.firebase_init import get_firestore_client
+from typing import Any, Dict
+
 from firebase_admin import firestore
+
+from ..firebase.firebase_init import get_firestore_client
 from .storage_interface import UserStorageInterface
+
 
 class FirestoreStorage(UserStorageInterface):
     """Stores user data in Firestore."""

@@ -3,8 +3,14 @@ Progression management module.
 Handles XP calculations, level-up logic, and progression-related functionality.
 """
 
-from typing import Dict, List, Any, Optional
-from src.app.game.progression_config import BASE_XP, XP_MULTIPLIER, TIER_XP_REWARDS, DIFFICULTY_BONUS_XP
+from typing import Any, Dict, List
+
+from src.app.game.progression_config import (
+    BASE_XP,
+    DIFFICULTY_BONUS_XP,
+    TIER_XP_REWARDS,
+    XP_MULTIPLIER,
+)
 
 
 class ProgressionManager:

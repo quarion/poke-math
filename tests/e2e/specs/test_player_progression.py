@@ -6,13 +6,13 @@ Tests for the player progression features.
 These tests verify that the core player progression features are working correctly.
 """
 
-import pytest
-import json
-from playwright.async_api import Page, expect
 
-from tests.e2e.pages import HomePage, ProfilePage
-from tests.e2e.utils.test_helpers import generate_screenshot_name
+import pytest
+from playwright.async_api import Page
+
+from tests.e2e.pages import ProfilePage
 from tests.e2e.utils.api_helpers import complete_adventure
+from tests.e2e.utils.test_helpers import generate_screenshot_name
 
 
 @pytest.mark.asyncio

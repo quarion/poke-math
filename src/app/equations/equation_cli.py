@@ -2,11 +2,14 @@
 import argparse
 import json
 import os
-import sys
-from typing import List, Dict, Any
 import re
+import sys
+from typing import Any, Dict, List
 
-from src.app.equations.equations_generator_v2 import EquationsGeneratorV2, DynamicQuizV2, EquationConfig
+from src.app.equations.equations_generator_v2 import (
+    DynamicQuizV2,
+    EquationsGeneratorV2,
+)
 
 
 def load_difficulty_configs(json_path: str) -> List[Dict[str, Any]]:
@@ -50,7 +53,7 @@ def print_equation(quiz: DynamicQuizV2, index: int = 1, config_type: str = None)
         config_type: The type of configuration used to generate the equations
     """
     print(f"\nEquation {index}:")
-    for i, eq in enumerate(quiz.equations):
+    for _i, eq in enumerate(quiz.equations):
         # Clean up the equation formatting for better display
         formatted_eq = eq.formatted
         

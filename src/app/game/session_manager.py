@@ -1,11 +1,12 @@
-from typing import Dict, Set, Any, Optional, List
-from flask import session as flask_session
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Set
 
-from src.app.storage.storage_interface import UserStorageInterface
-from src.app.storage.flask_session_storage import FlaskSessionStorage
+from flask import session as flask_session
+
 from src.app.auth.auth import AuthManager
-from src.app.game.models import SessionState, QuizData, QuizAttempt
+from src.app.game.models import QuizAttempt, QuizData, SessionState
+from src.app.storage.flask_session_storage import FlaskSessionStorage
+from src.app.storage.storage_interface import UserStorageInterface
 
 
 class SessionManager:

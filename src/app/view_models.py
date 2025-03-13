@@ -5,9 +5,9 @@ This module contains view model classes used to pass data to templates.
 These classes provide a strongly-typed interface between the application and views.
 """
 
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Any
 import re
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -88,4 +88,4 @@ class QuizResultViewModel:
         }
 
     def __str__(self) -> str:
-        return f"QuizResultViewModel(correct={self.correct}, score={self.correct_count}/{self.total_count})" 
+        return f"QuizResultViewModel(correct={self.correct}, score={self.correct_count}/{self.total_count})"

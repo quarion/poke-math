@@ -5,10 +5,17 @@ Tests the pure functions in the quiz_engine module that handle answer checking l
 and display variables.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
-from src.app.game.game_config import Quiz, QuizAnswer, Pokemon
-from src.app.game.quiz_engine import check_quiz_answers, get_display_variables, generate_random_quiz_data
+
+import pytest
+
+from src.app.game.game_config import Pokemon, Quiz, QuizAnswer
+from src.app.game.quiz_engine import (
+    check_quiz_answers,
+    generate_random_quiz_data,
+    get_display_variables,
+)
+
 
 @pytest.fixture
 def sample_quiz():
@@ -172,7 +179,7 @@ def test_generate_random_quiz_data_integration(mock_game_config, mock_equation_g
     assert quiz_data['title'] == "Random Medium Quiz"
     
     # Check that all Pokemon in the image mapping are from tier 1
-    for var, image_path in quiz_data['image_mapping'].items():
+    for _var, image_path in quiz_data['image_mapping'].items():
         # Find the Pokemon with this image path
         pokemon_name = None
         for name, pokemon in mock_game_config.pokemons.items():
@@ -192,7 +199,7 @@ def test_generate_random_quiz_data_integration(mock_game_config, mock_equation_g
     )
     
     # Check that all Pokemon in the image mapping are from tier 1-2
-    for var, image_path in quiz_data['image_mapping'].items():
+    for _var, image_path in quiz_data['image_mapping'].items():
         # Find the Pokemon with this image path
         pokemon_name = None
         for name, pokemon in mock_game_config.pokemons.items():

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import subprocess
-import re
 import argparse
-from datetime import datetime, timedelta
+import subprocess
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from datetime import datetime, timedelta
+from typing import List, Tuple
 
 # Default configuration values
 DEFAULT_BREAK_THRESHOLD_MINUTES = 90
@@ -160,7 +159,7 @@ Examples:
 def main():
     args = parse_arguments()
     
-    print(f"Analyzing git log to calculate work time...")
+    print("Analyzing git log to calculate work time...")
     print(f"Using break threshold: {args.break_threshold} minutes")
     print(f"Using pre-commit buffer: {args.pre_commit_buffer} minutes")
     

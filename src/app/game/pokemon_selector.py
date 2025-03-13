@@ -2,13 +2,13 @@
 Module for selecting Pokémon based on player level and adventure difficulty.
 """
 import random
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from src.app.game.progression_config import (
-    TIER_BASE_WEIGHTS,
     DIFFICULTY_MULTIPLIER,
+    LEVEL_MULTIPLIER,
+    TIER_BASE_WEIGHTS,
     TIER_UNLOCK_LEVELS,
-    LEVEL_MULTIPLIER
 )
 
 

@@ -6,8 +6,9 @@ to ensure consistent access to Firestore and Auth services.
 """
 
 import os
+
 import firebase_admin
-from firebase_admin import credentials, firestore, auth
+from firebase_admin import auth, credentials, firestore
 
 # Global clients to be used across the application
 _firestore_client = None
@@ -31,7 +32,7 @@ def initialize_firebase():
     
     # Check if Firebase is already initialized
     if firebase_admin._apps:
-        app = firebase_admin._apps[0]
+        firebase_admin._apps[0]
     else:
         # Initialize Firebase Admin SDK
         cred = None
@@ -77,7 +78,7 @@ def initialize_firebase():
         
         # Initialize the app
         try:
-            app = firebase_admin.initialize_app(cred)
+            firebase_admin.initialize_app(cred)
             print("Firebase Admin SDK initialized successfully")
         except Exception as e:
             raise RuntimeError(f"Failed to initialize Firebase: {e}")

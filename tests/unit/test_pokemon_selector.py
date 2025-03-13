@@ -1,11 +1,11 @@
 """
 Unit tests for the PokemonSelector class.
 """
-import pytest
-from unittest.mock import MagicMock
 
-from src.app.game.pokemon_selector import PokemonSelector
+import pytest
+
 from src.app.game.game_config import Pokemon
+from src.app.game.pokemon_selector import PokemonSelector
 from src.app.game.progression_config import TIER_BASE_WEIGHTS
 
 
