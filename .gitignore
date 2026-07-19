@@ -46,8 +46,11 @@ ENV/
 *.tfstate.*
 *.tfvars
 *.tfvars.json
+!infrastructure/environments/prod.tfvars
+*.tfplan
 .terraform/
 .terraform.lock.hcl
+!infrastructure/.terraform.lock.hcl
 crash.log
 crash.*.log
 override.tf

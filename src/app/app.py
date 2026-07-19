@@ -13,6 +13,7 @@ Authentication:
 """
 
 import os
+import secrets
 from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -37,7 +38,6 @@ from src.app.game.game_manager import GameManager
 from src.app.game.quiz_engine import generate_random_quiz_data
 from src.app.storage.session_factory import create_session_manager
 from src.app.view_models import QuizResultViewModel, QuizViewModel
-
 
 # -----------------------------------------------------------------------------
 # Authentication Helper
@@ -73,17 +73,37 @@ def create_flask_app():
     flask_app = Flask(__name__,
                       template_folder=str(Path(__file__).parent.parent / 'templates'),
                       static_folder=str(Path(__file__).parent.parent / 'static'))
-    flask_app.secret_key = 'your-secret-key-here'  # Required for session management
+    environment = os.environ.get(
+        'APP_ENVIRONMENT', os.environ.get('FLASK_ENV', 'development')
+    ).lower()
+    is_production = environment == 'production'
 
-    # Initialize CSRF protection
+    session_secret = os.environ.get('FLASK_SECRET_KEY')
+    if is_production and not session_secret:
+        raise RuntimeError('FLASK_SECRET_KEY is required in production')
+    if not session_secret:
+        # Local-only ephemeral key. Production must inject a stable secret.
+        session_secret = secrets.token_urlsafe(32)
+
+    flask_app.config.update(
+        SECRET_KEY=session_secret,
+        WTF_CSRF_SECRET_KEY=os.environ.get('WTF_CSRF_SECRET_KEY', session_secret),
+        WTF_CSRF_ENABLED=True,
+        WTF_CSRF_TIME_LIMIT=3600,
+        WTF_CSRF_CHECK_DEFAULT=True,
+        WTF_CSRF_METHODS=['POST', 'PUT', 'PATCH', 'DELETE'],
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SECURE=is_production,
+        PREFERRED_URL_SCHEME='https' if is_production else 'http',
+    )
+
     CSRFProtect(flask_app)
 
-    # Configure CSRF protection
-    flask_app.config['WTF_CSRF_ENABLED'] = True
-    flask_app.config['WTF_CSRF_SECRET_KEY'] = 'a-very-secret-key'  # Should be a strong random key in production
-    flask_app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour in seconds
-    flask_app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # Don't check CSRF by default, only where explicitly required
-    flask_app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']  # Only check these methods
+    @flask_app.get('/readyz')
+    def readyz():
+        """Liveness check that does not touch Firebase or Firestore."""
+        return jsonify({'status': 'ok'})
 
     # Add version info to all templates
     @flask_app.context_processor
@@ -111,16 +131,6 @@ def get_version_info():
 
 # Create Flask app
 app = create_flask_app()
-
-# Initialize CSRF protection separately to make it available globally
-csrf = CSRFProtect(app)
-
-# Configure CSRF protection
-app.config['WTF_CSRF_ENABLED'] = True
-app.config['WTF_CSRF_SECRET_KEY'] = 'a-very-secret-key'  # Should be a strong random key in production
-app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour in seconds
-app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # Don't check CSRF by default, only where explicitly required
-app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']  # Only check these methods
 
 
 # Add after_request handler to set guest cookie
@@ -741,44 +751,10 @@ def login():
         app.logger.info("User already authenticated in session, redirecting to index")
         return redirect(url_for('index'))
 
-    # Add Firebase check and debug info to help identify issues
-    try:
-        # Check if request has Firebase ID token in header (sometimes Firebase Auth redirects with this)
-        auth_header = request.headers.get('Authorization', '')
-        if auth_header.startswith('Bearer '):
-            app.logger.info("Found Firebase ID token in Authorization header")
-            token = auth_header.split('Bearer ')[1]
-
-            # Try to verify the token
-            try:
-                decoded_token = get_auth_client().verify_id_token(token)
-                uid = decoded_token['uid']
-                app.logger.info(f"Auto-login via token - UID: {uid}")
-
-                # Set up session
-                session['user_id'] = uid
-                session['auth_type'] = 'google'
-                session['authenticated'] = True
-                session['is_guest'] = False
-
-                # Check if user exists
-                session_manager = create_session_manager()
-                if session_manager.get_user_name():
-                    return redirect(url_for('index'))
-                else:
-                    return redirect(url_for('name_input'))
-            except Exception as e:
-                app.logger.error(f"Error verifying token from header: {str(e)}")
-    except Exception as e:
-        app.logger.error(f"Error in login route: {str(e)}")
-
-    # Otherwise, show the login page
-    app.logger.info("Showing login page")
     return render_template('login.html')
 
 
 @app.route('/auth_callback', methods=['POST'])
-@csrf.exempt  # Exempt this route from CSRF protection
 def auth_callback():
     """
     Handle Firebase authentication callback.
@@ -789,79 +765,65 @@ def auth_callback():
         JSON response with success status and redirect URL
     """
     try:
-        # Log the request for debugging
-        app.logger.info("Auth callback received")
-        app.logger.info(f"Request content type: {request.content_type}")
-        app.logger.info(f"Request headers: {request.headers}")
-
         # Get the ID token from the request
-        data = request.json
+        data = request.get_json(silent=True)
         if not data:
-            app.logger.error("No JSON data received in auth_callback")
             return jsonify({'success': False, 'error': 'No data provided'}), 400
 
-        app.logger.info(f"Request data keys: {data.keys()}")
         id_token = data.get('id_token')
-        is_guest = data.get('is_guest', False)
-
-        app.logger.info(f"Is guest login: {is_guest}")
 
         if not id_token:
-            app.logger.error("No ID token provided in auth_callback")
             return jsonify({'success': False, 'error': 'No ID token provided'}), 400
 
         try:
             # Verify the ID token with Firebase Admin SDK
-            app.logger.info("Verifying ID token...")
             decoded_token = get_auth_client().verify_id_token(id_token)
             uid = decoded_token['uid']
-            app.logger.info(f"Token verified successfully for UID: {uid}")
+            sign_in_provider = decoded_token.get('firebase', {}).get(
+                'sign_in_provider'
+            )
+            is_guest = sign_in_provider == 'anonymous'
 
             # Create a session for the user
             session['user_id'] = uid
-            app.logger.info(f"Session user_id set to: {uid}")
 
             if is_guest:
                 # Handle guest login
-                app.logger.info("Processing guest login")
                 session['auth_type'] = 'guest'
                 session['authenticated'] = True
                 session['is_guest'] = True
                 # Redirect to name input page for guests
                 redirect_url = url_for('name_input')
-                app.logger.info(f"Guest redirect URL: {redirect_url}")
                 return jsonify({'success': True, 'redirect': redirect_url})
             else:
                 # Regular user login
-                app.logger.info("Processing regular user login")
                 session['auth_type'] = 'google'
                 session['authenticated'] = True
                 session['is_guest'] = False
 
                 # Check if user exists in the database
-                app.logger.info("Checking for existing user name...")
                 session_manager = create_session_manager()
                 user_name = session_manager.get_user_name()
-                app.logger.info(f"User name from session: {user_name}")
 
                 if user_name:
                     # Existing user, redirect to home page
                     redirect_url = url_for('index')
-                    app.logger.info(f"Existing user redirect URL: {redirect_url}")
                     return jsonify({'success': True, 'redirect': redirect_url})
                 else:
                     # New user, redirect to profile setup
                     redirect_url = url_for('name_input')
-                    app.logger.info(f"New user redirect URL: {redirect_url}")
                     return jsonify({'success': True, 'redirect': redirect_url})
 
-        except Exception as e:
-            app.logger.error(f"Token verification error: {str(e)}")
-            return jsonify({'success': False, 'error': f'Token verification failed: {str(e)}'}), 401
+        except Exception:
+            app.logger.warning("Firebase ID token verification failed")
+            return jsonify({
+                'success': False,
+                'error': 'Token verification failed',
+            }), 401
 
-    except Exception as e:
-        app.logger.error(f"Error in auth_callback: {str(e)}")
-        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+    except Exception:
+        app.logger.exception("Unexpected authentication callback failure")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
 
 
 @app.route('/name')

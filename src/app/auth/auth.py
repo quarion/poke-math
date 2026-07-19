@@ -10,7 +10,7 @@ from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, Dict, Optional, Tuple
 
-from flask import redirect, request, session, url_for
+from flask import current_app, redirect, request, session, url_for
 from flask_wtf.csrf import generate_csrf
 
 from ..firebase.firebase_init import get_auth_client
@@ -77,7 +77,8 @@ class AuthManager:
                 session['user_id'],
                 max_age=max_age,
                 httponly=True,
-                samesite='Lax'
+                samesite='Lax',
+                secure=current_app.config.get('SESSION_COOKIE_SECURE', False),
             )
 
     
@@ -190,4 +191,4 @@ class AuthManager:
             if not AuthManager.is_authenticated():
                 return redirect(url_for('login'))
             return f(*args, **kwargs)
-        return decorated_function 
+        return decorated_function

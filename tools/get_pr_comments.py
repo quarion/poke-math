@@ -1,57 +1,74 @@
 import argparse
-import os
+import json
+import shutil
+import subprocess
+import sys
 
-import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Fetch GitHub PR review comments with filters",
+    )
+    parser.add_argument("--owner", default="quarion")
+    parser.add_argument("--repo", default="poke-math")
+    parser.add_argument("--pr", type=int, default=1)
+    parser.add_argument("--author", default="quarion")
+    return parser.parse_args()
 
-parser = argparse.ArgumentParser(description='Fetch GitHub PR review comments with filters')
-parser.add_argument('--owner', default='quarion', help='Repository owner (default: REPO_OWNER)')
-parser.add_argument('--repo', default='poke-math', help='Repository name (default: REPO_NAME)')
-parser.add_argument('--pr', type=int, default=1, help='Pull request number (default: 1)')
-parser.add_argument('--author', default='quarion', help='Filter by GitHub username (default: any author)')
-args = parser.parse_args()
 
-token = os.getenv("GITHUB_TOKEN")
-if not token:
-    raise ValueError("Missing GITHUB_TOKEN in .env or environment variables")
+def fetch_comments(owner: str, repo: str, pr: int) -> list[dict]:
+    if not shutil.which("gh"):
+        raise RuntimeError("GitHub CLI is required: https://cli.github.com/")
 
-headers = {
-    "Authorization": f"Bearer {token}",
-    "Accept": "application/vnd.github.v3+json"
-}
+    endpoint = f"repos/{owner}/{repo}/pulls/{pr}/comments"
+    try:
+        result = subprocess.run(
+            ["gh", "api", "--paginate", "--slurp", endpoint],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        message = exc.stderr.strip() or "GitHub API request failed"
+        raise RuntimeError(
+            f"{message}\nAuthenticate once with: gh auth login",
+        ) from exc
 
-url = f"https://api.github.com/repos/{args.owner}/{args.repo}/pulls/{args.pr}/comments"
+    pages = json.loads(result.stdout)
+    return [comment for page in pages for comment in page]
 
-try:
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    all_comments = response.json()
 
-    # Apply filters
-    filtered_comments = [
-        c for c in all_comments
-        if not c.get('resolved')  # Unresolved only
-           and (not args.author or c['user']['login'].lower() == args.author.lower())
+def main() -> int:
+    args = parse_args()
+    try:
+        comments = fetch_comments(args.owner, args.repo, args.pr)
+    except (RuntimeError, json.JSONDecodeError) as exc:
+        print(exc, file=sys.stderr)
+        return 1
+
+    filtered = [
+        comment
+        for comment in comments
+        if not comment.get("resolved")
+        and (
+            not args.author
+            or comment["user"]["login"].lower() == args.author.lower()
+        )
     ]
+    author = f" by '@{args.author}'" if args.author else ""
+    if not filtered:
+        print(f"No unresolved comments{author} found in PR #{args.pr}")
+        return 0
 
-except requests.exceptions.RequestException as e:
-    print(f"API request failed: {e}")
-    exit(1)
-
-# Output formatting
-if not filtered_comments:
-    author_msg = f" by '@{args.author}'" if args.author else ''
-    print(f"No unresolved comments{author_msg} found in PR #{args.pr}")
-else:
-    author_msg = f" by '@{args.author}'" if args.author else ''
-    print(f"Found {len(filtered_comments)} unresolved comments{author_msg}:\n")
-
-    for comment in filtered_comments:
+    print(f"Found {len(filtered)} unresolved comments{author}:\n")
+    for comment in filtered:
         print("-----")
         print(f"File: {comment['path']}")
         print(f"Line: {comment.get('original_line', 'N/A')}")
         print(f"Author: @{comment['user']['login']}")
         print(f"Comment: {comment['body']}")
-        #print(f"URL: {comment['html_url']}\n{'-' * 40}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

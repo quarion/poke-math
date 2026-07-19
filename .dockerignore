@@ -35,4 +35,18 @@ ENV
 
 # Local development
 .env
-.env.local 
+.env.local
+firebase-credentials.json
+
+# Infrastructure and agent-local files are not application runtime inputs
+.terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.agents
+.cursor
+docs
+infrastructure
+tests
+tools

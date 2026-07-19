@@ -22,4 +22,13 @@ The required dependencies for all tools are included in the project's `requireme
 
 ```bash
 pip install -r requirements.txt
-``` 
+```
+
+`get_pr_comments.py` uses the GitHub CLI instead of reading a personal access
+token from `.env`. Authenticate once through the operating-system credential
+store, then run the helper normally:
+
+```powershell
+gh auth login
+python tools/get_pr_comments.py --pr 1
+```
