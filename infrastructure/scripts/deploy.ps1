@@ -21,6 +21,14 @@ try {
     }
 
     $uploadFiles = gcloud.cmd meta list-files-for-upload
+    $unexpectedFiles = $uploadFiles | Where-Object {
+        $_ -notmatch '^src[\\/]' -and
+        $_ -notmatch '^(\.dockerignore|Dockerfile|cloudbuild\.yaml|requirements-prod\.txt)$'
+    }
+    if ($unexpectedFiles) {
+        throw "Unexpected files would be uploaded: $unexpectedFiles"
+    }
+
     $sensitiveFiles = $uploadFiles | Select-String -Pattern `
         '(^|[\\/])(firebase-credentials\.json|\.env|terraform\.tfvars|backend\.hcl)$'
     if ($sensitiveFiles) {

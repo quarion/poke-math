@@ -1,0 +1,14 @@
+# Cloud Build needs only the container recipe, production dependencies, and app.
+# Start closed and explicitly admit runtime build inputs.
+**
+!.dockerignore
+!Dockerfile
+!cloudbuild.yaml
+!requirements-prod.txt
+!src/
+!src/**
+
+# Generated Python files and source-adjacent documentation are not build inputs.
+src/**/__pycache__/
+src/**/*.py[cod]
+src/**/*.md

@@ -50,3 +50,6 @@ docs
 infrastructure
 tests
 tools
+
+# Source-adjacent documentation is not used by the running application
+src/**/*.md

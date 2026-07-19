@@ -17,8 +17,9 @@ RUN pip install --no-cache-dir -r requirements-prod.txt
 ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA}
 
-# Copy application code last since it changes most frequently
-COPY . .
+# Copy only runtime application files. Build configuration, tests, docs, and
+# local caches never belong in the deployed container.
+COPY src ./src
 
 # Runtime command (adjust for your WSGI server)
 CMD exec gunicorn --bind :${PORT:-8080} --workers 1 --threads 8 --timeout 60 src.app.app:app
