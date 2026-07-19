@@ -1,65 +1,81 @@
 # PokeMath infrastructure runbook
 
-Terraform is the source of truth for production infrastructure. Cloud Build
-owns immutable application-image promotion; Terraform deliberately ignores only
-the Cloud Run image field.
+This document describes the production system as it is operated. Terraform is the source of truth for Google Cloud resources and IAM. Cloud Build owns immutable application-image promotion; Terraform ignores only the Cloud Run container image field.
 
-The durable recovery status and historical evidence are in
-[`../docs/plans/infrastructure-recovery-and-automation.md`](../docs/plans/infrastructure-recovery-and-automation.md).
+## Production topology
 
-## Prerequisites and manual boundaries
+| Component | Current configuration |
+|---|---|
+| Project | `pokemath-451818` (`991216996410`) |
+| Region | `europe-west1` |
+| Public URLs | `https://pokemath.quarion.dev` and the generated Cloud Run URL |
+| Runtime | Cloud Run service `poke-math`, request billing, min 0/max 1, 1 vCPU, 512 MiB, concurrency 8, timeout 60 s |
+| Process | One Gunicorn worker with eight threads and a 60 s timeout |
+| Data | Firestore Native database `(default)` in `eur3`, delete protection on, PITR off |
+| Authentication | Firebase Authentication with Google and anonymous providers |
+| Images | Artifact Registry repository `poke-math`; keep two recent deployable versions and delete versions older than seven days |
+| Deployment | Cloud Build trigger `main` and `infrastructure/scripts/deploy.ps1` |
+| State | GCS bucket `tfstate-pokemath-europe-prod`, versioning and seven-day soft delete |
 
-Install `gcloud` and Terraform, authenticate both with the same Google account,
-and make sure that account can administer project `pokemath-451818`.
+The Cloud Run runtime identity is `poke-math-service@pokemath-451818.iam.gserviceaccount.com`. It has only Firestore user access and Secret Manager access to the Flask session key. The build identity is `poke-math-build@pokemath-451818.iam.gserviceaccount.com`.
 
-These operations remain manual because they cross account or payment trust
-boundaries:
+## Manual account boundaries
 
-1. Create/reopen the billing account and enter payment details.
-2. Authorize the GitHub repository once in Cloud Build.
-3. Verify the custom domain once with Google and configure its DNS in Cloudflare.
-4. Revoke credentials found outside Terraform, such as local personal-access
-   tokens or old service-account keys.
+Terraform does not cross these external trust boundaries:
 
-Do not upgrade Firebase Authentication to Identity Platform unless a feature
-requires it. PokeMath currently needs only Google and anonymous authentication.
+1. Create or reopen the billing account and enter payment details.
+2. Authorize the GitHub repository in the Cloud Build GitHub connection.
+3. Verify ownership of `quarion.dev` with Google and configure the domain mapping's DNS records at the DNS provider.
+4. Enable Google and anonymous providers in Firebase Authentication. Do not upgrade to Identity Platform unless a required feature depends on it.
+5. Verify a Monitoring email channel if Google marks it `UNVERIFIED`.
 
-## Initialize and plan
+The GCP project, backend bucket, billing attachment, and first secret value are bootstrap resources. Create them before the first full Terraform apply, then import the bucket and secret container. Secret values must never be placed in `.tfvars` or Terraform state.
 
-The backend configuration is intentionally local and gitignored:
+## Authenticate and check infrastructure
+
+Install the Google Cloud CLI and Terraform, then authenticate the operator:
+
+```powershell
+gcloud auth login
+gcloud auth application-default login
+gcloud auth application-default set-quota-project pokemath-451818
+```
+
+Create the gitignored `infrastructure/backend.hcl`:
 
 ```hcl
 bucket = "tfstate-pokemath-europe-prod"
 prefix = "terraform/state"
 ```
 
-Save that as `infrastructure/backend.hcl`, then run:
+Run the read-only consistency check from the repository root:
 
 ```powershell
 .\infrastructure\scripts\check.ps1
 ```
 
-The script initializes the backend, checks formatting, validates the provider
-schema, and runs a plan with `environments/prod.tfvars`. A routine plan must not
-replace Cloud Run, Firestore, the registry, the state bucket, or the secret.
+It initializes the backend, checks formatting, validates the provider schema, and plans with `infrastructure/environments/prod.tfvars`. A routine check should report no changes.
 
-For a new project, create the billing account, project, backend bucket, and
-GitHub connection first. Create the Flask secret container and its first version
-without printing the value, then import the pre-bootstrap bucket/secret before
-the first full apply. No secret value belongs in `.tfvars` or Terraform state.
-
-## Private deployment
-
-Run:
+For a change, save and review the exact plan that will be applied:
 
 ```powershell
-.\infrastructure\scripts\deploy-private.ps1
+Set-Location infrastructure
+terraform plan -var-file=environments/prod.tfvars -out=change.tfplan
+terraform show change.tfplan
+terraform apply change.tfplan
 ```
 
-This runs unit tests, verifies that the gcloud upload set excludes local
-credentials, and submits an asynchronous build under the dedicated build
-identity. The build uses a unique immutable tag and updates only the Cloud Run
-image. It never changes public IAM.
+Plan files are gitignored. Do not apply a plan containing an unexplained replacement or deletion, especially for Cloud Run, Firestore, the registry, the state bucket, or the secret.
+
+## Deploy application code
+
+Run from the repository root:
+
+```powershell
+.\infrastructure\scripts\deploy.ps1
+```
+
+The script runs unit tests, checks the gcloud upload set for local credentials, and submits an asynchronous build under the dedicated build identity. The build tags the image immutably and updates only the Cloud Run image; it preserves the service's current public/private IAM state.
 
 Inspect the returned build ID:
 
@@ -67,105 +83,68 @@ Inspect the returned build ID:
 gcloud builds describe BUILD_ID --project=pokemath-451818 --region=global
 ```
 
-Private verification requires a Google identity token:
+After a successful build, verify:
 
 ```powershell
 $serviceUrl = gcloud run services describe poke-math `
   --project=pokemath-451818 --region=europe-west1 `
   --format="value(status.url)"
-$token = gcloud auth print-identity-token
-curl.exe -H "Authorization: Bearer $token" "$serviceUrl/readyz"
-curl.exe -H "Authorization: Bearer $token" "$serviceUrl/login"
+curl.exe "$serviceUrl/readyz"
+curl.exe "https://pokemath.quarion.dev/login"
 ```
 
-For a browser-based private test, run
-`python tools/private_cloud_run_proxy.py $serviceUrl --port 8081` and open
-`http://localhost:8081/login`. The proxy keeps the service private and injects
-only a short-lived gcloud identity token into upstream requests.
+Then test Google login, guest login, a Firestore-backed read, and persistence after reload. Finish by running `check.ps1` and confirming no drift.
 
-Also verify that unauthenticated requests to both the generated URL and
-`https://pokemath.quarion.dev/login` return 403 while the release gate is closed.
+## Public access gate
 
-## Public release gate
+`public_access_enabled` in `infrastructure/environments/prod.tfvars` controls the single `allUsers` Cloud Run Invoker binding. Production is public when this value is `true`.
 
-Public release is deliberately a configuration change, not a build flag:
-
-1. Complete A1–A4, I1–I5, D1, and D2 in the recovery checklist.
-2. Obtain explicit owner approval.
-3. Change `public_access_enabled` to `true` in `environments/prod.tfvars`.
-4. Save and review a Terraform plan, then apply that exact saved plan.
-5. Verify Google login, guest login, Firestore persistence, both hostnames, and
-   the 10 PLN budget notification configuration.
-
-Set it back to `false` and apply if public access must be closed quickly.
-
-## Cost controls
-
-- Cloud Run uses request-based billing, CPU throttling, min 0, and max 1.
-- The project budget target is 10 PLN with actual-spend alerts at 10%, 90%, and
-  100%. Budgets send alerts; they do not stop consumption.
-- Firestore PITR and paid backup features are disabled.
-- Artifact Registry cleanup keeps two recent versions and deletes older images
-  after seven days. It was activated only after dry-run inventory review and
-  explicit owner approval. Re-review retention before changing these values.
-- The state bucket has versioning, seven-day soft delete, uniform access, public
-  access prevention, and an explicit operator binding. Never enable uniform
-  access without first creating the operator binding.
-
-### Abuse and spending boundary
-
-The Firebase Blaze plan retains the Firestore free allowance, but it has no hard
-usage or spending cap. The 10 PLN budget is an alerting threshold, not a payment
-limit; cost reporting and notifications can lag by hours.
-
-Live audit on 2026-07-19 found 18 reads, 3 writes, 2 deletes, and about 1.30 MiB
-of Firestore storage over the observed seven-day period, versus free allowances
-of 50,000 reads/day, 20,000 writes/day, 20,000 deletes/day, and 1 GiB storage.
-Cloud Run recorded 817 requests and about 52.5 billable instance-seconds.
-
-Existing safeguards are request-based billing, min 0/max 1, 1 vCPU, 512 MiB,
-ADC-only Firestore access, and authentication before all Firestore-backed routes.
-They strongly constrain compute/database amplification but do not constitute a
-strict cap on requests or outbound transfer.
-
-Emergency public-access kill switch:
-
-1. Set `public_access_enabled = false` in `environments/prod.tfvars`.
-2. Save and review a Terraform plan.
-3. Apply that exact plan; verify both URLs return 403.
-
-Recommended next KISS hardening is in-application per-IP and global rate limits
-on authentication, Firestore, and write routes, together with Cloud Run
-concurrency aligned to Gunicorn's eight threads and a shorter request timeout.
-If stronger edge enforcement becomes necessary, place Cloud Run behind an
-external load balancer/Cloud Armor and disable the default `run.app` URL; that
-adds fixed infrastructure cost and complexity. Do not automate disabling the
-billing account: billing notifications are delayed, and disabling billing can
-stop services and eventually remove resources.
-
-## Credential rotation
-
-Cloud Run uses Application Default Credentials through
-`poke-math-service@pokemath-451818.iam.gserviceaccount.com`; it does not need a
-downloaded Firebase JSON key. The legacy user-managed key and local JSON were
-deleted on 2026-07-19 after private Google/guest/Firestore verification. Do not
-recreate them. Local development uses ADC after running:
+Before changing it from `false` to `true`, verify the saved plan adds only the expected binding, then test both hostnames, both login providers, persistence, and monitoring. To test a private service from a browser, obtain the service URL and run:
 
 ```powershell
-gcloud auth application-default login
-gcloud auth application-default set-quota-project pokemath-451818
+python tools/private_cloud_run_proxy.py $serviceUrl --port 8081
 ```
 
-The Flask session key lives in Secret Manager as
-`poke-math-flask-secret-key`. Rotating it logs out existing browser sessions:
+Open `http://localhost:8081/login`. The proxy injects a short-lived gcloud identity token into upstream requests.
 
-1. Add a new generated secret version without printing it.
-2. Deploy a new private revision referencing `latest`.
-3. Verify login and disable the previous version.
+## Cost and abuse controls
+
+These controls bound amplification but do not create a monetary hard cap:
+
+- Cloud Run uses request-based billing, CPU throttling, minimum zero instances, maximum one instance, concurrency eight, and a 60-second request timeout.
+- The application admits at most 300 requests/minute globally and 120/minute per best-effort client identity. Authentication callbacks are limited to 60/minute globally and 10/minute per client; state-changing requests are limited to 120/minute globally and 30/minute per client.
+- Limiter counters live in the single application process and reset when Cloud Run starts a new instance. The global counter cannot be evicted by rotating client identities. `/readyz` is exempt and performs no Firebase work.
+- Monitoring emails on more than 1,000 Cloud Run requests in five minutes, more than five billable instance-minutes in 15 minutes, more than 5,000 Firestore reads/hour, or more than 2,000 Firestore writes/hour.
+- The project budget is 10 PLN/month with actual-spend alerts at 10%, 90%, and 100%. Budgets and Monitoring alerts detect usage; they do not stop it, and notifications can lag.
+- Firestore PITR and paid backups are disabled. Artifact Registry and Terraform state retention are bounded as described in the topology table.
+
+Firebase Blaze retains the applicable no-cost Firestore quotas, but Blaze has no usage or spending ceiling. Requests rejected inside the container may still count as Cloud Run requests. Stronger enforcement before the container requires an external load balancer and Cloud Armor, plus disabling the default `run.app` URL; adopt that only if alerts show hostile traffic or availability becomes more important than the added fixed cost and complexity.
+
+### Emergency public-access stop
+
+1. Set `public_access_enabled = false` in `infrastructure/environments/prod.tfvars`.
+2. Save and inspect a Terraform plan; it should remove one Invoker binding.
+3. Apply that exact plan.
+4. Confirm unauthenticated requests to both public URLs return `403`.
+
+Do not automate disabling the billing account. Billing information is delayed, and disabling billing can stop services and eventually remove resources.
+
+## Credentials and secret rotation
+
+Cloud Run and local development use Application Default Credentials. Do not create or download a Firebase service-account JSON key.
+
+The Flask session key is Secret Manager secret `poke-math-flask-secret-key`. Rotating it logs out browser sessions:
+
+1. Add a generated secret version without printing the value.
+2. Deploy a revision that references `latest`.
+3. Verify both login flows.
+4. Disable the prior secret version.
+
+Personal GitHub access uses the authenticated `gh` CLI; do not put a personal access token in `.env`.
 
 ## Rollback
 
-List revisions and move traffic to the last known-good revision:
+List revisions and move traffic to a known-good revision:
 
 ```powershell
 gcloud run revisions list --service=poke-math --region=europe-west1 `
@@ -174,5 +153,4 @@ gcloud run services update-traffic poke-math --region=europe-west1 `
   --project=pokemath-451818 --to-revisions=REVISION=100
 ```
 
-Rollback does not change IAM. Keep the service private until the rolled-back
-revision is verified, then use the Terraform release gate for public access.
+This changes the image receiving traffic, not IAM or Terraform-owned service settings. If the incident is cost or abuse related, close public access first.

@@ -36,6 +36,34 @@ def test_health_check_does_not_require_firebase():
     assert response.get_json() == {"status": "ok"}
 
 
+def test_request_fuse_rejects_before_route_handling(monkeypatch):
+    monkeypatch.setenv("REQUEST_RATE_LIMIT_ENABLED", "true")
+    monkeypatch.setenv("REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE", "2")
+    monkeypatch.setenv("REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE", "2")
+    flask_app = create_flask_app()
+    client = flask_app.test_client()
+
+    assert client.get("/missing").status_code == 404
+    assert client.get("/missing").status_code == 404
+
+    response = client.get("/missing")
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "60"
+    assert response.headers["Cache-Control"] == "no-store"
+
+
+def test_request_fuse_exempts_readiness_check(monkeypatch):
+    monkeypatch.setenv("REQUEST_RATE_LIMIT_ENABLED", "true")
+    monkeypatch.setenv("REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE", "1")
+    monkeypatch.setenv("REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE", "1")
+    flask_app = create_flask_app()
+    client = flask_app.test_client()
+
+    assert client.get("/missing").status_code == 404
+    assert client.get("/readyz").status_code == 200
+    assert client.get("/readyz").status_code == 200
+
+
 def test_auth_callback_rejects_request_without_csrf_token():
     response = app.test_client().post(
         "/auth_callback",

@@ -54,3 +54,9 @@ variable "public_access_enabled" {
   type        = bool
   default     = false
 }
+
+variable "alert_email" {
+  description = "Email address receiving operational usage alerts"
+  type        = string
+  default     = "quarion.pl@gmail.com"
+}

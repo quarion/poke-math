@@ -17,3 +17,8 @@ output "build_service_account" {
   value       = google_service_account.build.email
   description = "Least-privilege build and deploy identity"
 }
+
+output "monitoring_notification_channel" {
+  value       = google_monitoring_notification_channel.owner_email.name
+  description = "Email notification channel used by operational usage alerts"
+}

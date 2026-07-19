@@ -16,7 +16,7 @@ steps:
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/poke-math/poke-math:$COMMIT_SHA
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    id: deploy-private
+    id: deploy
     entrypoint: gcloud
     args:
       - run

@@ -1,4 +1,5 @@
 [CmdletBinding()]
+# Build and deploy an immutable application image without changing service IAM.
 param(
     [string]$ProjectId = "pokemath-451818",
     [string]$Region = "europe-west1",

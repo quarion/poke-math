@@ -36,6 +36,11 @@ from src.app.firebase.firebase_init import get_auth_client
 from src.app.game.game_config import load_equation_difficulties, load_game_config
 from src.app.game.game_manager import GameManager
 from src.app.game.quiz_engine import generate_random_quiz_data
+from src.app.security.rate_limiter import (
+    RateLimit,
+    RequestRateLimiter,
+    client_identifier,
+)
 from src.app.storage.session_factory import create_session_manager
 from src.app.view_models import QuizResultViewModel, QuizViewModel
 
@@ -96,8 +101,30 @@ def create_flask_app():
         SESSION_COOKIE_SAMESITE='Lax',
         SESSION_COOKIE_SECURE=is_production,
         PREFERRED_URL_SCHEME='https' if is_production else 'http',
+        REQUEST_RATE_LIMIT_ENABLED=_environment_bool(
+            'REQUEST_RATE_LIMIT_ENABLED', is_production
+        ),
+        REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE=int(
+            os.environ.get('REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE', '300')
+        ),
+        REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE=int(
+            os.environ.get('REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE', '120')
+        ),
+        REQUEST_RATE_LIMIT_AUTH_GLOBAL_PER_MINUTE=int(
+            os.environ.get('REQUEST_RATE_LIMIT_AUTH_GLOBAL_PER_MINUTE', '60')
+        ),
+        REQUEST_RATE_LIMIT_AUTH_CLIENT_PER_MINUTE=int(
+            os.environ.get('REQUEST_RATE_LIMIT_AUTH_CLIENT_PER_MINUTE', '10')
+        ),
+        REQUEST_RATE_LIMIT_WRITE_GLOBAL_PER_MINUTE=int(
+            os.environ.get('REQUEST_RATE_LIMIT_WRITE_GLOBAL_PER_MINUTE', '120')
+        ),
+        REQUEST_RATE_LIMIT_WRITE_CLIENT_PER_MINUTE=int(
+            os.environ.get('REQUEST_RATE_LIMIT_WRITE_CLIENT_PER_MINUTE', '30')
+        ),
     )
 
+    _register_request_fuse(flask_app, trust_forwarded_for=is_production)
     CSRFProtect(flask_app)
 
     @flask_app.get('/readyz')
@@ -111,6 +138,68 @@ def create_flask_app():
         return {'version_info': get_version_info()}
 
     return flask_app
+
+
+def _environment_bool(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def _register_request_fuse(flask_app: Flask, *, trust_forwarded_for: bool) -> None:
+    limiter = RequestRateLimiter()
+
+    @flask_app.before_request
+    def enforce_request_fuse():
+        if not flask_app.config['REQUEST_RATE_LIMIT_ENABLED']:
+            return None
+        if request.endpoint == 'readyz':
+            return None
+
+        limits = [
+            RateLimit(
+                'all',
+                flask_app.config['REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE'],
+                flask_app.config['REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE'],
+            )
+        ]
+        if request.endpoint == 'auth_callback':
+            limits.append(
+                RateLimit(
+                    'auth',
+                    flask_app.config['REQUEST_RATE_LIMIT_AUTH_GLOBAL_PER_MINUTE'],
+                    flask_app.config['REQUEST_RATE_LIMIT_AUTH_CLIENT_PER_MINUTE'],
+                )
+            )
+        if request.method not in {'GET', 'HEAD', 'OPTIONS'}:
+            limits.append(
+                RateLimit(
+                    'write',
+                    flask_app.config['REQUEST_RATE_LIMIT_WRITE_GLOBAL_PER_MINUTE'],
+                    flask_app.config['REQUEST_RATE_LIMIT_WRITE_CLIENT_PER_MINUTE'],
+                )
+            )
+
+        decision = limiter.check(
+            client_identifier(
+                request.remote_addr,
+                request.headers.get('X-Forwarded-For'),
+                trust_forwarded_for=trust_forwarded_for,
+            ),
+            limits,
+        )
+        if decision.allowed:
+            return None
+
+        response = jsonify({
+            'error': 'Too many requests',
+            'retry_after': decision.retry_after,
+        })
+        response.status_code = 429
+        response.headers['Retry-After'] = str(decision.retry_after)
+        response.headers['Cache-Control'] = 'no-store'
+        return response
 
 
 def get_version_info():

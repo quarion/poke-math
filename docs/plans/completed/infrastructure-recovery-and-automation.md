@@ -1,8 +1,14 @@
 # Infrastructure Recovery and Automation Plan
 
-Status: complete; cost-abuse hardening options documented for owner decision
+Status: completed
 
-Last verified: 2026-07-18
+Completed: 2026-07-19
+
+Implementation: `0b9c059` (`Restore and codify production infrastructure`)
+
+Follow-on work: [`../cost-abuse-hardening.md`](../cost-abuse-hardening.md)
+
+Last verified: 2026-07-19
 
 ## Execution checklist
 

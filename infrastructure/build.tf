@@ -7,7 +7,7 @@ resource "google_cloudbuild_trigger" "main" {
   project         = var.project_id
   location        = "global"
   name            = "main"
-  description     = "Build and privately deploy PokeMath from the main branch"
+  description     = "Build and deploy PokeMath from the main branch"
   filename        = "cloudbuild.yaml"
   service_account = google_service_account.build.id
 

@@ -21,4 +21,4 @@ ENV COMMIT_SHA=${COMMIT_SHA}
 COPY . .
 
 # Runtime command (adjust for your WSGI server)
-CMD exec gunicorn --bind :${PORT:-8080} --workers 1 --threads 8 --timeout 300 src.app.app:app
+CMD exec gunicorn --bind :${PORT:-8080} --workers 1 --threads 8 --timeout 60 src.app.app:app

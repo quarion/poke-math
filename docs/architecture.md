@@ -14,6 +14,7 @@ poke-math/
 │   │   ├── equations/       # Equation generation module
 │   │   ├── firebase/        # Firebase configuration and utilities
 │   │   ├── game/            # Game logic and state management
+│   │   ├── security/        # Request admission and abuse controls
 │   │   ├── storage/         # Storage implementations
 │   │   ├── view_models.py   # Strongly typed view models for templates
 │   │   └── app.py           # Flask application and routes
@@ -70,6 +71,10 @@ Data models and structures used throughout the game module.
 - **Firestore Storage** (`firestore_storage.py`): Stores data in Google Cloud Firestore.
 - **Session Factory** (`session_factory.py`): Creates appropriate storage implementation.
 
+### Security Module (`src/app/security/`)
+
+- **Request Rate Limiter** (`rate_limiter.py`): Applies bounded, thread-safe global and per-client request admission before expensive application work.
+
 ### Equations Module (`src/app/equations/`)
 
 #### Equations Generator V2 (`equations_generator_v2.py`)
@@ -124,4 +129,4 @@ When updating this documentation:
 8. **Use arrows in workflows** - Use → in data flow descriptions for brevity
 9. **Consider context limits** - Keep content minimal to avoid polluting AI context windows
 10. **Only detail key abstractions** - Focus on core concepts, not implementation details 
-11. **Note on planning documents** - Historical planning documents in the docs/plans/completed directory may contain outdated implementation details and file paths that don't reflect the current architecture 
+11. **Keep operating knowledge authoritative** - Architecture and runbooks must stand alone; implementation plans are historical records, not dependencies
