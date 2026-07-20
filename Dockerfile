@@ -30,6 +30,11 @@ RUN uv run --locked --no-sync pytest tests/unit -q
 
 FROM production-dependencies AS runtime
 
+# The application needs only read access to its source and virtual environment.
+# Run the web server without root privileges in the final image.
+RUN useradd --system --create-home --shell /usr/sbin/nologin appuser
+USER appuser
+
 # Add build argument for commit SHA after dependency installation so it does not
 # invalidate dependency layers.
 ARG COMMIT_SHA
