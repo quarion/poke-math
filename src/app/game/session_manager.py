@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from flask import session as flask_session
 
@@ -15,10 +15,10 @@ class SessionManager:
     Uses a storage implementation to persist data.
     """
 
-    def __init__(self, storage: Optional[UserStorageInterface] = None, user_id: Optional[str] = None):
+    def __init__(self, storage: UserStorageInterface | None = None, user_id: str | None = None):
         """
         Initialize the session manager.
-        
+
         Args:
             storage: Storage implementation. Defaults to FlaskSessionStorage.
             user_id: User ID. If not provided, will be loaded from Flask session
@@ -34,22 +34,20 @@ class SessionManager:
         """
         Get existing user ID from Flask session or create a new one.
         """
-        if 'user_id' not in flask_session:
+        if "user_id" not in flask_session:
             # Create a guest user if no user ID exists
             return AuthManager.create_guest_user()
-        return flask_session['user_id']
+        return flask_session["user_id"]
 
     def _load_state(self):
         """Load state from storage."""
         data = self.storage.load_user_data(self.user_id)
-        if 'session_state' in data:
-            self.state = SessionState.from_dict(data['session_state'])
+        if "session_state" in data:
+            self.state = SessionState.from_dict(data["session_state"])
 
     def _save_state(self):
         """Save state to storage."""
-        self.storage.save_user_data(self.user_id, {
-            'session_state': self.state.to_dict()
-        })
+        self.storage.save_user_data(self.user_id, {"session_state": self.state.to_dict()})
 
     def reset(self):
         """Reset the session state."""
@@ -64,11 +62,11 @@ class SessionManager:
         return quiz_id in self.state.solved_quizzes
 
     @property
-    def solved_quizzes(self) -> Set[str]:
+    def solved_quizzes(self) -> set[str]:
         return self.state.solved_quizzes
 
     @classmethod
-    def load_from_storage(cls, storage: Optional[UserStorageInterface] = None) -> 'SessionManager':
+    def load_from_storage(cls, storage: UserStorageInterface | None = None) -> "SessionManager":
         """
         Create session manager with specified storage and user ID from Flask session
         """
@@ -78,7 +76,7 @@ class SessionManager:
         """
         Save user_id to Flask session and state to storage.
         """
-        flask_session['user_id'] = self.user_id
+        flask_session["user_id"] = self.user_id
         self._save_state()
 
     # User name management methods
@@ -87,22 +85,21 @@ class SessionManager:
         self.state.user_name = name
         self._save_state()
 
-    def get_user_name(self) -> Optional[str]:
+    def get_user_name(self) -> str | None:
         return self.state.user_name
 
     # Quiz attempts methods
 
-    def get_quiz_attempts(self) -> List[QuizAttempt]:
+    def get_quiz_attempts(self) -> list[QuizAttempt]:
         return self.state.quiz_attempts
 
     def remove_quiz_attempt(self, timestamp: str):
         self.state.quiz_attempts = [
-            attempt for attempt in self.state.quiz_attempts
-            if attempt.timestamp != timestamp
+            attempt for attempt in self.state.quiz_attempts if attempt.timestamp != timestamp
         ]
         self._save_state()
 
-    def find_quiz_attempt(self, quiz_id: str) -> Optional[QuizAttempt]:
+    def find_quiz_attempt(self, quiz_id: str) -> QuizAttempt | None:
         for attempt in self.state.quiz_attempts:
             if attempt.quiz_id == quiz_id:
                 return attempt
@@ -110,18 +107,18 @@ class SessionManager:
 
     # Unified quiz data methods
 
-    def save_quiz_data(self, quiz_id: str, quiz_data_dict: Dict[str, Any], is_random: bool = False):
+    def save_quiz_data(self, quiz_id: str, quiz_data_dict: dict[str, Any], is_random: bool = False):
         """
         Save quiz data for both random and regular quizzes.
-        
+
         Args:
             quiz_id: The ID of the quiz
             quiz_data_dict: Complete quiz data including equations, variables, solutions
             is_random: Whether this is a randomly generated quiz
         """
         # Convert dictionary to QuizData object
-        quiz_data_dict['is_random'] = is_random
-        quiz_data_dict['quiz_id'] = quiz_id
+        quiz_data_dict["is_random"] = is_random
+        quiz_data_dict["quiz_id"] = quiz_id
         quiz_data = QuizData.from_dict(quiz_data_dict)
 
         # Find existing attempt for this quiz or create a new one
@@ -133,7 +130,7 @@ class SessionManager:
                 quiz_id=quiz_id,
                 quiz_data=quiz_data,
                 timestamp=datetime.now().isoformat(),
-                user_answers={}
+                user_answers={},
             )
             self.state.quiz_attempts.append(attempt)
         else:
@@ -143,7 +140,7 @@ class SessionManager:
 
         self._save_state()
 
-    def get_quiz_data(self, quiz_id: str) -> Optional[Dict[str, Any]]:
+    def get_quiz_data(self, quiz_id: str) -> dict[str, Any] | None:
         """
         Get quiz data for any quiz by ID.
         """
@@ -153,7 +150,7 @@ class SessionManager:
             return attempt.quiz_data.to_dict()
         return None
 
-    def save_quiz_answers(self, quiz_id: str, user_answers: Dict[str, int]):
+    def save_quiz_answers(self, quiz_id: str, user_answers: dict[str, int]):
         """
         Save user answers for any quiz.
         """
@@ -164,7 +161,7 @@ class SessionManager:
             attempt.timestamp = datetime.now().isoformat()
             self._save_state()
 
-    def get_quiz_answers(self, quiz_id: str) -> Dict[str, int]:
+    def get_quiz_answers(self, quiz_id: str) -> dict[str, int]:
         """
         Get the user's answers for a quiz.
         """
@@ -176,10 +173,10 @@ class SessionManager:
     def catch_pokemon(self, pokemon_id: str) -> int:
         """
         Add a Pokémon to the player's caught list or increment its count.
-        
+
         Args:
             pokemon_id: ID of the Pokémon to catch
-            
+
         Returns:
             The new count for this Pokémon
         """
@@ -190,10 +187,10 @@ class SessionManager:
 
         return new_count
 
-    def get_caught_pokemon(self) -> Dict[str, int]:
+    def get_caught_pokemon(self) -> dict[str, int]:
         """
         Get the dictionary of caught Pokémon IDs and their counts.
-        
+
         Returns:
             Dictionary mapping Pokémon IDs to catch counts
         """
@@ -202,7 +199,7 @@ class SessionManager:
     def update_xp(self, xp_amount: int) -> None:
         """
         Update player's XP by adding the specified amount.
-        
+
         Args:
             xp_amount: Amount of XP to add
         """
@@ -212,7 +209,7 @@ class SessionManager:
     def update_level_and_xp(self, level: int, xp: int) -> None:
         """
         Update player's level and XP directly.
-        
+
         Args:
             level: New player level
             xp: New player XP
@@ -221,14 +218,11 @@ class SessionManager:
         self.state.xp = xp
         self._save_state()
 
-    def get_level_and_xp(self) -> Dict[str, Any]:
+    def get_level_and_xp(self) -> dict[str, Any]:
         """
         Get player's current level and XP.
-        
+
         Returns:
             Dictionary with level and XP
         """
-        return {
-            'level': self.state.level,
-            'xp': self.state.xp
-        }
+        return {"level": self.state.level, "xp": self.state.xp}

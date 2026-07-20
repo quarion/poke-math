@@ -1,3 +1,3 @@
 """
 PokeMath source package.
-""" 
+"""

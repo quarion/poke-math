@@ -1,3 +1,3 @@
 """
 PokeMath application package.
-""" 
+"""

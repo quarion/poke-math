@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -10,66 +10,72 @@ class Pokemon:
     image_path: str
     tier: int = 1  # Default to tier 1 (common)
 
+
 @dataclass
 class QuizAnswer:
-    values: Dict[str, int]
+    values: dict[str, int]
+
 
 @dataclass
 class Quiz:
     id: str
     title: str
     description: str
-    equations: List[str]
+    equations: list[str]
     answer: QuizAnswer
     section_id: str
     section_title: str
     display_number: int
-    next_quiz_id: Optional[str] = None
+    next_quiz_id: str | None = None
+
 
 @dataclass
 class Section:
     id: str
     title: str
     description: str
-    quizzes: List[Quiz]
+    quizzes: list[Quiz]
+
 
 @dataclass
 class GameConfig:
-    pokemons: Dict[str, Pokemon]
-    sections: List[Section]
-    quizzes_by_id: Dict[str, Quiz]
+    pokemons: dict[str, Pokemon]
+    sections: list[Section]
+    quizzes_by_id: dict[str, Quiz]
 
-def load_pokemon_config(data_file: Path) -> Dict[str, Pokemon]:
+
+def load_pokemon_config(data_file: Path) -> dict[str, Pokemon]:
     with open(data_file) as f:
         raw_data = json.load(f)
 
     pokemons = {}
-    
+
     # Get Pokemon data and tier assignments
-    pokemon_data = raw_data['pokemons']
-    tier_data = raw_data['tiers']
-    
+    pokemon_data = raw_data["pokemons"]
+    tier_data = raw_data["tiers"]
+
     # First create all Pokemon objects with default tier
     for name, data in pokemon_data.items():
         pokemons[name] = Pokemon(
             name=name,
-            image_path=data.get('image_path', ''),
-            tier=1  # Default tier
+            image_path=data.get("image_path", ""),
+            tier=1,  # Default tier
         )
-    
+
     # Then assign tiers based on the tiers mapping
     for tier_str, pokemon_names in tier_data.items():
         tier = int(tier_str)
         for pokemon_name in pokemon_names:
             if pokemon_name in pokemons:
                 pokemons[pokemon_name].tier = tier
-    
+
     return pokemons
+
 
 def load_game_config(data_file: Path, pokemon_file: Path) -> GameConfig:
     with open(data_file) as f:
         raw_data = json.load(f)
-    
+
     # Load Pokemon data from separate file
     pokemons = load_pokemon_config(pokemon_file)
 
@@ -77,31 +83,31 @@ def load_game_config(data_file: Path, pokemon_file: Path) -> GameConfig:
     sections = []
     quizzes_by_id = {}
 
-    for section_data in raw_data['sections']:
+    for section_data in raw_data["sections"]:
         section_quizzes = []
-        for idx, quiz_data in enumerate(section_data['quizzes'], 1):
+        for idx, quiz_data in enumerate(section_data["quizzes"], 1):
             # Create quiz object with answer
-            answer = QuizAnswer(values=quiz_data['answer'])
-            
+            answer = QuizAnswer(values=quiz_data["answer"])
+
             quiz = Quiz(
-                id=quiz_data['id'],
-                title=quiz_data['title'],
-                description=quiz_data['description'],
-                equations=quiz_data['equations'],
+                id=quiz_data["id"],
+                title=quiz_data["title"],
+                description=quiz_data["description"],
+                equations=quiz_data["equations"],
                 answer=answer,
-                section_id=section_data['id'],
-                section_title=section_data['title'],
-                display_number=idx
+                section_id=section_data["id"],
+                section_title=section_data["title"],
+                display_number=idx,
             )
             section_quizzes.append(quiz)
             quizzes_by_id[quiz.id] = quiz
 
         # Create section object
         section = Section(
-            id=section_data['id'],
-            title=section_data['title'],
-            description=section_data['description'],
-            quizzes=section_quizzes
+            id=section_data["id"],
+            title=section_data["title"],
+            description=section_data["description"],
+            quizzes=section_quizzes,
         )
         sections.append(section)
 
@@ -115,14 +121,10 @@ def load_game_config(data_file: Path, pokemon_file: Path) -> GameConfig:
             elif section_idx < len(sections) - 1 and sections[section_idx + 1].quizzes:
                 quiz.next_quiz_id = sections[section_idx + 1].quizzes[0].id
 
-    return GameConfig(
-        pokemons=pokemons,
-        sections=sections,
-        quizzes_by_id=quizzes_by_id
-    )
+    return GameConfig(pokemons=pokemons, sections=sections, quizzes_by_id=quizzes_by_id)
 
 
-def load_equation_difficulties(file_path: Path) -> List[Dict[str, Any]]:
+def load_equation_difficulties(file_path: Path) -> list[dict[str, Any]]:
     with open(file_path) as f:
         difficulties = json.load(f)
     return difficulties

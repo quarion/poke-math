@@ -6,7 +6,7 @@ from src.app.storage.flask_session_storage import FlaskSessionStorage
 def create_session_manager(use_firestore: bool = True) -> SessionManager:
     """
     Factory function to create a SessionManager with the appropriate storage.
-    
+
     Handles creation of either Firestore or Flask session storage based on the parameter.
     """
     if use_firestore:
@@ -15,6 +15,6 @@ def create_session_manager(use_firestore: bool = True) -> SessionManager:
     else:
         # Create Flask session storage
         storage = FlaskSessionStorage()
-        
+
     # Create and return a SessionManager with the specified storage
     return SessionManager.load_from_storage(storage=storage)

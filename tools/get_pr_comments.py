@@ -50,10 +50,7 @@ def main() -> int:
         comment
         for comment in comments
         if not comment.get("resolved")
-        and (
-            not args.author
-            or comment["user"]["login"].lower() == args.author.lower()
-        )
+        and (not args.author or comment["user"]["login"].lower() == args.author.lower())
     ]
     author = f" by '@{args.author}'" if args.author else ""
     if not filtered:

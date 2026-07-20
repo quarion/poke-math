@@ -68,10 +68,7 @@ def handler_for(service_url: str, token: str):
 
             self.send_response(upstream.status_code)
             for name, value in upstream.headers.items():
-                if (
-                    name.lower() not in HOP_BY_HOP_HEADERS
-                    and name.lower() != "set-cookie"
-                ):
+                if name.lower() not in HOP_BY_HOP_HEADERS and name.lower() != "set-cookie":
                     self.send_header(name, value)
             # Production must keep Secure cookies. The localhost HTTP proxy
             # removes that attribute only on its downstream test response so

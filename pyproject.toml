@@ -31,28 +31,20 @@ dev = [
 package = false
 
 [tool.ruff]
-# Exclude a variety of commonly ignored directories.
-exclude = [
-    ".git",
-    ".venv",
-    "venv",
-    "__pycache__",
-    ".pytest_cache",
-]
-
-# Match the supported runtime.
+line-length = 100
+src = ["src", "tests", "tools"]
 target-version = "py311"
 
 [tool.ruff.lint]
-# Enable pycodestyle, Pyflakes, flake8-bugbear, and import sorting. The legacy
-# codebase is not line-wrapped consistently, so E501 is intentionally deferred.
-select = ["E", "F", "B", "I"]
 ignore = ["E501"]
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-[tool.ruff.lint.per-file-ignores]
-# Tests can use magic values, assertions, and relative imports
-"tests/**/*" = ["PLR2004", "S101", "TID252"]
+select = [
+    "B",   # flake8-bugbear: likely bugs and footguns
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes
+    "I",   # isort
+    "RUF", # Ruff-specific rules
+    "UP",  # pyupgrade
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
