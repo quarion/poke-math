@@ -7,7 +7,7 @@
 
 ## Validation
 
-- Use Python 3.11 and install dependencies with `uv sync --locked --all-groups`.
+- Install dependencies with `uv sync --locked --all-groups`.
 - Run `uv run pytest tests/unit -q`.
 - Run `docker build --build-arg COMMIT_SHA=local --tag poke-math:local .`.
 - Ruff has a known baseline of pre-existing findings and is not a required delivery check until that baseline is deliberately cleaned up.
