@@ -79,7 +79,8 @@ uv sync --locked --group dev
 
 ### Implementation status: 2026-07-20
 
-- Completed in the repository: Python dependencies are managed by `uv` with a committed lockfile; root agent guidance documents Python 3.11, setup, validation, cloud-environment, and delivery boundaries; CI defines `unit-tests` and `docker-build`; Cloud Build runs the locked unit suite before build, push, and deploy.
+- Completed in the repository: Python dependencies are managed by `uv` with a committed lockfile; root agent guidance documents Python 3.11, setup, validation, cloud-environment, and delivery boundaries; CI defines `unit-tests` and `docker-build`.
+- Cloud Build correction in progress: the initial deployment of merge commit `0068fc45c9b69887a988b5ea136f29d37d8b5b74` failed before tests because the selected `ghcr.io/astral-sh/uv:0.11.26-python3.11-bookworm-slim` manifest does not exist. The correction makes Cloud Build build the Dockerfile's `test` target, which uses the same pinned Python 3.11 and `uv` setup as the runtime target, adds only locked development dependencies, and runs the unit suite before the production image build. Hosted verification remains required before Cloud Build can be recorded as passing.
 - Verified locally in a managed Python 3.11 environment: `uv lock --check` and `uv run --locked --group dev pytest tests/unit -q` (74 passed). The Docker build remains to be run by GitHub Actions or a Docker-capable environment.
 - Still external and intentionally not changed: personal GitHub CLI reauthentication, Codex cloud-repository/environment setup, GitHub `main` branch protection, Cloud Build trigger/connection verification, remote pull-request rehearsal, production deployment observation, and rollback rehearsal.
 

@@ -49,7 +49,6 @@ firebase-credentials.json
 .cursor
 docs
 infrastructure
-tests
 tools
 
 # Source-adjacent documentation is not used by the running application

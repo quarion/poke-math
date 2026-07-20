@@ -1,5 +1,5 @@
-# Use official Python runtime
-FROM python:3.11-slim
+# Use the same Python and uv installation in test and production targets.
+FROM python:3.11-slim AS base
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -9,13 +9,29 @@ ENV PYTHONPATH=/app
 # Create app directory
 WORKDIR /app
 
-# Install locked production dependencies first. Keep the virtual environment in
-# the application directory for a self-contained runtime.
+# Install the pinned uv binary once for every target derived from this base.
 COPY --from=ghcr.io/astral-sh/uv:0.11.26 /uv /usr/local/bin/uv
+
+# Dependency metadata changes less often than source files, preserving Docker's
+# cache for both test and production dependency installation.
 COPY pyproject.toml uv.lock ./
+
+FROM base AS production-dependencies
 RUN uv sync --locked --no-dev
 
-# Add build argument for commit SHA - moved down since it changes frequently
+# The test target extends the exact production dependency environment, then adds
+# only the locked development dependencies required to run the unit suite.
+FROM production-dependencies AS test
+RUN uv sync --locked --group dev
+COPY pytest.ini ./
+COPY src ./src
+COPY tests ./tests
+RUN uv run --locked --no-sync pytest tests/unit -q
+
+FROM production-dependencies AS runtime
+
+# Add build argument for commit SHA after dependency installation so it does not
+# invalidate dependency layers.
 ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA}
 
