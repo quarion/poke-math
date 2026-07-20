@@ -12,8 +12,7 @@
 - Run `docker build --build-arg COMMIT_SHA=local --tag poke-math:local .`.
 - Ruff has a known baseline of pre-existing findings and is not a required delivery check until that baseline is deliberately cleaned up.
 
-## Delivery boundaries
+## Boundaries
 
-- Deliver changes through a pull request against `main`; do not merge or deploy from an agent task.
-- Do not modify infrastructure unless the task specifically requires it.
+- Do not modify or deploy infrastructure unless the task explicitly requires it.
 - Never add production credentials to the repository, logs, pull requests, or agent environment.
