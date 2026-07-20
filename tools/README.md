@@ -18,10 +18,10 @@ python tool_name.py [arguments]
 
 ## Prerequisites
 
-The required dependencies for all tools are included in the project's `requirements.txt` file. Make sure to install them with:
+The required dependencies for all tools are declared in `pyproject.toml`. Create the development environment with:
 
 ```bash
-pip install -r requirements.txt
+uv sync --group dev
 ```
 
 `get_pr_comments.py` uses the GitHub CLI instead of reading a personal access

@@ -1,10 +1,11 @@
-# Cloud Build needs only the container recipe, production dependencies, and app.
+# Cloud Build needs only the container recipe, locked dependency metadata, and app.
 # Start closed and explicitly admit runtime build inputs.
 **
 !.dockerignore
 !Dockerfile
 !cloudbuild.yaml
-!requirements-prod.txt
+!pyproject.toml
+!uv.lock
 !src/
 !src/**
 

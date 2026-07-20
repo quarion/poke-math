@@ -7,8 +7,8 @@ This directory contains Playwright scripts for end-to-end testing of the Pokemat
 Before running these tests, you need to install Playwright for Python:
 
 ```bash
-pip install playwright
-python -m playwright install
+uv sync --group dev
+uv run playwright install
 ```
 
 ## Running the Tests
@@ -38,12 +38,12 @@ If you prefer to run the tests manually:
 
 1. Start the application:
    ```bash
-   $env:FLASK_ENV="development"; python -m src.app
+   $env:FLASK_ENV="development"; uv run python -m src.app
    ```
 
 2. Run the tests:
    ```bash
-   python -m pytest tests/e2e -v
+   uv run pytest tests/e2e -v
    ```
 
 ## Fixtures
@@ -57,4 +57,4 @@ The tests use pytest fixtures for setup and teardown:
 
 ## Screenshots
 
-Screenshots are automatically taken during tests and saved to the `screenshots` directory. Each screenshot is named with the test name and a timestamp. 
+Screenshots are automatically taken during tests and saved to the `screenshots` directory. Each screenshot is named with the test name and a timestamp.

@@ -75,7 +75,7 @@ Run from the repository root:
 .\infrastructure\scripts\deploy.ps1
 ```
 
-The script runs unit tests, verifies that `.gcloudignore` admits only `Dockerfile`, `.dockerignore`, `cloudbuild.yaml`, `requirements-prod.txt`, and `src/`, checks the upload set for local credentials, and submits an asynchronous build under the dedicated build identity. The Dockerfile copies only `src/` into the runtime image. The build tags the image immutably and updates only the Cloud Run image; it preserves the service's current public/private IAM state.
+The script runs unit tests, verifies that `.gcloudignore` admits only the container recipe, locked dependency metadata, and `src/`, checks the upload set for local credentials, and submits an asynchronous build under the dedicated build identity. Cloud Build runs the same unit suite before it builds, pushes, and deploys. The Dockerfile copies only the application source and dependency metadata into the runtime image. The build tags the image immutably and updates only the Cloud Run image; it preserves the service's current public/private IAM state.
 
 Inspect the returned build ID:
 

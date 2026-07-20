@@ -1,3 +1,35 @@
+[project]
+name = "poke-math"
+version = "0.1.0"
+description = "A Pokémon-themed math practice web application."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "Flask==3.0.0",
+    "Flask-WTF==1.2.2",
+    "Werkzeug==3.1.3",
+    "firebase-admin>=6.0.0",
+    "gunicorn==23.0.0",
+    "sympy~=1.13.3",
+]
+
+[dependency-groups]
+dev = [
+    "matplotlib>=3.7.0",
+    "mypy==1.15.0",
+    "numpy>=1.24.0",
+    "playwright>=1.42.0",
+    "pytest~=8.3.4",
+    "pytest-asyncio>=0.24.0",
+    "python-dotenv~=1.0.1",
+    "requests~=2.32.3",
+    "ruff==0.9.10",
+    "types-requests>=2.32.0",
+]
+
+[tool.uv]
+package = false
+
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
@@ -8,8 +40,8 @@ exclude = [
     ".pytest_cache",
 ]
 
-# Assume Python 3.10
-target-version = "py310"
+# Match the supported runtime.
+target-version = "py311"
 
 [tool.ruff.lint]
 # Enable pycodestyle, Pyflakes, flake8-bugbear, and import sorting. The legacy
@@ -26,7 +58,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 known-first-party = ["src"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 ignore_missing_imports = true
 allow_redefinition = true
 show_error_context = false
