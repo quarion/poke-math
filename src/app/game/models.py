@@ -5,116 +5,118 @@ This module contains dataclasses for strongly typed quiz data structures.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 
 @dataclass
 class QuizData:
     """Strongly typed model for quiz data."""
+
     quiz_id: str
     title: str
-    equations: List[str]
-    solution: Dict[str, str]  # Variable name -> solution value
-    image_mapping: Dict[str, str]  # Variable name -> Pokemon image path
+    equations: list[str]
+    solution: dict[str, str]  # Variable name -> solution value
+    image_mapping: dict[str, str]  # Variable name -> Pokemon image path
     description: str = ""
-    next_quiz_id: Optional[str] = None
-    difficulty: Optional[Dict[str, Any]] = None
+    next_quiz_id: str | None = None
+    difficulty: dict[str, Any] | None = None
     is_random: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'quiz_id': self.quiz_id,
-            'title': self.title,
-            'equations': self.equations,
-            'solution': self.solution,
-            'image_mapping': self.image_mapping,
-            'description': self.description,
-            'next_quiz_id': self.next_quiz_id,
-            'difficulty': self.difficulty,
-            'is_random': self.is_random
+            "quiz_id": self.quiz_id,
+            "title": self.title,
+            "equations": self.equations,
+            "solution": self.solution,
+            "image_mapping": self.image_mapping,
+            "description": self.description,
+            "next_quiz_id": self.next_quiz_id,
+            "difficulty": self.difficulty,
+            "is_random": self.is_random,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'QuizData':
+    def from_dict(cls, data: dict[str, Any]) -> "QuizData":
         """Create a QuizData instance from a dictionary."""
         return cls(
-            quiz_id=data.get('quiz_id', ''),
-            title=data.get('title', ''),
-            equations=data.get('equations', []),
-            solution=data.get('solution', {}),
-            image_mapping=data.get('image_mapping', {}),
-            description=data.get('description', ''),
-            next_quiz_id=data.get('next_quiz_id'),
-            difficulty=data.get('difficulty'),
-            is_random=data.get('is_random', False)
+            quiz_id=data.get("quiz_id", ""),
+            title=data.get("title", ""),
+            equations=data.get("equations", []),
+            solution=data.get("solution", {}),
+            image_mapping=data.get("image_mapping", {}),
+            description=data.get("description", ""),
+            next_quiz_id=data.get("next_quiz_id"),
+            difficulty=data.get("difficulty"),
+            is_random=data.get("is_random", False),
         )
 
 
 @dataclass
 class QuizAttempt:
     """Strongly typed model for a quiz attempt."""
+
     quiz_id: str
     quiz_data: QuizData
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    user_answers: Dict[str, int] = field(default_factory=dict)
+    user_answers: dict[str, int] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'quiz_id': self.quiz_id,
-            'quiz_data': self.quiz_data.to_dict(),
-            'timestamp': self.timestamp,
-            'user_answers': self.user_answers
+            "quiz_id": self.quiz_id,
+            "quiz_data": self.quiz_data.to_dict(),
+            "timestamp": self.timestamp,
+            "user_answers": self.user_answers,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'QuizAttempt':
+    def from_dict(cls, data: dict[str, Any]) -> "QuizAttempt":
         """Create a QuizAttempt instance from a dictionary."""
-        quiz_data = QuizData.from_dict(data.get('quiz_data', {}))
+        quiz_data = QuizData.from_dict(data.get("quiz_data", {}))
         return cls(
-            quiz_id=data.get('quiz_id', ''),
+            quiz_id=data.get("quiz_id", ""),
             quiz_data=quiz_data,
-            timestamp=data.get('timestamp', datetime.now().isoformat()),
-            user_answers=data.get('user_answers', {})
+            timestamp=data.get("timestamp", datetime.now().isoformat()),
+            user_answers=data.get("user_answers", {}),
         )
 
 
 @dataclass
 class SessionState:
     """Strongly typed model for session state."""
-    solved_quizzes: Set[str] = field(default_factory=set)
-    quiz_attempts: List[QuizAttempt] = field(default_factory=list)
-    user_name: Optional[str] = None
+
+    solved_quizzes: set[str] = field(default_factory=set)
+    quiz_attempts: list[QuizAttempt] = field(default_factory=list)
+    user_name: str | None = None
     level: int = 1
     xp: int = 0
-    caught_pokemon: Dict[str, int] = field(default_factory=dict)  # Pokemon ID -> count
+    caught_pokemon: dict[str, int] = field(default_factory=dict)  # Pokemon ID -> count
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'solved_quizzes': list(self.solved_quizzes),
-            'quiz_attempts': [attempt.to_dict() for attempt in self.quiz_attempts],
-            'user_name': self.user_name,
-            'level': self.level,
-            'xp': self.xp,
-            'caught_pokemon': self.caught_pokemon
+            "solved_quizzes": list(self.solved_quizzes),
+            "quiz_attempts": [attempt.to_dict() for attempt in self.quiz_attempts],
+            "user_name": self.user_name,
+            "level": self.level,
+            "xp": self.xp,
+            "caught_pokemon": self.caught_pokemon,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'SessionState':
+    def from_dict(cls, data: dict[str, Any]) -> "SessionState":
         """Create a SessionState instance from a dictionary."""
         quiz_attempts = [
-            QuizAttempt.from_dict(attempt_data)
-            for attempt_data in data.get('quiz_attempts', [])
+            QuizAttempt.from_dict(attempt_data) for attempt_data in data.get("quiz_attempts", [])
         ]
         return cls(
-            solved_quizzes=set(data.get('solved_quizzes', [])),
+            solved_quizzes=set(data.get("solved_quizzes", [])),
             quiz_attempts=quiz_attempts,
-            user_name=data.get('user_name'),
-            level=data.get('level', 1),
-            xp=data.get('xp', 0),
-            caught_pokemon=data.get('caught_pokemon', {})
+            user_name=data.get("user_name"),
+            level=data.get("level", 1),
+            xp=data.get("xp", 0),
+            caught_pokemon=data.get("caught_pokemon", {}),
         )
 
     def reset(self):
@@ -126,4 +128,4 @@ class SessionState:
         self.level = 1
         self.xp = 0
         # Clear caught Pokémon
-        self.caught_pokemon.clear() 
+        self.caught_pokemon.clear()

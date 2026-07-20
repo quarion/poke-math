@@ -5,10 +5,10 @@ from __future__ import annotations
 import math
 import time
 from collections import OrderedDict, deque
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from ipaddress import ip_address
 from threading import Lock
-from typing import Callable, Deque, Iterable, Optional
 
 
 @dataclass(frozen=True)
@@ -48,8 +48,8 @@ class RequestRateLimiter:
         self._max_client_buckets = max_client_buckets
         self._clock = clock
         self._lock = Lock()
-        self._global: dict[str, Deque[float]] = {}
-        self._clients: OrderedDict[tuple[str, str], Deque[float]] = OrderedDict()
+        self._global: dict[str, deque[float]] = {}
+        self._clients: OrderedDict[tuple[str, str], deque[float]] = OrderedDict()
 
     def check(
         self,
@@ -62,7 +62,7 @@ class RequestRateLimiter:
         now = self._clock()
 
         with self._lock:
-            counters: list[tuple[Deque[float], int, int]] = []
+            counters: list[tuple[deque[float], int, int]] = []
             for limit in requested_limits:
                 if limit.global_limit < 1 or limit.client_limit < 1:
                     raise ValueError("rate limits must be positive")
@@ -93,7 +93,7 @@ class RequestRateLimiter:
                 counter.append(now)
             return RateLimitDecision(True)
 
-    def _client_counter(self, scope: str, client_id: str) -> Deque[float]:
+    def _client_counter(self, scope: str, client_id: str) -> deque[float]:
         key = (scope, client_id)
         counter = self._clients.get(key)
         if counter is not None:
@@ -107,15 +107,15 @@ class RequestRateLimiter:
         return counter
 
     @staticmethod
-    def _prune(counter: Deque[float], now: float, window_seconds: int) -> None:
+    def _prune(counter: deque[float], now: float, window_seconds: int) -> None:
         cutoff = now - window_seconds
         while counter and counter[0] <= cutoff:
             counter.popleft()
 
 
 def client_identifier(
-    remote_addr: Optional[str],
-    forwarded_for: Optional[str],
+    remote_addr: str | None,
+    forwarded_for: str | None,
     *,
     trust_forwarded_for: bool,
 ) -> str:
@@ -129,7 +129,7 @@ def client_identifier(
 
     candidates = []
     if trust_forwarded_for and forwarded_for:
-        candidates.extend(part.strip() for part in forwarded_for.split(','))
+        candidates.extend(part.strip() for part in forwarded_for.split(","))
     if remote_addr:
         candidates.append(remote_addr.strip())
 

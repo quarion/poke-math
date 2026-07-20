@@ -59,21 +59,30 @@ def test_client_bucket_bound_does_not_evict_global_counter():
 
 
 def test_client_identifier_uses_forwarded_address_only_when_trusted():
-    assert client_identifier(
-        "10.0.0.1",
-        "203.0.113.9, 198.51.100.2",
-        trust_forwarded_for=True,
-    ) == "203.0.113.9"
-    assert client_identifier(
-        "10.0.0.1",
-        "203.0.113.9",
-        trust_forwarded_for=False,
-    ) == "10.0.0.1"
+    assert (
+        client_identifier(
+            "10.0.0.1",
+            "203.0.113.9, 198.51.100.2",
+            trust_forwarded_for=True,
+        )
+        == "203.0.113.9"
+    )
+    assert (
+        client_identifier(
+            "10.0.0.1",
+            "203.0.113.9",
+            trust_forwarded_for=False,
+        )
+        == "10.0.0.1"
+    )
 
 
 def test_client_identifier_ignores_invalid_addresses():
-    assert client_identifier(
-        "192.0.2.4",
-        "not-an-ip",
-        trust_forwarded_for=True,
-    ) == "192.0.2.4"
+    assert (
+        client_identifier(
+            "192.0.2.4",
+            "not-an-ip",
+            trust_forwarded_for=True,
+        )
+        == "192.0.2.4"
+    )

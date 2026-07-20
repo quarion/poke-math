@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 Page Object Model classes for end-to-end testing.
@@ -11,10 +10,4 @@ from .LoginPage import LoginPage
 from .NamePage import NamePage
 from .ProfilePage import ProfilePage
 
-__all__ = [
-    'BasePage',
-    'LoginPage',
-    'NamePage',
-    'HomePage',
-    'ProfilePage'
-] 
+__all__ = ["BasePage", "HomePage", "LoginPage", "NamePage", "ProfilePage"]

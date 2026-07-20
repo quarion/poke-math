@@ -16,7 +16,7 @@ import os
 import secrets
 from functools import wraps
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from flask import (
     Flask,
@@ -48,6 +48,7 @@ from src.app.view_models import QuizResultViewModel, QuizViewModel
 # Authentication Helper
 # -----------------------------------------------------------------------------
 
+
 def login_required(f):
     """
     Decorator to require authentication for routes.
@@ -58,7 +59,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not AuthManager.is_authenticated():
-            return redirect(url_for('login'))
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
 
     return decorated_function
@@ -68,74 +69,75 @@ def login_required(f):
 # Application Setup and Configuration
 # -----------------------------------------------------------------------------
 
+
 def create_flask_app():
     """
     Create and configure the Flask application.
-    
+
     Returns:
         Flask: Configured Flask application
     """
-    flask_app = Flask(__name__,
-                      template_folder=str(Path(__file__).parent.parent / 'templates'),
-                      static_folder=str(Path(__file__).parent.parent / 'static'))
+    flask_app = Flask(
+        __name__,
+        template_folder=str(Path(__file__).parent.parent / "templates"),
+        static_folder=str(Path(__file__).parent.parent / "static"),
+    )
     environment = os.environ.get(
-        'APP_ENVIRONMENT', os.environ.get('FLASK_ENV', 'development')
+        "APP_ENVIRONMENT", os.environ.get("FLASK_ENV", "development")
     ).lower()
-    is_production = environment == 'production'
+    is_production = environment == "production"
 
-    session_secret = os.environ.get('FLASK_SECRET_KEY')
+    session_secret = os.environ.get("FLASK_SECRET_KEY")
     if is_production and not session_secret:
-        raise RuntimeError('FLASK_SECRET_KEY is required in production')
+        raise RuntimeError("FLASK_SECRET_KEY is required in production")
     if not session_secret:
         # Local-only ephemeral key. Production must inject a stable secret.
         session_secret = secrets.token_urlsafe(32)
 
     flask_app.config.update(
         SECRET_KEY=session_secret,
-        WTF_CSRF_SECRET_KEY=os.environ.get('WTF_CSRF_SECRET_KEY', session_secret),
+        WTF_CSRF_SECRET_KEY=os.environ.get("WTF_CSRF_SECRET_KEY", session_secret),
         WTF_CSRF_ENABLED=True,
         WTF_CSRF_TIME_LIMIT=3600,
         WTF_CSRF_CHECK_DEFAULT=True,
-        WTF_CSRF_METHODS=['POST', 'PUT', 'PATCH', 'DELETE'],
+        WTF_CSRF_METHODS=["POST", "PUT", "PATCH", "DELETE"],
         SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=is_production,
-        PREFERRED_URL_SCHEME='https' if is_production else 'http',
-        REQUEST_RATE_LIMIT_ENABLED=_environment_bool(
-            'REQUEST_RATE_LIMIT_ENABLED', is_production
-        ),
+        PREFERRED_URL_SCHEME="https" if is_production else "http",
+        REQUEST_RATE_LIMIT_ENABLED=_environment_bool("REQUEST_RATE_LIMIT_ENABLED", is_production),
         REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE=int(
-            os.environ.get('REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE', '300')
+            os.environ.get("REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE", "300")
         ),
         REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE=int(
-            os.environ.get('REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE', '120')
+            os.environ.get("REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE", "120")
         ),
         REQUEST_RATE_LIMIT_AUTH_GLOBAL_PER_MINUTE=int(
-            os.environ.get('REQUEST_RATE_LIMIT_AUTH_GLOBAL_PER_MINUTE', '60')
+            os.environ.get("REQUEST_RATE_LIMIT_AUTH_GLOBAL_PER_MINUTE", "60")
         ),
         REQUEST_RATE_LIMIT_AUTH_CLIENT_PER_MINUTE=int(
-            os.environ.get('REQUEST_RATE_LIMIT_AUTH_CLIENT_PER_MINUTE', '10')
+            os.environ.get("REQUEST_RATE_LIMIT_AUTH_CLIENT_PER_MINUTE", "10")
         ),
         REQUEST_RATE_LIMIT_WRITE_GLOBAL_PER_MINUTE=int(
-            os.environ.get('REQUEST_RATE_LIMIT_WRITE_GLOBAL_PER_MINUTE', '120')
+            os.environ.get("REQUEST_RATE_LIMIT_WRITE_GLOBAL_PER_MINUTE", "120")
         ),
         REQUEST_RATE_LIMIT_WRITE_CLIENT_PER_MINUTE=int(
-            os.environ.get('REQUEST_RATE_LIMIT_WRITE_CLIENT_PER_MINUTE', '30')
+            os.environ.get("REQUEST_RATE_LIMIT_WRITE_CLIENT_PER_MINUTE", "30")
         ),
     )
 
     _register_request_fuse(flask_app, trust_forwarded_for=is_production)
     CSRFProtect(flask_app)
 
-    @flask_app.get('/readyz')
+    @flask_app.get("/readyz")
     def readyz():
         """Liveness check that does not touch Firebase or Firestore."""
-        return jsonify({'status': 'ok'})
+        return jsonify({"status": "ok"})
 
     # Add version info to all templates
     @flask_app.context_processor
     def inject_version_info():
-        return {'version_info': get_version_info()}
+        return {"version_info": get_version_info()}
 
     return flask_app
 
@@ -144,7 +146,7 @@ def _environment_bool(name: str, default: bool) -> bool:
     value = os.environ.get(name)
     if value is None:
         return default
-    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _register_request_fuse(flask_app: Flask, *, trust_forwarded_for: bool) -> None:
@@ -152,39 +154,39 @@ def _register_request_fuse(flask_app: Flask, *, trust_forwarded_for: bool) -> No
 
     @flask_app.before_request
     def enforce_request_fuse():
-        if not flask_app.config['REQUEST_RATE_LIMIT_ENABLED']:
+        if not flask_app.config["REQUEST_RATE_LIMIT_ENABLED"]:
             return None
-        if request.endpoint == 'readyz':
+        if request.endpoint == "readyz":
             return None
 
         limits = [
             RateLimit(
-                'all',
-                flask_app.config['REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE'],
-                flask_app.config['REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE'],
+                "all",
+                flask_app.config["REQUEST_RATE_LIMIT_GLOBAL_PER_MINUTE"],
+                flask_app.config["REQUEST_RATE_LIMIT_CLIENT_PER_MINUTE"],
             )
         ]
-        if request.endpoint == 'auth_callback':
+        if request.endpoint == "auth_callback":
             limits.append(
                 RateLimit(
-                    'auth',
-                    flask_app.config['REQUEST_RATE_LIMIT_AUTH_GLOBAL_PER_MINUTE'],
-                    flask_app.config['REQUEST_RATE_LIMIT_AUTH_CLIENT_PER_MINUTE'],
+                    "auth",
+                    flask_app.config["REQUEST_RATE_LIMIT_AUTH_GLOBAL_PER_MINUTE"],
+                    flask_app.config["REQUEST_RATE_LIMIT_AUTH_CLIENT_PER_MINUTE"],
                 )
             )
-        if request.method not in {'GET', 'HEAD', 'OPTIONS'}:
+        if request.method not in {"GET", "HEAD", "OPTIONS"}:
             limits.append(
                 RateLimit(
-                    'write',
-                    flask_app.config['REQUEST_RATE_LIMIT_WRITE_GLOBAL_PER_MINUTE'],
-                    flask_app.config['REQUEST_RATE_LIMIT_WRITE_CLIENT_PER_MINUTE'],
+                    "write",
+                    flask_app.config["REQUEST_RATE_LIMIT_WRITE_GLOBAL_PER_MINUTE"],
+                    flask_app.config["REQUEST_RATE_LIMIT_WRITE_CLIENT_PER_MINUTE"],
                 )
             )
 
         decision = limiter.check(
             client_identifier(
                 request.remote_addr,
-                request.headers.get('X-Forwarded-For'),
+                request.headers.get("X-Forwarded-For"),
                 trust_forwarded_for=trust_forwarded_for,
             ),
             limits,
@@ -192,26 +194,26 @@ def _register_request_fuse(flask_app: Flask, *, trust_forwarded_for: bool) -> No
         if decision.allowed:
             return None
 
-        response = jsonify({
-            'error': 'Too many requests',
-            'retry_after': decision.retry_after,
-        })
+        response = jsonify(
+            {
+                "error": "Too many requests",
+                "retry_after": decision.retry_after,
+            }
+        )
         response.status_code = 429
-        response.headers['Retry-After'] = str(decision.retry_after)
-        response.headers['Cache-Control'] = 'no-store'
+        response.headers["Retry-After"] = str(decision.retry_after)
+        response.headers["Cache-Control"] = "no-store"
         return response
 
 
 def get_version_info():
     """
     Get application version information from environment.
-    
+
     Returns:
         dict: Version information
     """
-    return {
-        'version': os.environ.get('COMMIT_SHA', 'development')
-    }
+    return {"version": os.environ.get("COMMIT_SHA", "development")}
 
 
 # -----------------------------------------------------------------------------
@@ -227,13 +229,13 @@ app = create_flask_app()
 def after_request(response):
     """
     Process response after each request.
-    
+
     This function:
     1. Sets the guest cookie for guest users
-    
+
     Args:
         response: Flask response object
-        
+
     Returns:
         Modified response
     """
@@ -244,12 +246,12 @@ def after_request(response):
 
 
 # Load game configuration
-GAME_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'quizzes.json'
-POKEMON_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'pokemons.json'
+GAME_CONFIG_PATH = Path(__file__).parent.parent / "data" / "quizzes.json"
+POKEMON_CONFIG_PATH = Path(__file__).parent.parent / "data" / "pokemons.json"
 GAME_CONFIG = load_game_config(GAME_CONFIG_PATH, POKEMON_CONFIG_PATH)
 
 # Load equation difficulties
-DIFFICULTY_CONFIG_PATH = Path(__file__).parent.parent / 'data' / 'equation_difficulties_v2.json'
+DIFFICULTY_CONFIG_PATH = Path(__file__).parent.parent / "data" / "equation_difficulties_v2.json"
 EQUATION_DIFFICULTIES = load_equation_difficulties(DIFFICULTY_CONFIG_PATH)
 
 # Create equation generator
@@ -263,13 +265,14 @@ POKEMON_IMAGES = [pokemon.image_path for pokemon in GAME_CONFIG.pokemons.values(
 # Helper Functions
 # -----------------------------------------------------------------------------
 
+
 def create_game_manager() -> GameManager:
     """
     Create a GameManager instance with session data loaded from persistent storage.
-    
+
     Returns:
         GameManager: Instance with loaded session data
-        
+
     Raises:
         Exception: If Firestore storage is enabled but not available
     """
@@ -287,15 +290,16 @@ def create_game_manager() -> GameManager:
         raise
 
 
-def process_quiz_answers(user_answers: Dict[str, int],
-                         expected_answers: Dict[str, Union[int, str]]) -> QuizResultViewModel:
+def process_quiz_answers(
+    user_answers: dict[str, int], expected_answers: dict[str, int | str]
+) -> QuizResultViewModel:
     """
     Process quiz answers for both random and regular quizzes.
-    
+
     Args:
         user_answers: Dictionary of user-provided answers {var: value}
         expected_answers: Dictionary of expected answers {var: value}
-        
+
     Returns:
         QuizResultViewModel: Standardized result object containing quiz results data
     """
@@ -326,40 +330,41 @@ def process_quiz_answers(user_answers: Dict[str, int],
         correct_answers=correct_answers,
         all_answered=all_answered,
         correct_count=correct_count,
-        total_count=total_count
+        total_count=total_count,
     )
 
 
-def parse_user_answers(form_data: Dict[str, str], solution_keys: List[str]) -> Dict[str, int]:
+def parse_user_answers(form_data: dict[str, str], solution_keys: list[str]) -> dict[str, int]:
     """
     Parse and filter user answers from form data.
-    
+
     Args:
         form_data: Form data from request
         solution_keys: Keys expected in the solution
-        
+
     Returns:
         Dict[str, int]: Filtered and parsed user answers
     """
     return {
         key: int(value)
         for key, value in form_data.items()
-        if value.strip() and key in solution_keys  # Only include non-empty values for solution variables
+        if value.strip()
+        and key in solution_keys  # Only include non-empty values for solution variables
     }
 
 
 def render_quiz_template(
-        is_random: bool,
-        quiz_data: Dict[str, Any],
-        image_mapping: Dict[str, str],
-        result: Optional[QuizResultViewModel] = None,
-        user_answers: Optional[Dict[str, int]] = None,
-        already_solved: bool = False,
-        adventure_results: Optional[Dict[str, Any]] = None
+    is_random: bool,
+    quiz_data: dict[str, Any],
+    image_mapping: dict[str, str],
+    result: QuizResultViewModel | None = None,
+    user_answers: dict[str, int] | None = None,
+    already_solved: bool = False,
+    adventure_results: dict[str, Any] | None = None,
 ) -> Any:
     """
     Render the quiz template for both random and regular quizzes.
-    
+
     Args:
         is_random: Whether this is a random quiz
         quiz_data: Quiz data in unified dictionary format
@@ -368,7 +373,7 @@ def render_quiz_template(
         user_answers: Optional dictionary of user submitted answers
         already_solved: Flag indicating if the quiz is already solved
         adventure_results: Optional dictionary with adventure completion results
-        
+
     Returns:
         Response: Flask response with rendered template
     """
@@ -377,39 +382,40 @@ def render_quiz_template(
 
     # Create a strongly-typed view model
     quiz = QuizViewModel(
-        id=quiz_data.get('quiz_id', ''),
-        title=quiz_data.get('title', 'Random Mission' if is_random else 'Quiz'),
-        equations=quiz_data.get('equations', []),
-        variables=list(quiz_data.get('solution', {}).keys()),
+        id=quiz_data.get("quiz_id", ""),
+        title=quiz_data.get("title", "Random Mission" if is_random else "Quiz"),
+        equations=quiz_data.get("equations", []),
+        variables=list(quiz_data.get("solution", {}).keys()),
         image_mapping=image_mapping,
-        description=quiz_data.get('description', ''),
+        description=quiz_data.get("description", ""),
         is_random=is_random,
-        difficulty=quiz_data.get('difficulty'),
-        next_quiz_id=quiz_data.get('next_quiz_id'),
-        has_next=quiz_data.get('next_quiz_id') is not None
+        difficulty=quiz_data.get("difficulty"),
+        next_quiz_id=quiz_data.get("next_quiz_id"),
+        has_next=quiz_data.get("next_quiz_id") is not None,
     )
 
     template_args = {
-        'quiz': quiz,  # Strongly typed view model
-        'result': result,
-        'user_answers': user_answers,
-        'already_solved': already_solved,
-        'adventure_results': adventure_results
+        "quiz": quiz,  # Strongly typed view model
+        "result": result,
+        "user_answers": user_answers,
+        "already_solved": already_solved,
+        "adventure_results": adventure_results,
     }
 
-    return render_template('quiz.html', **template_args)
+    return render_template("quiz.html", **template_args)
 
 
 # -----------------------------------------------------------------------------
 # Route Handlers
 # -----------------------------------------------------------------------------
 
-@app.route('/')
+
+@app.route("/")
 @login_required
 def index():
     """
     Display the home page.
-    
+
     Returns:
         Rendered index page template
     """
@@ -417,21 +423,23 @@ def index():
     session_manager = create_session_manager()
     user_name = session_manager.get_user_name()
 
-    return render_template('index.html', user_name=user_name)
+    return render_template("index.html", user_name=user_name)
 
 
-@app.route('/exercises')
+@app.route("/exercises")
 @login_required
 def all_exercises():
     """Display all available community exercises."""
     game_manager = create_game_manager()
-    return render_template('all_exercises.html',
-                           title="Community Exercises",
-                           sections=GAME_CONFIG.sections,
-                           solved_quizzes=game_manager.session_manager.solved_quizzes)
+    return render_template(
+        "all_exercises.html",
+        title="Community Exercises",
+        sections=GAME_CONFIG.sections,
+        solved_quizzes=game_manager.session_manager.solved_quizzes,
+    )
 
 
-@app.route('/profile')
+@app.route("/profile")
 @login_required
 def profile():
     """
@@ -459,45 +467,48 @@ def profile():
     for pokemon_id, count in caught_pokemon.items():
         if pokemon_id in game_manager.game_config.pokemons:
             pokemon = game_manager.game_config.pokemons[pokemon_id]
-            collection.append({
-                'id': pokemon_id,
-                'name': pokemon.name,
-                'image_path': pokemon.image_path,
-                'count': count
-            })
+            collection.append(
+                {
+                    "id": pokemon_id,
+                    "name": pokemon.name,
+                    "image_path": pokemon.image_path,
+                    "count": count,
+                }
+            )
 
     # Sort by name
-    collection.sort(key=lambda p: p['name'])
+    collection.sort(key=lambda p: p["name"])
 
     # Calculate totals
     total_unique_pokemon = len(caught_pokemon)
     total_available_pokemon = len(game_manager.game_config.pokemons)
 
-    return render_template('profile.html',
-                           points=points,
-                           solved_count=solved_count,
-                           user_name=user_name,
-                           is_guest=is_guest,
-                           level_info=level_info,
-                           collection=collection,
-                           total_unique_pokemon=total_unique_pokemon,
-                           total_available_pokemon=total_available_pokemon)
+    return render_template(
+        "profile.html",
+        points=points,
+        solved_count=solved_count,
+        user_name=user_name,
+        is_guest=is_guest,
+        level_info=level_info,
+        collection=collection,
+        total_unique_pokemon=total_unique_pokemon,
+        total_available_pokemon=total_available_pokemon,
+    )
 
 
-@app.route('/new-exercise')
+@app.route("/new-exercise")
 @login_required
 def new_exercise():
     """Display difficulty selection screen for random exercise generation."""
-    return render_template('new_exercise.html',
-                           difficulties=EQUATION_DIFFICULTIES)
+    return render_template("new_exercise.html", difficulties=EQUATION_DIFFICULTIES)
 
 
-@app.route('/generate-random-exercise/<difficulty_id>')
+@app.route("/generate-random-exercise/<difficulty_id>")
 @login_required
 def generate_random_exercise(difficulty_id):
     """Generate a random exercise based on the selected difficulty."""
     # Find the selected difficulty
-    selected_difficulty = next((d for d in EQUATION_DIFFICULTIES if d['id'] == difficulty_id), None)
+    selected_difficulty = next((d for d in EQUATION_DIFFICULTIES if d["id"] == difficulty_id), None)
 
     if not selected_difficulty:
         return "Difficulty not found", 404
@@ -506,22 +517,19 @@ def generate_random_exercise(difficulty_id):
 
     # Get the player's current level
     level_info = game_manager.get_player_level_info()
-    player_level = level_info['level']
+    player_level = level_info["level"]
 
     random_quiz_id, quiz_data = generate_random_quiz_data(
-        GAME_CONFIG,
-        selected_difficulty,
-        EQUATION_GENERATOR,
-        player_level=player_level
+        GAME_CONFIG, selected_difficulty, EQUATION_GENERATOR, player_level=player_level
     )
 
     # Store the quiz in the session manager
     game_manager.session_manager.save_quiz_data(random_quiz_id, quiz_data, is_random=True)
 
-    return redirect(url_for('quiz', quiz_id=random_quiz_id))
+    return redirect(url_for("quiz", quiz_id=random_quiz_id))
 
 
-@app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
+@app.route("/quiz/<quiz_id>", methods=["GET", "POST"])
 @login_required
 def quiz(quiz_id):
     """
@@ -530,7 +538,7 @@ def quiz(quiz_id):
     game_manager = create_game_manager()
 
     # Check if this is a random quiz ID format
-    is_random = quiz_id.startswith('random_')
+    is_random = quiz_id.startswith("random_")
 
     # Get quiz data from session manager
     session_manager = game_manager.session_manager
@@ -543,24 +551,24 @@ def quiz(quiz_id):
             quiz_state = game_manager.get_quiz_state(quiz_id)
             if quiz_state:
                 # Convert to unified format
-                quiz = quiz_state['quiz']
+                quiz = quiz_state["quiz"]
                 regular_quiz_data = {
-                    'quiz_id': quiz_id,
-                    'title': quiz.title,
-                    'description': quiz.description,
-                    'equations': quiz.equations,
-                    'solution': quiz.answer.values,
-                    'image_mapping': quiz_state['image_mapping'],
-                    'next_quiz_id': quiz.next_quiz_id,
-                    'is_random': False
+                    "quiz_id": quiz_id,
+                    "title": quiz.title,
+                    "description": quiz.description,
+                    "equations": quiz.equations,
+                    "solution": quiz.answer.values,
+                    "image_mapping": quiz_state["image_mapping"],
+                    "next_quiz_id": quiz.next_quiz_id,
+                    "is_random": False,
                 }
                 quiz_data = regular_quiz_data
                 session_manager.save_quiz_data(quiz_id, quiz_data, is_random=False)
             else:
-                return render_template('quiz_not_found.html', quiz_id=quiz_id)
+                return render_template("quiz_not_found.html", quiz_id=quiz_id)
         else:
             # Random quiz not found - simply return not found page
-            return render_template('quiz_not_found.html', quiz_id=quiz_id)
+            return render_template("quiz_not_found.html", quiz_id=quiz_id)
 
     # Check if this quiz is already solved
     already_solved = game_manager.session_manager.is_quiz_solved(quiz_id)
@@ -571,26 +579,26 @@ def quiz(quiz_id):
     # Pre-populate answers if the quiz is already solved and user hasn't entered anything
     if already_solved and not user_answers:
         # Show the correct answers for an already solved quiz
-        user_answers = {var: int(float(val)) for var, val in quiz_data['solution'].items()}
+        user_answers = {var: int(float(val)) for var, val in quiz_data["solution"].items()}
         session_manager.save_quiz_answers(quiz_id, user_answers)
 
     # Initialize adventure results data
     adventure_results = None
 
     # Handle form submission
-    if request.method == 'POST':
+    if request.method == "POST":
         # If the quiz is already solved, don't process the answers again
         if already_solved:
-            return render_template('already_solved.html', quiz_id=quiz_id)
+            return render_template("already_solved.html", quiz_id=quiz_id)
 
         # Parse user answers
-        user_answers = parse_user_answers(request.form, quiz_data['solution'].keys())
+        user_answers = parse_user_answers(request.form, quiz_data["solution"].keys())
 
         # Save the answers
         session_manager.save_quiz_answers(quiz_id, user_answers)
 
         # Check answers
-        result = process_quiz_answers(user_answers, quiz_data['solution'])
+        result = process_quiz_answers(user_answers, quiz_data["solution"])
 
         # Update session data if all answers are correct
         if result.correct:
@@ -598,14 +606,14 @@ def quiz(quiz_id):
 
             # Process adventure completion if the quiz was solved correctly
             # Determine difficulty level
-            difficulty = quiz_data.get('difficulty').get('difficulty')
+            difficulty = quiz_data.get("difficulty").get("difficulty")
 
             # Determine which Pokémon to catch based on the quiz
             # For now, we'll use the Pokémon from the image mapping as the caught Pokémon
             caught_pokemon = []
-            for _var, img_path in quiz_data['image_mapping'].items():
+            for _var, img_path in quiz_data["image_mapping"].items():
                 # Extract Pokémon ID from image path (remove file extension)
-                pokemon_id = img_path.split('.')[0]
+                pokemon_id = img_path.split(".")[0]
                 if pokemon_id not in caught_pokemon:
                     caught_pokemon.append(pokemon_id)
 
@@ -625,55 +633,53 @@ def quiz(quiz_id):
             for pokemon_id in caught_pokemon:
                 if pokemon_id in game_manager.game_config.pokemons:
                     pokemon = game_manager.game_config.pokemons[pokemon_id]
-                    caught_pokemon_details.append({
-                        'id': pokemon_id,
-                        'name': pokemon.name,
-                        'image_path': pokemon.image_path
-                    })
+                    caught_pokemon_details.append(
+                        {"id": pokemon_id, "name": pokemon.name, "image_path": pokemon.image_path}
+                    )
 
             # Create adventure results data
             adventure_results = {
-                'caught_pokemon': caught_pokemon_details,
-                'pokemon_counts': pokemon_counts,
-                'xp_gained': rewards['xp_reward'],
-                'leveled_up': rewards['leveled_up'],
-                'level_info': level_info
+                "caught_pokemon": caught_pokemon_details,
+                "pokemon_counts": pokemon_counts,
+                "xp_gained": rewards["xp_reward"],
+                "leveled_up": rewards["leveled_up"],
+                "level_info": level_info,
             }
 
             # Add adventure results to the result dictionary for AJAX requests
             result_dict = result.to_dict()
-            result_dict['adventure_results'] = adventure_results
+            result_dict["adventure_results"] = adventure_results
 
             # If it's an AJAX request, return JSON with adventure results
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
                 return jsonify(result_dict)
         else:
             # If it's an AJAX request, return JSON without adventure results
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
                 return jsonify(result.to_dict())
 
         # For regular form submissions
         return render_quiz_template(
             is_random=is_random,
             quiz_data=quiz_data,
-            image_mapping=quiz_data['image_mapping'],
+            image_mapping=quiz_data["image_mapping"],
             result=result,
             user_answers=user_answers,
             already_solved=already_solved,
-            adventure_results=adventure_results
+            adventure_results=adventure_results,
         )
 
     # GET request - just display the quiz
     return render_quiz_template(
         is_random=is_random,
         quiz_data=quiz_data,
-        image_mapping=quiz_data['image_mapping'],
+        image_mapping=quiz_data["image_mapping"],
         user_answers=user_answers,
-        already_solved=already_solved
+        already_solved=already_solved,
     )
 
 
-@app.route('/api/quiz/<quiz_id>/reset', methods=['POST'])
+@app.route("/api/quiz/<quiz_id>/reset", methods=["POST"])
 @login_required
 def reset_quiz(quiz_id):
     """Reset a solved quiz to allow it to be solved again."""
@@ -696,10 +702,10 @@ def reset_quiz(quiz_id):
         session_manager.save_session()
 
     # Redirect to the quiz page
-    return redirect(url_for('quiz', quiz_id=quiz_id))
+    return redirect(url_for("quiz", quiz_id=quiz_id))
 
 
-@app.route('/my-quizzes')
+@app.route("/my-quizzes")
 @login_required
 def my_quizzes():
     """Display the user's missions/quizzes."""
@@ -719,35 +725,36 @@ def my_quizzes():
         is_random = quiz_data.is_random
 
         # Format the attempt for display
-        formatted_attempts.append({
-            'id': quiz_id,
-            'title': quiz_data.title,
-            'timestamp': attempt.timestamp,
-            'completed': game_manager.session_manager.is_quiz_solved(quiz_id),
-            'solved': game_manager.session_manager.is_quiz_solved(quiz_id),
-            'exists': True,  # We now store all quiz data, so it always exists
-            'is_random': is_random,
-            'user_answers': attempt.user_answers,
-            'quiz_data': quiz_data.to_dict(),  # Include the full quiz data
-            'image_mapping': quiz_data.image_mapping  # Include the image mapping directly
-        })
+        formatted_attempts.append(
+            {
+                "id": quiz_id,
+                "title": quiz_data.title,
+                "timestamp": attempt.timestamp,
+                "completed": game_manager.session_manager.is_quiz_solved(quiz_id),
+                "solved": game_manager.session_manager.is_quiz_solved(quiz_id),
+                "exists": True,  # We now store all quiz data, so it always exists
+                "is_random": is_random,
+                "user_answers": attempt.user_answers,
+                "quiz_data": quiz_data.to_dict(),  # Include the full quiz data
+                "image_mapping": quiz_data.image_mapping,  # Include the image mapping directly
+            }
+        )
 
     # Sort attempts by timestamp (newest first)
-    formatted_attempts.sort(key=lambda x: x['timestamp'], reverse=True)
+    formatted_attempts.sort(key=lambda x: x["timestamp"], reverse=True)
 
     # Calculate statistics
     stats = {
-        'total_attempts': len(formatted_attempts),
-        'total_solved': len(game_manager.session_manager.solved_quizzes)
+        "total_attempts": len(formatted_attempts),
+        "total_solved": len(game_manager.session_manager.solved_quizzes),
     }
 
-    return render_template('my_quizzes.html',
-                           attempts=formatted_attempts,
-                           stats=stats,
-                           user_name=user_name)
+    return render_template(
+        "my_quizzes.html", attempts=formatted_attempts, stats=stats, user_name=user_name
+    )
 
 
-@app.route('/forget-quiz', methods=['POST'])
+@app.route("/forget-quiz", methods=["POST"])
 @login_required
 def forget_quiz():
     """Remove a quiz attempt from the user's history."""
@@ -755,8 +762,8 @@ def forget_quiz():
     game_manager = create_game_manager()
 
     # Get the timestamp from the form
-    timestamp = request.form.get('timestamp')
-    quiz_id = request.form.get('quiz_id')
+    timestamp = request.form.get("timestamp")
+    quiz_id = request.form.get("quiz_id")
 
     if timestamp:
         # Remove the quiz attempt by timestamp
@@ -773,10 +780,10 @@ def forget_quiz():
         game_manager.session_manager.save_session()
 
     # Redirect back to my quizzes page
-    return redirect(url_for('my_quizzes'))
+    return redirect(url_for("my_quizzes"))
 
 
-@app.route('/reset-progress', methods=['POST'])
+@app.route("/reset-progress", methods=["POST"])
 @login_required
 def reset_progress():
     """Reset all user progress, including solved quizzes and attempts."""
@@ -785,18 +792,18 @@ def reset_progress():
     game_manager.reset()
     game_manager.save_session()
 
-    return redirect(url_for('profile'))
+    return redirect(url_for("profile"))
 
 
-@app.route('/adventure/complete', methods=['POST'])
+@app.route("/adventure/complete", methods=["POST"])
 @login_required
 def complete_adventure():
     """
     Complete an adventure and award XP.
     """
     data = request.json
-    difficulty = data.get('difficulty', 1)
-    caught_pokemon = data.get('caught_pokemon', [])
+    difficulty = data.get("difficulty", 1)
+    caught_pokemon = data.get("caught_pokemon", [])
 
     # Get game manager
     game_manager = create_game_manager()
@@ -812,44 +819,47 @@ def complete_adventure():
     # Get updated level info
     level_info = game_manager.get_player_level_info()
 
-    return jsonify({
-        'success': True,
-        'xp_gained': rewards['xp_reward'],
-        'pokemon_counts': pokemon_counts,
-        'leveled_up': rewards['leveled_up'],
-        'level_info': level_info
-    })
+    return jsonify(
+        {
+            "success": True,
+            "xp_gained": rewards["xp_reward"],
+            "pokemon_counts": pokemon_counts,
+            "leveled_up": rewards["leveled_up"],
+            "level_info": level_info,
+        }
+    )
 
 
 # -----------------------------------------------------------------------------
 # Authentication Routes
 # -----------------------------------------------------------------------------
 
-@app.route('/login')
+
+@app.route("/login")
 def login():
     """
     Display the login page.
-    
+
     If the user is already authenticated, redirect to the home page.
-    
+
     Returns:
         Rendered login template or redirect to home page
     """
     # If user is already authenticated in session, redirect to home page
     if AuthManager.is_authenticated():
         app.logger.info("User already authenticated in session, redirecting to index")
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
-    return render_template('login.html')
+    return render_template("login.html")
 
 
-@app.route('/auth_callback', methods=['POST'])
+@app.route("/auth_callback", methods=["POST"])
 def auth_callback():
     """
     Handle Firebase authentication callback.
-    
+
     Processes both regular Firebase authentication and anonymous (guest) logins.
-    
+
     Returns:
         JSON response with success status and redirect URL
     """
@@ -857,38 +867,36 @@ def auth_callback():
         # Get the ID token from the request
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({'success': False, 'error': 'No data provided'}), 400
+            return jsonify({"success": False, "error": "No data provided"}), 400
 
-        id_token = data.get('id_token')
+        id_token = data.get("id_token")
 
         if not id_token:
-            return jsonify({'success': False, 'error': 'No ID token provided'}), 400
+            return jsonify({"success": False, "error": "No ID token provided"}), 400
 
         try:
             # Verify the ID token with Firebase Admin SDK
             decoded_token = get_auth_client().verify_id_token(id_token)
-            uid = decoded_token['uid']
-            sign_in_provider = decoded_token.get('firebase', {}).get(
-                'sign_in_provider'
-            )
-            is_guest = sign_in_provider == 'anonymous'
+            uid = decoded_token["uid"]
+            sign_in_provider = decoded_token.get("firebase", {}).get("sign_in_provider")
+            is_guest = sign_in_provider == "anonymous"
 
             # Create a session for the user
-            session['user_id'] = uid
+            session["user_id"] = uid
 
             if is_guest:
                 # Handle guest login
-                session['auth_type'] = 'guest'
-                session['authenticated'] = True
-                session['is_guest'] = True
+                session["auth_type"] = "guest"
+                session["authenticated"] = True
+                session["is_guest"] = True
                 # Redirect to name input page for guests
-                redirect_url = url_for('name_input')
-                return jsonify({'success': True, 'redirect': redirect_url})
+                redirect_url = url_for("name_input")
+                return jsonify({"success": True, "redirect": redirect_url})
             else:
                 # Regular user login
-                session['auth_type'] = 'google'
-                session['authenticated'] = True
-                session['is_guest'] = False
+                session["auth_type"] = "google"
+                session["authenticated"] = True
+                session["is_guest"] = False
 
                 # Check if user exists in the database
                 session_manager = create_session_manager()
@@ -896,83 +904,85 @@ def auth_callback():
 
                 if user_name:
                     # Existing user, redirect to home page
-                    redirect_url = url_for('index')
-                    return jsonify({'success': True, 'redirect': redirect_url})
+                    redirect_url = url_for("index")
+                    return jsonify({"success": True, "redirect": redirect_url})
                 else:
                     # New user, redirect to profile setup
-                    redirect_url = url_for('name_input')
-                    return jsonify({'success': True, 'redirect': redirect_url})
+                    redirect_url = url_for("name_input")
+                    return jsonify({"success": True, "redirect": redirect_url})
 
         except Exception:
             app.logger.warning("Firebase ID token verification failed")
-            return jsonify({
-                'success': False,
-                'error': 'Token verification failed',
-            }), 401
+            return jsonify(
+                {
+                    "success": False,
+                    "error": "Token verification failed",
+                }
+            ), 401
 
     except Exception:
         app.logger.exception("Unexpected authentication callback failure")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
+        return jsonify({"success": False, "error": "Server error"}), 500
 
 
-@app.route('/name')
+@app.route("/name")
 @login_required
 def name_input():
     """
     Display the name input page.
-    
+
     Returns:
         Rendered name input page template
     """
     # Get the current name if it exists
     current_name = create_session_manager().get_user_name()
 
-    return render_template('name_input.html', current_name=current_name)
+    return render_template("name_input.html", current_name=current_name)
 
 
-@app.route('/save-name', methods=['POST'])
+@app.route("/save-name", methods=["POST"])
 @login_required
 def save_name():
     """
     Save the user's Pokemon-style name.
-    
+
     Returns:
         Redirect to home page or name input page with error
     """
     try:
         # Get the trainer name from the form
-        trainer_name = request.form.get('trainer_name', '').strip()
+        trainer_name = request.form.get("trainer_name", "").strip()
 
         # Validate the trainer name
         if not trainer_name:
-            return render_template('name_input.html', error='Please enter a name')
+            return render_template("name_input.html", error="Please enter a name")
 
         if len(trainer_name) > 20:
-            return render_template('name_input.html', error='Name must be 20 characters or less')
+            return render_template("name_input.html", error="Name must be 20 characters or less")
 
         # Save the trainer name
         session_manager = create_session_manager()
         session_manager.set_user_name(trainer_name)
 
         # Redirect to home page
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
     except Exception as e:
         app.logger.error(f"Error in save_name: {e}")
-        return render_template('name_input.html', error=f'An error occurred: {str(e)}')
+        return render_template("name_input.html", error=f"An error occurred: {e!s}")
 
 
-@app.route('/logout')
+@app.route("/logout")
 def logout():
     """
     Log out the current user.
-    
+
     Returns:
         Redirect to login page with a script to sign out from Firebase
     """
     AuthManager.logout()
 
     # Create a response that includes a script to sign out from Firebase
-    response = make_response(render_template('logout.html'))
+    response = make_response(render_template("logout.html"))
 
     return response
 
@@ -982,47 +992,42 @@ def logout():
 def inject_auth_status():
     """
     Add authentication status and CSRF token to all templates.
-    
+
     Returns:
         Dictionary with is_authenticated value and csrf_token function
     """
     from flask_wtf.csrf import generate_csrf
-    return {
-        'is_authenticated': AuthManager.is_authenticated(),
-        'csrf_token': generate_csrf
-    }
+
+    return {"is_authenticated": AuthManager.is_authenticated(), "csrf_token": generate_csrf}
 
 
 # -----------------------------------------------------------------------------
 # Error Handlers
 # -----------------------------------------------------------------------------
 
+
 @app.errorhandler(404)
 def page_not_found(e):
     """Handle 404 errors."""
-    return render_template('error.html',
-                           error_code=404,
-                           error_message="Page not found"), 404
+    return render_template("error.html", error_code=404, error_message="Page not found"), 404
 
 
 @app.errorhandler(500)
 def server_error(e):
     """Handle 500 errors."""
-    return render_template('error.html',
-                           error_code=500,
-                           error_message="Server error"), 500
+    return render_template("error.html", error_code=500, error_message="Server error"), 500
 
 
-@app.route('/api/dev/quiz/<quiz_id>/answers', methods=['GET'])
+@app.route("/api/dev/quiz/<quiz_id>/answers", methods=["GET"])
 @login_required
 def dev_get_quiz_answers(quiz_id):
     """
     Development-only endpoint to get the correct answers for a quiz.
     This endpoint is only available in development mode.
-    
+
     Args:
         quiz_id: The ID of the quiz to get answers for
-        
+
     Returns:
         JSON with the correct answers
     """
@@ -1037,21 +1042,21 @@ def dev_get_quiz_answers(quiz_id):
 
     # If not found in session, try to get from game config (for regular quizzes)
     if not quiz_data:
-        if not quiz_id.startswith('random_'):
+        if not quiz_id.startswith("random_"):
             # Regular quiz - get from game config
             quiz_state = game_manager.get_quiz_state(quiz_id)
             if quiz_state:
                 # Convert to unified format
-                quiz = quiz_state['quiz']
+                quiz = quiz_state["quiz"]
                 quiz_data = {
-                    'quiz_id': quiz_id,
-                    'title': quiz.title,
-                    'description': quiz.description,
-                    'equations': quiz.equations,
-                    'solution': quiz.answer.values,
-                    'image_mapping': quiz_state['image_mapping'],
-                    'next_quiz_id': quiz.next_quiz_id,
-                    'is_random': False
+                    "quiz_id": quiz_id,
+                    "title": quiz.title,
+                    "description": quiz.description,
+                    "equations": quiz.equations,
+                    "solution": quiz.answer.values,
+                    "image_mapping": quiz_state["image_mapping"],
+                    "next_quiz_id": quiz.next_quiz_id,
+                    "is_random": False,
                 }
             else:
                 return jsonify({"error": "Quiz not found"}), 404
@@ -1060,7 +1065,4 @@ def dev_get_quiz_answers(quiz_id):
             return jsonify({"error": "Quiz not found"}), 404
 
     # Return the correct answers
-    return jsonify({
-        "quiz_id": quiz_id,
-        "answers": quiz_data['solution']
-    })
+    return jsonify({"quiz_id": quiz_id, "answers": quiz_data["solution"]})

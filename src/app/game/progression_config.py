@@ -11,35 +11,35 @@ BASE_XP = 150
 
 # XP rewards per Pokémon tier
 TIER_XP_REWARDS = {
-    1: 50,   # Common
+    1: 50,  # Common
     2: 100,  # Uncommon
     3: 200,  # Rare
     4: 400,  # Very Rare
-    5: 800   # Legendary
+    5: 800,  # Legendary
 }
 
 # Base weights for Pokémon selection by tier
 TIER_BASE_WEIGHTS = {
     1: 1,  # Common
-    2: 2,   # Uncommon
-    3: 3,   # Rare
-    4: 5,   # Very Rare
-    5: 8     # Legendary
+    2: 2,  # Uncommon
+    3: 3,  # Rare
+    4: 5,  # Very Rare
+    5: 8,  # Legendary
 }
 
 # Difficulty multiplier for tier weights
-DIFFICULTY_MULTIPLIER = 1/5
+DIFFICULTY_MULTIPLIER = 1 / 5
 
 # Level multiplier for tier weights
-LEVEL_MULTIPLIER = 1/4
+LEVEL_MULTIPLIER = 1 / 4
 
 # Tier unlock levels
 TIER_UNLOCK_LEVELS = {
-    1: 1,    # Available from start
-    2: 11,   # Unlock at level 11
-    3: 21,   # Unlock at level 21
-    4: 31,   # Unlock at level 31
-    5: 41    # Unlock at level 41
+    1: 1,  # Available from start
+    2: 11,  # Unlock at level 11
+    3: 21,  # Unlock at level 21
+    4: 31,  # Unlock at level 31
+    5: 41,  # Unlock at level 41
 }
 
 # Bonus XP per difficulty level
