@@ -9,6 +9,7 @@
 
 - Install dependencies with `uv sync --locked --all-groups`.
 - Run `uv run pytest tests/unit -q`.
+- Run `docker build --target test --tag poke-math:test .` to validate the Linux test target used by Cloud Build.
 - Run `docker build --build-arg COMMIT_SHA=local --tag poke-math:local .`.
 - Ruff has a known baseline of pre-existing findings and is not a required delivery check until that baseline is deliberately cleaned up.
 
