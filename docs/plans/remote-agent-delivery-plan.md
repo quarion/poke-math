@@ -1,6 +1,6 @@
 # Remote-agent delivery plan
 
-Status: planned
+Status: in progress
 
 Created: 2026-07-20
 
@@ -33,7 +33,7 @@ The coding agent owns changes on a feature branch. GitHub owns review and merge 
 - The production container uses Python 3.11.
 - As of 2026-07-20, all 74 unit tests pass locally.
 - Ruff reports 16 pre-existing findings, so linting must not become a required check until those findings are fixed or an intentionally scoped lint policy is defined.
-- No GitHub Actions workflow is currently committed.
+- A GitHub Actions workflow defines the `unit-tests` and `docker-build` checks for pull requests and pushes to `main`; its first hosted run and required-check configuration still need verification.
 - The root `AGENTS.md` contains Markdown guidance but does not yet document setup, validation, or delivery expectations for coding agents.
 
 ## Security and delivery principles
@@ -65,11 +65,10 @@ From the ChatGPT mobile experience or another remote client, start a Codex task 
 ### External configuration
 
 1. Connect the GitHub repository in Codex settings and create an OpenAI-managed cloud environment for PokeMath.
-2. Pin Python 3.11 in the environment and use the following setup script:
+2. Pin Python 3.11 in the environment and use the following setup command:
 
 ```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+uv sync --locked --group dev
 ```
 
 3. Leave agent-phase internet access disabled unless a task has a concrete reason to enable a restricted allowlist.
@@ -77,6 +76,12 @@ python -m pip install -r requirements.txt
 5. Optionally require one human approval. For this personal repository, the minimum human gate is that Codex does not merge its own pull request and the owner explicitly performs the merge.
 6. Verify that the Terraform-declared Cloud Build trigger is active and that the GitHub connection still has access to the repository.
 7. Reauthenticate the local GitHub CLI before using it for repository administration; the credential observed during planning was expired.
+
+### Implementation status: 2026-07-20
+
+- Completed in the repository: Python dependencies are managed by `uv` with a committed lockfile; root agent guidance documents Python 3.11, setup, validation, cloud-environment, and delivery boundaries; CI defines `unit-tests` and `docker-build`; Cloud Build runs the locked unit suite before build, push, and deploy.
+- Verified locally in a managed Python 3.11 environment: `uv lock --check` and `uv run --locked --group dev pytest tests/unit -q` (74 passed). The Docker build remains to be run by GitHub Actions or a Docker-capable environment.
+- Still external and intentionally not changed: personal GitHub CLI reauthentication, Codex cloud-repository/environment setup, GitHub `main` branch protection, Cloud Build trigger/connection verification, remote pull-request rehearsal, production deployment observation, and rollback rehearsal.
 
 ### End-to-end validation scenario
 

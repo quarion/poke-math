@@ -11,17 +11,20 @@ param(
     [switch]$Headless = $false
 )
 
-# Check if Playwright is installed
-$playwrightInstalled = python -c "import importlib.util; print(importlib.util.find_spec('playwright') is not None)" 2>$null
+# Ensure the locked development environment is available, then install the
+# browser binaries if they are missing.
+uv sync --locked --group dev
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+$playwrightInstalled = uv run --locked --no-sync python -c "import importlib.util; print(importlib.util.find_spec('playwright') is not None)" 2>$null
 
 if ($playwrightInstalled -ne "True") {
-    Write-Host "Installing Playwright..." -ForegroundColor Yellow
-    pip install playwright
-    python -m playwright install
-    Write-Host "Playwright installed successfully!" -ForegroundColor Green
-} else {
-    Write-Host "Playwright is already installed." -ForegroundColor Green
+    Write-Host "Playwright dependency is unavailable after uv sync." -ForegroundColor Red
+    exit 1
 }
+
+uv run --locked --no-sync playwright install
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Check if the application is running
 try {
@@ -38,7 +41,7 @@ if (-not $appRunning) {
     Write-Host "Starting the application..." -ForegroundColor Yellow
     
     # Start the application in a new PowerShell window
-    $appProcess = Start-Process powershell -ArgumentList "-Command `"cd $(Get-Location); `$env:FLASK_ENV='development'; python -m src.app`"" -PassThru
+    $appProcess = Start-Process powershell -ArgumentList "-Command `"cd $(Get-Location); `$env:FLASK_ENV='development'; uv run --locked --no-sync python -m src.app`"" -PassThru
     
     # Wait for the application to start
     Write-Host "Waiting for the application to start..." -ForegroundColor Yellow
@@ -60,11 +63,11 @@ $env:HEADLESS = $Headless.ToString().ToLower()
 
 # Run the tests
 Write-Host "Running e2e tests..." -ForegroundColor Cyan
-python -m pytest $TestPath -v
+uv run --locked --no-sync pytest $TestPath -v
 
 # Stop the application if we started it
 if (-not $appRunning -and (Get-Variable -Name appProcess -ErrorAction SilentlyContinue)) {
     Write-Host "Stopping the application..." -ForegroundColor Yellow
     Stop-Process -Id $appProcess.Id -Force
     Write-Host "Application stopped." -ForegroundColor Green
-} 
+}

@@ -26,6 +26,7 @@ coverage.xml
 *.log
 
 # Virtual environment
+.venv
 venv
 ENV
 

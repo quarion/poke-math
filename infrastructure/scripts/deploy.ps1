@@ -8,22 +8,16 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..")
-$python = Join-Path $repoRoot "venv/Scripts/python.exe"
-
 Push-Location $repoRoot
 try {
-    if (Test-Path -LiteralPath $python) {
-        & $python -m pytest tests/unit -q
-        if ($LASTEXITCODE -ne 0) { throw "Unit tests failed" }
-    }
-    else {
-        throw "Expected local Python environment at $python"
-    }
+    uv run --locked --group dev pytest tests/unit -q
+    if ($LASTEXITCODE -ne 0) { throw "Unit tests failed" }
 
     $uploadFiles = gcloud.cmd meta list-files-for-upload
     $unexpectedFiles = $uploadFiles | Where-Object {
         $_ -notmatch '^src[\\/]' -and
-        $_ -notmatch '^(\.dockerignore|Dockerfile|cloudbuild\.yaml|requirements-prod\.txt)$'
+        $_ -notmatch '^tests[\\/]' -and
+        $_ -notmatch '^(\.dockerignore|Dockerfile|cloudbuild\.yaml|pyproject\.toml|pytest\.ini|uv\.lock)$'
     }
     if ($unexpectedFiles) {
         throw "Unexpected files would be uploaded: $unexpectedFiles"
