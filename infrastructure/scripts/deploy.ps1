@@ -16,7 +16,8 @@ try {
     $uploadFiles = gcloud.cmd meta list-files-for-upload
     $unexpectedFiles = $uploadFiles | Where-Object {
         $_ -notmatch '^src[\\/]' -and
-        $_ -notmatch '^(\.dockerignore|Dockerfile|cloudbuild\.yaml|pyproject\.toml|uv\.lock)$'
+        $_ -notmatch '^tests[\\/]' -and
+        $_ -notmatch '^(\.dockerignore|Dockerfile|cloudbuild\.yaml|pyproject\.toml|pytest\.ini|uv\.lock)$'
     }
     if ($unexpectedFiles) {
         throw "Unexpected files would be uploaded: $unexpectedFiles"
