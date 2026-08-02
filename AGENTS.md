@@ -17,3 +17,13 @@
 
 - Do not modify or deploy infrastructure unless the task explicitly requires it.
 - Never add production credentials to the repository, logs, pull requests, or agent environment.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+This repository uses the single-context domain documentation layout. See `docs/agents/domain.md`.

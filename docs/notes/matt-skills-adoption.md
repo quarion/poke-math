@@ -41,17 +41,15 @@ The setup skill is prompt-driven rather than a deterministic installer. It inspe
 ## Current repository findings
 
 - The product repository uses GitHub at `quarion/poke-math`.
-- It has an existing root `AGENTS.md` with no Matt-skills configuration block.
-- It has no `docs/agents/` tracker or domain configuration.
+- Its root `AGENTS.md` contains the repository-specific Matt-skills configuration block.
+- Its `docs/agents/` directory configures GitHub Issues and the single-context domain documentation layout.
 - It has no established root `CONTEXT.md`, `CONTEXT-MAP.md`, or `docs/adr/`.
 - It is a single-context repository rather than a monorepo.
-- The Matt skills are not exposed in the current Codex session.
 - The Matt `triage` skill is not installed, so its label setup is not currently required.
 
 ## Open adoption decisions
 
 - Which minimal set of skills should be installed for the trial?
-- Should GitHub Issues be the canonical tracker, as the setup skill would recommend from the repository remote?
 - How should workflow observations be recorded without contaminating product artifacts?
 - After a faithful trial, what explicit criteria should determine whether a skill is retained verbatim, adapted, or replaced?
 
@@ -59,8 +57,13 @@ The setup skill is prompt-driven rather than a deterministic installer. It inspe
 
 - The first faithful trial will use `release/v1.2` pinned at commit `41283677d63b8f658e6c94b3519f556a1831f9ad`.
 - The initial trial installs `setup-matt-pocock-skills`, `wayfinder`, `grilling`, `domain-modeling`, `prototype`, and `research` as complete, unmodified skill directories in the personal Codex skills directory.
-- The initial installation was completed on 2026-08-02 from the pinned commit. Repository-specific setup has not yet been run.
+- The initial installation was completed on 2026-08-02 from the pinned commit.
+- Repository-specific setup was completed on 2026-08-02 using GitHub Issues and the single-context domain documentation layout. Because `triage` is not installed, no triage-label mapping was added.
 - Designing an upgradable customization mechanism, potentially based on tracked patches or Git merges, is deferred until after the verbatim trial provides concrete evidence about what should change.
+
+## Possible future adaptations
+
+- Evaluate trimming post-setup optionality and migration guidance from generated repository instructions once choices such as single-context layout and PR triage scope have been made. The hypothesis is that recording only the active configuration would reduce recurring context cost; this should be weighed against the discoverability and migration value of the upstream guidance after the faithful trial.
 
 ## Installed initial skill set
 
