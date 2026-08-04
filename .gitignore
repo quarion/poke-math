@@ -67,3 +67,6 @@ firebase-credentials.json
 
 # Playwright
 /tests/e2e/screenshots/
+
+# Local equation calibration viewer evidence
+/artifacts/equation-calibration/latest.json

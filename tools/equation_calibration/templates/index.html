@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Equation calibration viewer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <p class="eyebrow">Local-only repository tool</p>
+      <h1>Equation calibration viewer</h1>
+      <p>Scan one reproducible exercise per configured candidate, then review compact batch evidence. This does not change production behavior or rate candidate quality.</p>
+    </div>
+  </header>
+  <main>
+    <form class="controls" method="get">
+      <label>Fixed seed <input name="fixed_seed" type="number" value="{{ form_values.fixed_seed }}" required></label>
+      <label>Batch seed <input name="batch_seed" type="number" value="{{ form_values.batch_seed }}" required></label>
+      <label>Batch size <input name="batch_size" type="number" min="1" max="{{ max_batch_size }}" value="{{ form_values.batch_size }}" required></label>
+      <button type="submit">Generate evidence</button>
+      <button type="submit" name="fresh" value="1">Fresh batch seed</button>
+    </form>
+    {% if error %}
+      <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    {% if evidence %}
+      <section class="run-meta" aria-label="Latest run metadata">
+        <span>Fixed seed: <strong>{{ evidence.fixed_seed }}</strong></span>
+        <span>Batch seed: <strong>{{ evidence.batch_seed }}</strong></span>
+        <span>Batch size: <strong>{{ evidence.batch_size }}</strong></span>
+        <span>Saved evidence: <code>{{ evidence.saved_evidence_path }}</code></span>
+      </section>
+      <p class="note">Operator counts are derived from display strings. Symbolic solution checks are performed; formatted-versus-symbolic parsing is deliberately not attempted.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order / candidate</th>
+              <th>Current capability</th>
+              <th>Fixed-seed exercise</th>
+              <th>Answer</th>
+              <th>Measured properties</th>
+              <th>Batch evidence</th>
+              <th>Selected tail cases</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sample in fixed_samples %}
+              {% set summary = summaries[sample.candidate_id] %}
+              <tr>
+                <td><strong>{{ sample.candidate_order }}. {{ sample.candidate_name }}</strong><br><code>{{ sample.candidate_id }}</code></td>
+                <td>{{ sample.capability_description }}</td>
+                <td class="equations">
+                  {% if sample.status == 'success' %}
+                    {% for equation in sample.displayed_equations %}<div>{{ equation }}</div>{% endfor %}
+                  {% else %}
+                    <span class="failure">Generation failed: {{ sample.error }}</span>
+                  {% endif %}
+                </td>
+                <td class="answer">
+                  {% if sample.status == 'success' %}
+                    {% for variable, value in sample.answer.items() %}<div>{{ variable }} = {{ value }}</div>{% endfor %}
+                  {% else %}—{% endif %}
+                </td>
+                <td>
+                  {% if sample.status == 'success' %}
+                    <ul class="measurements">
+                      <li>{{ sample.measurements.equation_count }} equations</li>
+                      <li>{{ sample.measurements.variable_count }} variables</li>
+                      <li>{{ sample.measurements.operation_count }} display operations</li>
+                      <li>operators: {{ sample.measurements.operators_present | join(', ') or 'none' }}</li>
+                      <li>signature: <code>{{ sample.measurements.exercise_signature }}</code></li>
+                      <li>symbolic check: {{ 'pass' if sample.diagnostics.symbolic_solution_satisfies_equations else 'violation' }}</li>
+                    </ul>
+                  {% else %}—{% endif %}
+                </td>
+                <td>
+                  <strong>{{ summary.success_count }}/{{ summary.requested_count }} succeeded</strong><br>
+                  {{ summary.failure_count }} failures · {{ summary.unique_count }} unique · {{ summary.duplicate_count }} duplicates<br>
+                  {{ summary.diagnostic_violation_count }} diagnostic violations<br>
+                  negatives {{ summary.negative_solution_count }} · non-integers {{ summary.non_integer_solution_count }}<br>
+                  <small>equations {{ summary.property_distributions.equation_count.min }}–{{ summary.property_distributions.equation_count.max }}; variables {{ summary.property_distributions.variable_count.min }}–{{ summary.property_distributions.variable_count.max }}; operations {{ summary.property_distributions.operation_count.min }}–{{ summary.property_distributions.operation_count.max }}</small>
+                </td>
+                <td>
+                  {% if summary.selected_tail_cases %}
+                    <ul class="tails">
+                      {% for tail in summary.selected_tail_cases %}
+                        <li><strong>{{ tail.reason | replace('_', ' ') }}</strong> · #{{ tail.sample_index }} · seed {{ tail.seed }}{% if tail.error %}<br><span class="failure">{{ tail.error }}</span>{% elif tail.displayed_equations %}<br><span class="equations">{{ tail.displayed_equations | join(' / ') }}</span>{% endif %}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}No tail case available.{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </main>
+</body>
+</html>

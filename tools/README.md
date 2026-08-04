@@ -32,3 +32,13 @@ store, then run the helper normally:
 gh auth login
 python tools/get_pr_comments.py --pr 1
 ```
+
+## Equation calibration viewer
+
+Run the local-only equation calibration viewer from the repository root:
+
+```powershell
+uv run python -m tools.equation_calibration
+```
+
+Open http://127.0.0.1:8092. The viewer generates a fixed-seed scan sheet plus batch evidence for the current entries in `src/data/equation_difficulties_v2.json`, and writes the latest structured result to `artifacts/equation-calibration/latest.json`. This tool is separate from the production Flask application.
